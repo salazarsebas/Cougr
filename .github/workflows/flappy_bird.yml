@@ -1,0 +1,152 @@
+name: Flappy Bird Example
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/flappy_bird/**'
+      - 'src/**'
+      - 'Cargo.toml'
+      - '.github/workflows/flappy_bird.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/flappy_bird/**'
+      - 'src/**'
+      - 'Cargo.toml'
+      - '.github/workflows/flappy_bird.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+          target: wasm32-unknown-unknown
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check formatting
+        run: cargo fmt --all --manifest-path examples/flappy_bird/Cargo.toml -- --check
+
+      - name: Run clippy
+        run: cargo clippy --manifest-path examples/flappy_bird/Cargo.toml --all-targets --all-features -- -D warnings
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build library
+        run: cargo build --release --manifest-path examples/flappy_bird/Cargo.toml
+
+      - name: Build WASM
+        run: cargo build --release --target wasm32-unknown-unknown --manifest-path examples/flappy_bird/Cargo.toml
+
+      - name: Check WASM size
+        run: |
+          WASM_SIZE=$(stat -f%z target/wasm32-unknown-unknown/release/flappy_bird.wasm 2>/dev/null || stat -c%s target/wasm32-unknown-unknown/release/flappy_bird.wasm)
+          echo "WASM size: $WASM_SIZE bytes"
+          if [ $WASM_SIZE -gt 1048576 ]; then
+            echo "Warning: WASM file is larger than 1MB"
+          fi
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-test-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run tests
+        run: cargo test --manifest-path examples/flappy_bird/Cargo.toml --verbose
+
+  stellar-build:
+    name: Build with Stellar CLI
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Install Stellar CLI
+        run: |
+          curl -L https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv stellar /usr/local/bin/
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-stellar-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build contract with Stellar CLI
+        working-directory: examples/flappy_bird
+        run: stellar contract build
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flappy_bird.wasm
+          path: target/wasm32-unknown-unknown/release/flappy_bird.wasm
+          if-no-files-found: error
