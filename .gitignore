@@ -1,0 +1,12 @@
+# Rust
+/target
+**/target
+
+# Node
+/node_modules
+**/node_modules
+
+# Misc
+.DS_Store
+.env
+.env.local
