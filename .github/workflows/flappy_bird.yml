@@ -144,9 +144,27 @@ jobs:
         working-directory: examples/flappy_bird
         run: stellar contract build
 
+      - name: Check WASM file and size
+        working-directory: examples/flappy_bird
+        run: |
+          if [ -f target/wasm32v1-none/release/flappy_bird.wasm ]; then
+            WASM_SIZE=$(stat -c%s target/wasm32v1-none/release/flappy_bird.wasm)
+            echo "✅ WASM file found!"
+            echo "📊 Size: $WASM_SIZE bytes ($(echo "scale=2; $WASM_SIZE / 1024" | bc) KB)"
+            ls -lh target/wasm32v1-none/release/flappy_bird.wasm
+            if [ $WASM_SIZE -gt 1048576 ]; then
+              echo "⚠️  Warning: WASM file is larger than 1MB"
+            fi
+          else
+            echo "❌ ERROR: WASM file not found!"
+            echo "Searching for WASM files:"
+            find target -name "*.wasm" 2>/dev/null || echo "No WASM files found"
+            exit 1
+          fi
+
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v4
         with:
           name: flappy_bird.wasm
-          path: target/wasm32-unknown-unknown/release/flappy_bird.wasm
+          path: examples/flappy_bird/target/wasm32v1-none/release/flappy_bird.wasm
           if-no-files-found: error
