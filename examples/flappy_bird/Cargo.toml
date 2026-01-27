@@ -9,7 +9,7 @@ description = "Flappy Bird on-chain game example using cougr-core ECS framework"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = { path = "../../", version = "0.0.1" }
+cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
 soroban-sdk = "23.0.2"
 
 [dev-dependencies]
