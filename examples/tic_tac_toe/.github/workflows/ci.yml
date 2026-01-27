@@ -1,0 +1,54 @@
+name: Tic Tac Toe CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "examples/tic_tac_toe/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "examples/tic_tac_toe/**"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/tic_tac_toe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Run tests
+        run: cargo test --verbose
+
+      - name: Install Stellar CLI
+        run: cargo install stellar-cli --locked
+
+      - name: Build WASM
+        run: stellar contract build
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tic_tac_toe_wasm
+          path: examples/tic_tac_toe/target/tic_tac_toe.wasm
