@@ -1,10 +1,10 @@
 # Rust
 target/
-**/*.rs.bk
-*.pdb
 
 # Cargo
 Cargo.lock
+**/*.rs.bk
+*.pdb
 
 # IDE
 .vscode/
@@ -12,6 +12,8 @@ Cargo.lock
 *.swp
 *.swo
 *~
+
+.direnv/
 
 # OS
 .DS_Store
@@ -29,3 +31,7 @@ test_snapshots/
 *.so
 *.dylib
 *.dll
+
+# Claude plans
+.claude/
+
