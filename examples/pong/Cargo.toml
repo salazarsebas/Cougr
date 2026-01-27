@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = "23.0.2"
-cougr-core = { path = "../.." }
+cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
 
 [dev-dependencies]
 soroban-sdk = { version = "23.0.2", features = ["testutils"] }
