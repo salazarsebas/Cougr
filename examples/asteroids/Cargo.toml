@@ -1,5 +1,5 @@
 [package]
-name = "hello-world"
+name = "asteroids"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -9,8 +9,8 @@ crate-type = ["lib", "cdylib"]
 doctest = false
 
 [dependencies]
-soroban-sdk = { workspace = true }
+soroban-sdk = "23.0.2"
 cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
 
 [dev-dependencies]
-soroban-sdk = { workspace = true, features = ["testutils"] }
+soroban-sdk = { version = "23.0.2", features = ["testutils"] }

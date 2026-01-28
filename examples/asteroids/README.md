@@ -1,19 +1,17 @@
 # Asteroids (Soroban Example)
 
-This folder bootstraps a Soroban workspace that will host the on-chain Asteroids example contract.
+This folder hosts the on-chain Asteroids example contract.
 
 ## Project Structure
 
-This repository uses the recommended structure for a Soroban project:
+This example uses the single-contract Soroban layout:
 
 ```text
 .
-├── contracts
-│   └── hello-world
-│       ├── src
-│       │   ├── lib.rs
-│       │   └── test.rs
-│       └── Cargo.toml
+├── src
+│   ├── lib.rs
+│   ├── test.rs
+│   └── Makefile
 ├── Cargo.toml
 └── README.md
 ```
@@ -57,5 +55,37 @@ stellar contract init .
 
 ## Notes
 
-- New Soroban contracts can be added under `contracts/`, each in its own directory.
-- Contracts have their own `Cargo.toml` files and share dependencies from the workspace `Cargo.toml`.
+- This example is a single Soroban contract crate.
+
+## Verification (Jan 28, 2026)
+
+Build:
+
+```bash
+cd examples/asteroids
+cargo build
+```
+
+Soroban WASM build:
+
+```bash
+stellar contract build
+```
+
+Resulting WASM:
+
+```
+examples/asteroids/target/wasm32v1-none/release/asteroids.wasm
+```
+
+Tests:
+
+```bash
+cargo test
+```
+
+All tests pass:
+
+```
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+```
