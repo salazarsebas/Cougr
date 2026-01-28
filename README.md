@@ -1,172 +1,108 @@
 # Cougr Core
 
-**Cougr Core** is a Soroban-compatible ECS (Entity Component System) framework designed for building on-chain video games on the Stellar blockchain.
+Cougr Core is a Soroban-compatible ECS (Entity Component System) framework for building on-chain games on the Stellar blockchain. It brings Bevy-inspired ergonomics to smart contracts while remaining no_std and WASM-friendly.
 
-## Overview
+- Website: https://soroban.stellar.org/
+- Docs: coming soon
 
-This crate provides a complete ECS architecture adapted for `no_std` and WebAssembly (WASM) compatibility, built on top of the **soroban-sdk**. It follows an architecture inspired by Bevy ECS, providing a modular and efficient foundation for decentralized gaming experiences.
+## Highlights
 
-## Features
+| Area | What you get | Why it matters |
+|---|---|---|
+| ECS primitives | Entities, Components, Systems, Resources, Events, Queries | Model complex game logic simply and safely |
+| Soroban-native | Works with soroban-sdk types, storage, and environment | Ship directly as Stellar contracts |
+| no_std + WASM | Optimized for wasm32 targets | Small binaries and predictable execution |
+| Storage efficiency | Dense/sparse layouts, reduced reads/writes | Lower fees and rent on ledger |
+| Safety | Strong typing and borrowing discipline | Fewer runtime errors and better maintainability |
 
-- ✅ **Complete ECS Architecture**: Entities, Components, Systems, World, Resources, Events, and Queries
-- ✅ **Soroban-SDK Integration**: Native support for Stellar smart contracts
-- ✅ **no_std Compatible**: Works in constrained environments
-- ✅ **WASM Ready**: Optimized for WebAssembly execution
-- ✅ **Type-Safe**: Leverages Rust's type system for safety
-- ✅ **Efficient Storage**: Optimized component storage systems
+## How Cougr Core improves code writing
 
-## Architecture
+| Pain without Cougr | With Cougr Core |
+|---|---|
+| Scattered storage reads/writes increasing fees | Structured component storage with predictable access patterns |
+| Ad-hoc state passing across functions | Resource and event systems to coordinate logic |
+| Complex borrow lifetimes across subsystems | SystemParam abstractions that encapsulate access rules |
+| Boilerplate-heavy entity management | Ergonomic spawn/despawn and query APIs |
+| Hard-to-test game logic | Isolated systems with deterministic inputs for unit tests |
 
-### Core Modules
+Developers focus on intent (what the system does) rather than plumbing (how to wire storage and access), which leads to clearer code and easier reviews.
 
-- **entity**: Entity management with unique IDs and generation tracking
-- **component**: Component types and registry for attaching data to entities
-- **world**: Central ECS world containing all entities, components, and systems
-- **system**: System trait and implementations for game logic
-- **storage**: Efficient component storage (Table and Sparse storage)
-- **resource**: Global resources accessible to systems
-- **event**: Event system for communication between systems
-- **query**: Query system for filtering entities by components
+## Example contracts in this repo
 
-## Quick Start
+| Example | Path | CI | Build command |
+|---|---|---|---|
+| Bomberman (on-chain) | examples/bomberman | macOS workflow with stellar contract build | stellar contract build |
+| Space Invaders | examples/space_invaders | macOS workflow with Homebrew install | stellar contract build |
+| Flappy Bird | examples/flappy_bird | Ubuntu workflow | cargo build --target wasm32-unknown-unknown |
+| Tic Tac Toe | examples/tic_tac_toe | Ubuntu workflow | stellar contract build |
 
-### Installation
+## Testnet deployments
 
-Add to your `Cargo.toml`:
+| Contract | Network | Contract ID | Explorer |
+|---|---|---|---|
+| Bomberman | Testnet | CCJMHQZFJJGUFP6TUXNEZ2NYVHWGU73GVF4CW45PRRGBDILUB2QJJ7QY | https://lab.stellar.org/r/testnet/contract/CCJMHQZFJJGUFP6TUXNEZ2NYVHWGU73GVF4CW45PRRGBDILUB2QJJ7QY |
+
+Run the Deploy to Testnet workflow (workflow_dispatch) after adding the secret STELLAR_SECRET_KEY to your repository settings. The workflow uploads deployment logs and outputs the contract_id.
+
+## Quick start
+
+Add to your Cargo.toml:
 
 ```toml
 [dependencies]
 cougr-core = "0.0.1"
 ```
 
-### Basic Usage
+Create and use a world:
 
 ```rust
 use cougr_core::prelude::*;
 
-// Create a world
 let mut world = World::new();
-
-// Spawn an entity
 let entity = world.spawn_empty();
-
-// Add components
-let position = Component::new(
-    symbol_short!("position"),
-    position_data
-);
+let position = Component::new(symbol_short!("position"), position_data);
 world.add_component_to_entity(entity.id(), position);
-
-// Query entities
 let entities = world.query_entities(&[symbol_short!("position")]);
 ```
 
-## Module Documentation
+## Architecture
 
-### Entity Module (`entity.rs`)
+Core modules:
 
-Provides entity management functionality:
-- `EntityId`: Unique identifier with generation tracking
-- `Entity`: Entity container with component tracking
-- `EntityManager`: Handles entity lifecycle (spawn, despawn, lookup)
-
-### Component Module (`component.rs`)
-
-Defines component types and management:
-- `Component`: Base component type with Soroban serialization
-- `ComponentId`: Unique component type identifier
-- `ComponentRegistry`: Manages component type registration
-- `ComponentTrait`: Trait for implementing custom components
-
-### World Module (`world.rs`)
-
-Central ECS container:
-- `World`: Main ECS world containing all entities and components
-- Methods for entity/component management
-- Resource and event management
-- Query execution
-
-### System Module (`system.rs`)
-
-System execution framework:
-- `System` trait: Define game logic systems
-- `SystemParam`: Parameter types for systems
-- Pre-built systems: MovementSystem, CollisionSystem, HealthSystem
-
-### Storage Module (`storage.rs`)
-
-Component storage implementations:
-- `Storage`: Base storage type
-- `TableStorage`: Dense storage for common components
-- `SparseStorage`: Sparse storage for rare components
-
-### Resource Module (`resource.rs`)
-
-Global state management:
-- `Resource`: Global resources accessible to all systems
-- `ResourceTrait`: Trait for implementing custom resources
-- Example: `GameState` resource
-
-### Event Module (`event.rs`)
-
-Event system for inter-system communication:
-- `Event`: Base event type
-- `EventReader`: Read events in systems
-- `EventWriter`: Send events from systems
-- Pre-built events: `CollisionEvent`, `DamageEvent`
-
-### Query Module (`query.rs`)
-
-Entity filtering and querying:
-- `Query`: Filter entities by components
-- `QueryState`: Cached query results
-- `QueryBuilder`: Fluent query construction
-- `QueryFilter`: Custom filter trait
+- entity: allocation and lifecycle management with generation tracking
+- component: typed components, IDs, and registry
+- world: container for entities, components, and systems
+- system: execution model for game logic with SystemParam
+- storage: table and sparse storage backends
+- resource: global resources accessible to systems
+- event: decoupled communication via events
+- query: fast filtered iteration over entities
 
 ## Development
 
-### Building
+- Build: cargo build
+- Test: cargo test
+- Build for Soroban: cargo build --target wasm32-unknown-unknown --release
 
-```bash
-cargo build
-```
-
-### Testing
-
-```bash
-cargo test
-```
-
-### Building for Soroban
-
-```bash
-cargo build --target wasm32-unknown-unknown --release
-```
-
-## Profile Configuration
-
-The crate is optimized for small WASM binary size:
-- LTO enabled
-- Single codegen unit
-- Size optimization (`opt-level = "z"`)
+The crate is configured for small WASM binaries (LTO, single codegen unit, opt-level = "z").
 
 ## Compatibility
 
-- **Rust Version**: 1.70.0+
-- **Edition**: 2021
-- **Target**: wasm32-unknown-unknown
-- **Soroban SDK**: 23.0.2
+- Rust: 1.70+
+- Edition: 2021
+- Target: wasm32-unknown-unknown
+- Soroban SDK: 23.0.2
 
 ## License
 
-Licensed under MIT OR Apache-2.0
+MIT OR Apache-2.0
 
 ## Contributing
 
-This is part of the Cougr framework for on-chain gaming on Stellar. Contributions are welcome!
+Contributions are welcome. Open an issue or PR.
 
 ## Resources
 
-- [Soroban Documentation](https://soroban.stellar.org/)
-- [Stellar Documentation](https://developers.stellar.org/)
-- [Rust Documentation](https://www.rust-lang.org/learn)
+- Soroban: https://soroban.stellar.org/
+- Stellar: https://developers.stellar.org/
+- Rust: https://www.rust-lang.org/learn
