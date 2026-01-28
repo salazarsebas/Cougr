@@ -340,7 +340,7 @@ impl Contract {
             }
         }
 
-        if remaining_asteroids.len() == 0 {
+        if remaining_asteroids.is_empty() {
             state.game_over = true;
         }
 

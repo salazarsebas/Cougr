@@ -33,7 +33,7 @@ fn test_smoke_and_init() {
     assert_eq!(state.lives, 3);
     assert_eq!(state.asteroids.len(), 2);
     assert_eq!(state.bullets.len(), 0);
-    assert_eq!(state.game_over, false);
+    assert!(!state.game_over);
 }
 
 #[test]
