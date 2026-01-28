@@ -1,0 +1,72 @@
+name: Asteroids Contract
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: examples/asteroids
+      - name: cargo fmt
+        working-directory: examples/asteroids
+        run: cargo fmt --check
+      - name: cargo clippy
+        working-directory: examples/asteroids
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: examples/asteroids
+      - name: cargo build
+        working-directory: examples/asteroids
+        run: cargo build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: examples/asteroids
+      - name: cargo test
+        working-directory: examples/asteroids
+        run: cargo test
+
+  soroban:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: examples/asteroids
+      - name: install Stellar CLI
+        run: cargo install stellar-cli --locked
+      - name: add wasm target
+        run: rustup target add wasm32-unknown-unknown
+      - name: stellar contract build
+        working-directory: examples/asteroids
+        run: stellar contract build
