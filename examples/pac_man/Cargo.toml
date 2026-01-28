@@ -1,0 +1,31 @@
+[package]
+name = "pac_man"
+version = "0.1.0"
+edition = "2021"
+description = "Pac-Man on-chain game example using Cougr-Core for Stellar/Soroban"
+license = "MIT OR Apache-2.0"
+rust-version = "1.70.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "23.0.2"
+cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
+
+[dev-dependencies]
+soroban-sdk = { version = "23.0.2", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
