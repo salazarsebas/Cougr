@@ -150,6 +150,10 @@ jobs:
         with:
           toolchain: stable
           target: wasm32-unknown-unknown
+      - name: Add WASM targets
+        run: |
+          rustup target add wasm32-unknown-unknown
+          rustup target add wasm32v1-none || true
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -161,10 +165,11 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-soroban-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Stellar CLI
-        run: |
-          cargo install --locked stellar-cli --features opt || true
+        run: cargo install --locked stellar-cli --features opt
       - name: Build Soroban contract
-        run: stellar contract build
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          stellar contract build
       - name: Verify WASM output
         run: |
           ls -la target/wasm32*/release/*.wasm
