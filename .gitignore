@@ -1,12 +1,10 @@
 # Rust
 target/
+
+# Cargo
 Cargo.lock
 **/*.rs.bk
 *.pdb
-
-# Soroban
-.soroban/
-*.wasm
 
 # IDE
 .vscode/
@@ -14,14 +12,25 @@ Cargo.lock
 *.swp
 *.swo
 *~
+
 .direnv/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Test snapshots
+# Soroban
+.soroban/
+*.wasm
+
+# Test artifacts
 test_snapshots/
+
+# Build artifacts
+*.o
+*.so
+*.dylib
+*.dll
 
 # Claude plans
 .claude/
