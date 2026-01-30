@@ -51,12 +51,12 @@ fn test_paddle_bounds_left() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move paddle far left
     for _ in 0..20 {
         client.move_paddle(&-1);
     }
-    
+
     let state = client.get_game_state();
     assert_eq!(state.paddle_x, 7); // PADDLE_WIDTH/2 = 15/2 = 7
 }
@@ -68,12 +68,12 @@ fn test_paddle_bounds_right() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move paddle far right
     for _ in 0..20 {
         client.move_paddle(&1);
     }
-    
+
     let state = client.get_game_state();
     assert_eq!(state.paddle_x, 93); // FIELD_WIDTH - PADDLE_WIDTH/2 = 100 - 7
 }
@@ -99,12 +99,12 @@ fn test_top_wall_collision() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move ball to top
     for _ in 0..60 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // Ball should have bounced and be moving down
     assert!(state.ball_vy > 0);
@@ -117,12 +117,12 @@ fn test_side_wall_collision() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move ball to side by updating many times
     for _ in 0..60 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // Ball should stay within bounds
     assert!(state.ball_x >= 0 && state.ball_x <= 100);
@@ -135,12 +135,12 @@ fn test_paddle_collision() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move ball down towards paddle
     for _ in 0..10 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // Ball should eventually bounce off paddle and move up
     if state.ball_y >= 55 {
@@ -156,12 +156,12 @@ fn test_brick_breaking() {
 
     let initial_state = client.init_game();
     let initial_bricks = initial_state.bricks_remaining;
-    
+
     // Simulate game ticks to hit bricks
     for _ in 0..5 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // At least one brick should be broken or score increased
     assert!(state.bricks_remaining <= initial_bricks || state.score > 0);
@@ -174,12 +174,12 @@ fn test_scoring() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Play for a while
     for _ in 0..20 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // Score should increase when bricks are broken
     if state.bricks_remaining < 50 {
@@ -194,12 +194,12 @@ fn test_lose_life() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move paddle away from ball
     for _ in 0..10 {
         client.move_paddle(&1);
     }
-    
+
     // Let ball fall
     // Ball starts at y=50, moving up (vy=-1). Hits top (y=0) at approx tick 50.
     // Bounces down. Hits bottom (y=60) at approx tick 110.
@@ -207,7 +207,7 @@ fn test_lose_life() {
     for _ in 0..300 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // Should have lost at least one life
     assert!(state.lives < 3);
@@ -220,7 +220,7 @@ fn test_game_over_no_lives() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Move paddle away and let ball fall multiple times
     for _ in 0..5 {
         for _ in 0..10 {
@@ -230,7 +230,7 @@ fn test_game_over_no_lives() {
             client.update_tick();
         }
     }
-    
+
     let state = client.get_game_state();
     // Game should end when lives reach 0
     assert_eq!(state.lives, 0);
@@ -246,10 +246,10 @@ fn test_get_game_state() {
 
     client.init_game();
     let state1 = client.get_game_state();
-    
+
     client.move_paddle(&1);
     let state2 = client.get_game_state();
-    
+
     // State should change after paddle movement
     assert_ne!(state1.paddle_x, state2.paddle_x);
 }
@@ -261,7 +261,7 @@ fn test_check_game_over() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     let game_over = client.check_game_over();
     assert_eq!(game_over, false);
 }
@@ -273,7 +273,7 @@ fn test_inactive_game_no_updates() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     client.init_game();
-    
+
     // Force game over by losing all lives
     for _ in 0..5 {
         for _ in 0..10 {
@@ -283,16 +283,16 @@ fn test_inactive_game_no_updates() {
             client.update_tick();
         }
     }
-    
+
     let state1 = client.get_game_state();
     assert!(!state1.game_active);
-    
+
     let ball_x = state1.ball_x;
-    
+
     // Try to update
     client.update_tick();
     let state2 = client.get_game_state();
-    
+
     // Ball position should not change when game is inactive
     assert_eq!(state2.ball_x, ball_x);
 }
@@ -304,12 +304,12 @@ fn test_multiple_brick_breaks() {
     let client = ArkanoidContractClient::new(&env, &contract_id);
 
     let initial_state = client.init_game();
-    
+
     // Play for extended period
     for _ in 0..50 {
         client.update_tick();
     }
-    
+
     let state = client.get_game_state();
     // Bricks should decrease
     assert!(state.bricks_remaining <= initial_state.bricks_remaining);

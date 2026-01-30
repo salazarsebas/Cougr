@@ -61,7 +61,8 @@ impl ComponentTrait for PaddleComponent {
         if data.len() != 4 {
             return None;
         }
-        let x_position = i32::from_be_bytes([data.get(0)?, data.get(1)?, data.get(2)?, data.get(3)?]);
+        let x_position =
+            i32::from_be_bytes([data.get(0)?, data.get(1)?, data.get(2)?, data.get(3)?]);
         Some(Self { x_position })
     }
 }
@@ -119,7 +120,10 @@ impl ComponentTrait for BricksComponent {
         let mut bytes = soroban_sdk::Bytes::new(env);
         for i in 0..self.grid.len() {
             let brick = self.grid.get(i).unwrap_or(false);
-            bytes.append(&soroban_sdk::Bytes::from_array(env, &[if brick { 1u8 } else { 0u8 }]));
+            bytes.append(&soroban_sdk::Bytes::from_array(
+                env,
+                &[if brick { 1u8 } else { 0u8 }],
+            ));
         }
         bytes
     }
@@ -149,8 +153,14 @@ impl ComponentTrait for ScoreComponent {
 
     fn serialize(&self, env: &Env) -> soroban_sdk::Bytes {
         let mut bytes = soroban_sdk::Bytes::new(env);
-        bytes.append(&soroban_sdk::Bytes::from_array(env, &self.score.to_be_bytes()));
-        bytes.append(&soroban_sdk::Bytes::from_array(env, &self.lives.to_be_bytes()));
+        bytes.append(&soroban_sdk::Bytes::from_array(
+            env,
+            &self.score.to_be_bytes(),
+        ));
+        bytes.append(&soroban_sdk::Bytes::from_array(
+            env,
+            &self.lives.to_be_bytes(),
+        ));
         bytes.append(&soroban_sdk::Bytes::from_array(
             env,
             &[if self.game_active { 1u8 } else { 0u8 }],
@@ -223,9 +233,7 @@ impl ArkanoidContract {
                 vx: BALL_SPEED,
                 vy: -BALL_SPEED,
             },
-            bricks: BricksComponent {
-                grid: bricks_grid,
-            },
+            bricks: BricksComponent { grid: bricks_grid },
             score: ScoreComponent {
                 score: 0,
                 lives: STARTING_LIVES,
@@ -332,13 +340,11 @@ impl ArkanoidContract {
         }
 
         // Bottom wall collision (lose life)
-        if world.ball.y >= FIELD_HEIGHT {
-            if world.score.lives > 0 {
-                world.score.lives -= 1;
-                Self::reset_ball(&mut world.ball);
-                if world.score.lives == 0 {
-                    world.score.game_active = false;
-                }
+        if world.ball.y >= FIELD_HEIGHT && world.score.lives > 0 {
+            world.score.lives -= 1;
+            Self::reset_ball(&mut world.ball);
+            if world.score.lives == 0 {
+                world.score.game_active = false;
             }
         }
 
