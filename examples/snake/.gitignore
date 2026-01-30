@@ -1,0 +1,27 @@
+# Build artifacts
+/target/
+
+# Cargo lock file (optional for libraries, required for binaries)
+# Cargo.lock
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Soroban test snapshots
+test_snapshots/
+
+# Environment files
+.env
+.env.local
+
+# Stellar/Soroban artifacts
+.soroban/
+*.wasm.d

@@ -1,0 +1,27 @@
+[package]
+name = "snake"
+version = "0.0.1"
+edition = "2021"
+authors = ["Cougr Contributors"]
+description = "Snake on-chain game example using cougr-core ECS framework"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
+soroban-sdk = "23.0.2"
+
+[dev-dependencies]
+soroban-sdk = { version = "23.0.2", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
