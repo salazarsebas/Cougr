@@ -175,7 +175,7 @@ fn test_score_increase() {
     client.init_game();
     
     let initial_score = client.get_score();
-    let _initial_invaders = client.get_active_invaders();
+    let initial_invaders = client.get_active_invaders();
     
     // Shoot and run many ticks to potentially hit an invader
     // Note: This is a simplified test; in practice, hitting invaders

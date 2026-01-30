@@ -101,14 +101,14 @@ impl ComponentTrait for PipeConfig {
 
 /// Pipe marker component - identifies an entity as a pipe
 #[contracttype]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct PipeMarker {
     pub passed: bool, // Has the bird passed this pipe?
 }
 
 impl PipeMarker {
     pub fn new() -> Self {
-        Self::default()
+        Self { passed: false }
     }
 }
 

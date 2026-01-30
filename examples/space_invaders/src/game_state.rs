@@ -308,7 +308,6 @@ pub const SHIP_Y: i32 = GAME_HEIGHT - 2;
 /// Y position where invaders cause game over
 pub const INVADER_WIN_Y: i32 = SHIP_Y - 2;
 /// Points needed for extra life
-#[allow(dead_code)]
 pub const EXTRA_LIFE_SCORE: u32 = 1000;
 /// Shoot cooldown in ticks
 pub const SHOOT_COOLDOWN: u32 = 3;
