@@ -15,13 +15,14 @@ crate-type = ["cdylib", "rlib"]
 default = []
 
 [dependencies]
-soroban-sdk = "23.0.2"
+soroban-sdk = "25.0.0"
 wee_alloc = "0.4.5"
 
 [dev-dependencies]
-soroban-sdk = { version = "23.0.2", features = ["testutils"] }
+soroban-sdk = { version = "25.0.0", features = ["testutils"] }
 
 [profile.release]
 lto = true
 codegen-units = 1
 opt-level = "z"
+overflow-checks = true
