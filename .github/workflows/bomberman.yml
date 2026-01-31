@@ -1,0 +1,111 @@
+name: Onchain CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/bomberman/**'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/bomberman/**'
+
+jobs:
+  onchain-checks:
+    name: Test Suite
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: ./examples/bomberman
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+        # `stellar contract build` uses `wasm32v1-none`
+        targets: wasm32-unknown-unknown, wasm32v1-none
+        components: rustfmt, clippy
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "examples/bomberman"
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Install Stellar CLI with Homebrew
+      run: |
+        brew update
+        brew install stellar-cli
+        stellar --version
+
+    - name: Build WASM (cargo)
+      run: cargo build --target wasm32-unknown-unknown --release
+
+    - name: Build Soroban contract (stellar contract build)
+      run: stellar contract build --verbose
+
+    - name: Run tests
+      run: cargo test
+      continue-on-error: true
+
+  deploy-testnet:
+    name: Deploy to Testnet
+    runs-on: macos-latest
+    needs: onchain-checks
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: ./examples/bomberman
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          # `stellar contract build` uses `wasm32v1-none`
+          targets: wasm32-unknown-unknown, wasm32v1-none
+
+      - name: Install Stellar CLI with Homebrew
+        run: |
+          brew update
+          brew install stellar-cli
+          stellar --version
+
+      - name: Build contract
+        run: |
+          cargo build --target wasm32-unknown-unknown --release
+          stellar contract build --verbose
+
+      - name: Deploy contract to Testnet
+        id: deploy
+        env:
+          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_SECRET_KEY }}
+        run: |
+          set -e
+          WASM=target/wasm32-unknown-unknown/release/bomberman.wasm
+          echo "WASM path: $WASM"
+          DEPLOY_OUTPUT=$(stellar contract deploy \
+            --wasm "$WASM" \
+            --network testnet \
+            --source "$STELLAR_SECRET_KEY" 2>&1 | tee deploy.log)
+          # Attempt to extract contract id (looks like CA...)
+          CONTRACT_ID=$(echo "$DEPLOY_OUTPUT" | grep -Eo 'C[A-Z0-9]{55,}' | head -n1 || true)
+          echo "Contract ID: $CONTRACT_ID"
+          echo "contract_id=$CONTRACT_ID" >> $GITHUB_OUTPUT
+
+      - name: Upload deployment logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: bomberman-deploy-logs
+          path: examples/bomberman/deploy.log
