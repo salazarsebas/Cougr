@@ -481,7 +481,7 @@ fn test_position_roundtrip() {
 
 #[test]
 fn test_ghost_respawn() {
-    let mut ghost = Ghost::new(5, 5);
+    let mut ghost = Ghost::new(1, 5, 5); // entity_id=1, position (5,5)
     ghost.position = Position::new(1, 1); // Move ghost
     ghost.mode = GhostMode::Frightened;
     ghost.frightened_timer = 5;
@@ -538,4 +538,70 @@ fn test_multiple_direction_changes() {
 
     let state = client.get_game_state();
     assert_eq!(state.pacman_dir, Direction::Right);
+}
+
+// =============================================================================
+// Cougr-Core Integration Tests
+// =============================================================================
+
+#[test]
+fn test_collision_events_initially_empty() {
+    let (_env, client) = setup_game();
+
+    client.init_game();
+
+    let events = client.get_collision_events();
+    assert!(events.is_empty());
+}
+
+#[test]
+fn test_core_position_conversion() {
+    let (_env, client) = setup_game();
+
+    client.init_game();
+
+    // Get Pac-Man's position as a cougr_core Position
+    let core_pos = client.get_pacman_core_position();
+    assert_eq!(core_pos.x, 1);
+    assert_eq!(core_pos.y, 1);
+}
+
+#[test]
+fn test_serialized_position() {
+    let (_env, client) = setup_game();
+
+    client.init_game();
+
+    // Get serialized position using ComponentTrait
+    let serialized = client.get_serialized_pacman_position();
+    // Position serialization produces 8 bytes (2 i32 values)
+    assert_eq!(serialized.len(), 8);
+}
+
+#[test]
+fn test_ghost_entity_ids() {
+    let (_env, client) = setup_game();
+
+    let state = client.init_game();
+
+    // Verify each ghost has a unique entity ID
+    for i in 0..state.ghosts.len() {
+        let ghost = state.ghosts.get(i).unwrap();
+        // Entity IDs start at GHOST_ENTITY_ID_START (1) and increment
+        assert_eq!(ghost.entity_id, 1 + (i as u64));
+    }
+}
+
+#[test]
+fn test_position_to_core_position() {
+    // Test the Position helper methods
+    let pos = Position::new(5, 7);
+    let core_pos = pos.to_core_position();
+
+    assert_eq!(core_pos.x, 5);
+    assert_eq!(core_pos.y, 7);
+
+    // Test round-trip
+    let restored = Position::from_core_position(&core_pos);
+    assert_eq!(pos, restored);
 }

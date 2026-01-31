@@ -225,16 +225,53 @@ let state: GameState = env.storage()
 
 ### 3. Cougr-Core Integration
 
-The contract imports cougr-core for ECS patterns:
+The contract uses cougr-core for ECS patterns and event handling:
 
 ```rust
-use cougr_core::*;
+use cougr_core::component::{ComponentTrait, Position as CorePosition};
+use cougr_core::event::{CollisionEvent, Event, EventTrait};
 ```
 
-This provides access to:
-- Component patterns for game entities
-- Event system for game actions
-- Storage utilities optimized for Soroban
+**Position Component**: Game positions integrate with cougr_core's Position:
+```rust
+impl Position {
+    /// Convert to cougr_core Position for ECS integration
+    pub fn to_core_position(&self) -> CorePosition {
+        CorePosition::new(self.x, self.y)
+    }
+}
+```
+
+**Collision Events**: Ghost collisions use cougr_core's event system:
+```rust
+// Each ghost has an entity_id for collision tracking
+pub struct Ghost {
+    pub entity_id: u64,
+    // ...
+}
+
+// Create collision events using cougr_core
+let collision_event = CollisionEvent::new(
+    PACMAN_ENTITY_ID,
+    ghost.entity_id,
+    symbol_short!("ghost"),
+);
+```
+
+**Query Functions**: Get serialized component data:
+```rust
+// Get Pac-Man's position as serialized cougr_core component
+pub fn get_serialized_pacman_position(env: Env) -> Bytes {
+    let core_pos = state.pacman_pos.to_core_position();
+    core_pos.serialize(&env) // Uses ComponentTrait
+}
+```
+
+This provides:
+- **Component patterns**: Position, Velocity components with serialization
+- **Entity IDs**: Unique identifiers for Pac-Man and ghosts
+- **Event system**: CollisionEvent for standardized collision handling
+- **ComponentTrait**: Serialization/deserialization for on-chain storage
 
 ### 4. Game Loop
 

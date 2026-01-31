@@ -20,13 +20,13 @@
 //! 4. Call `update_tick` to advance the game state
 //! 5. Query `get_score`, `get_lives`, etc. to check game status
 
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Env, Vec};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, symbol_short, Env, Vec};
 
 // Import cougr-core for ECS patterns and utilities
 // The cougr-core package provides Entity-Component-System patterns optimized
 // for Soroban smart contracts, simplifying on-chain game development.
-#[allow(unused_imports)]
-use cougr_core::*;
+use cougr_core::component::{ComponentTrait, Position as CorePosition};
+use cougr_core::event::{CollisionEvent, Event, EventTrait};
 
 // =============================================================================
 // Constants
@@ -142,6 +142,9 @@ pub enum CellType {
 ///
 /// Coordinates use i32 to allow for easier boundary calculations
 /// and potential negative positions during movement math.
+///
+/// This extends cougr_core::component::Position with maze-specific
+/// helper methods for index conversion.
 #[contracttype]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Position {
@@ -169,15 +172,31 @@ impl Position {
             y: (index / MAZE_WIDTH) as i32,
         }
     }
+
+    /// Convert to cougr_core Position for ECS integration
+    pub fn to_core_position(&self) -> CorePosition {
+        CorePosition::new(self.x, self.y)
+    }
+
+    /// Create from cougr_core Position
+    pub fn from_core_position(core_pos: &CorePosition) -> Self {
+        Self {
+            x: core_pos.x,
+            y: core_pos.y,
+        }
+    }
 }
 
 /// Ghost entity with position and behavior state
 ///
 /// Each ghost maintains its own position, direction, and mode.
 /// The start_position is used to respawn the ghost when eaten.
+/// Uses cougr_core entity patterns with a unique entity_id.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct Ghost {
+    /// Unique entity ID for this ghost (used with cougr_core CollisionEvent)
+    pub entity_id: u64,
     pub position: Position,
     pub direction: Direction,
     pub mode: GhostMode,
@@ -185,11 +204,18 @@ pub struct Ghost {
     pub start_position: Position,
 }
 
+/// Entity ID for Pac-Man (constant for collision events)
+const PACMAN_ENTITY_ID: u64 = 0;
+
+/// Starting entity ID for ghosts
+const GHOST_ENTITY_ID_START: u64 = 1;
+
 impl Ghost {
-    /// Create a new ghost at the given position
-    pub fn new(x: i32, y: i32) -> Self {
+    /// Create a new ghost at the given position with a unique entity ID
+    pub fn new(entity_id: u64, x: i32, y: i32) -> Self {
         let pos = Position::new(x, y);
         Self {
+            entity_id,
             position: pos,
             direction: Direction::Up,
             mode: GhostMode::Chase,
@@ -204,6 +230,12 @@ impl Ghost {
         self.mode = GhostMode::Chase;
         self.frightened_timer = 0;
     }
+
+    /// Create a CollisionEvent between this ghost and Pac-Man
+    /// Uses cougr_core's CollisionEvent for standardized event handling
+    pub fn create_collision_event(&self) -> CollisionEvent {
+        CollisionEvent::new(PACMAN_ENTITY_ID, self.entity_id, symbol_short!("ghost"))
+    }
 }
 
 /// Complete game state stored on-chain
@@ -211,6 +243,8 @@ impl Ghost {
 /// This struct contains all data needed to represent the current
 /// state of a Pac-Man game. It is stored in persistent storage
 /// and updated with each game action.
+///
+/// Uses cougr_core patterns for entity management and event tracking.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct GameState {
@@ -220,7 +254,7 @@ pub struct GameState {
     pub pacman_dir: Direction,
     /// Starting position for respawns
     pub pacman_start: Position,
-    /// Array of ghost entities
+    /// Array of ghost entities (each with unique entity_id for cougr_core)
     pub ghosts: Vec<Ghost>,
     /// Flat array representing the maze (row-major order)
     pub maze: Vec<CellType>,
@@ -236,6 +270,8 @@ pub struct GameState {
     pub power_mode_timer: u32,
     /// Number of pellets remaining to collect
     pub pellets_remaining: u32,
+    /// Last collision events (cougr_core Event system integration)
+    pub last_collision_events: Vec<Event>,
 }
 
 // =============================================================================
@@ -287,15 +323,19 @@ impl PacManContract {
 
         // Create ghosts at their starting positions
         let mut ghosts: Vec<Ghost> = Vec::new(&env);
-        ghosts.push_back(Ghost::new(4, 4)); // Ghost 1 - center area
-        ghosts.push_back(Ghost::new(5, 4)); // Ghost 2 - center area
-        ghosts.push_back(Ghost::new(4, 5)); // Ghost 3 - center area
-        ghosts.push_back(Ghost::new(5, 5)); // Ghost 4 - center area
+        // Create ghosts with unique entity IDs for cougr_core collision tracking
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START, 4, 4)); // Ghost 1 - center area
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 1, 5, 4)); // Ghost 2 - center area
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 2, 4, 5)); // Ghost 3 - center area
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 3, 5, 5)); // Ghost 4 - center area
 
         // Pac-Man starting position
         let pacman_start = Position::new(1, 1);
 
         // Create initial game state
+        // Initialize collision events vector using cougr_core Event system
+        let collision_events: Vec<Event> = Vec::new(&env);
+
         let state = GameState {
             pacman_pos: pacman_start,
             pacman_dir: Direction::Right,
@@ -308,6 +348,7 @@ impl PacManContract {
             won: false,
             power_mode_timer: 0,
             pellets_remaining: pellet_count,
+            last_collision_events: collision_events,
         };
 
         // Store game state
@@ -477,6 +518,34 @@ impl PacManContract {
     pub fn check_game_over(env: Env) -> (bool, bool) {
         let state = Self::get_state(&env);
         (state.game_over, state.won)
+    }
+
+    /// Get the last collision events
+    ///
+    /// Returns collision events from the most recent tick, using
+    /// cougr_core's Event system for standardized event handling.
+    pub fn get_collision_events(env: Env) -> Vec<Event> {
+        Self::get_state(&env).last_collision_events
+    }
+
+    /// Get Pac-Man's position as a cougr_core Position component
+    ///
+    /// Demonstrates integration with cougr_core's component system,
+    /// returning a serialized Position using ComponentTrait.
+    pub fn get_pacman_core_position(env: Env) -> CorePosition {
+        let state = Self::get_state(&env);
+        state.pacman_pos.to_core_position()
+    }
+
+    /// Serialize Pac-Man's position using cougr_core ComponentTrait
+    ///
+    /// This demonstrates how to use cougr_core's serialization patterns
+    /// for component data, enabling ECS-style data handling.
+    pub fn get_serialized_pacman_position(env: Env) -> soroban_sdk::Bytes {
+        let state = Self::get_state(&env);
+        let core_pos = state.pacman_pos.to_core_position();
+        // Use cougr_core's ComponentTrait for serialization
+        core_pos.serialize(&env)
     }
 
     // =========================================================================
@@ -724,13 +793,28 @@ impl PacManContract {
     }
 
     /// Check for collisions between Pac-Man and ghosts
-    fn check_ghost_collisions(_env: &Env, state: &mut GameState) {
+    /// Check for collisions between Pac-Man and ghosts
+    ///
+    /// Uses cougr_core's CollisionEvent to track collision events,
+    /// enabling standardized event-driven game logic.
+    fn check_ghost_collisions(env: &Env, state: &mut GameState) {
         let pacman_pos = state.pacman_pos;
+
+        // Clear previous collision events
+        state.last_collision_events = Vec::new(env);
 
         for i in 0..state.ghosts.len() {
             let mut ghost = state.ghosts.get(i).unwrap();
 
             if ghost.position == pacman_pos {
+                // Create collision event using cougr_core's CollisionEvent
+                let collision_event = ghost.create_collision_event();
+
+                // Serialize collision event using cougr_core's EventTrait
+                let event_data = collision_event.serialize(env);
+                let event = Event::new(CollisionEvent::event_type(), event_data);
+                state.last_collision_events.push_back(event);
+
                 match ghost.mode {
                     GhostMode::Chase => {
                         // Pac-Man loses a life
