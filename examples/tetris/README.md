@@ -1,186 +1,52 @@
-# Tetris Smart Contract
+# Tetris
 
-An on-chain Tetris game implementation using the Cougr-Core ECS framework on Stellar's Soroban platform.
+Classic Tetris game implemented on-chain using the cougr-core ECS framework on the Stellar blockchain via Soroban.
+Demonstrates entity-component-system patterns for piece movement, rotation, collision detection, line clearing, scoring, and level progression.
 
-## 📋 Overview
+# ECS Architecture
+Components
 
-This example demonstrates how to build a fully functional game as a smart contract using:
-- **Soroban** - Stellar's smart contract platform
-- **Cougr-Core** - ECS framework for on-chain games
-- **Rust** - Smart contract programming language
+`Piece` — Active tetromino, including shape, X/Y position, and rotation
 
-## 🎮 Game Features
+`GameState` — Stores board state (20x10), current and next pieces, score, level, lines cleared, and game over status
 
-| Feature | Description |
-|---------|-------------|
-| **Game Board** | 20x10 grid with collision detection |
-| **Tetrominoes** | All 7 classic shapes (I, J, L, O, S, T, Z) |
-| **Rotation** | Full 360° rotation system |
-| **Line Clearing** | Automatic detection and scoring |
-| **Scoring** | Points based on lines cleared |
-| **Leveling** | Difficulty increases every 10 lines |
+`TetrominoShape` — Enum representing the 7 standard Tetris pieces (I, J, L, O, S, T, Z)
 
-## 🚀 Quick Start
+Systems
 
-### Prerequisites
+`Movement System` — Moves current piece left, right, down, or hard drop
 
-| Tool | Version | Installation |
-|------|---------|-------------|
-| Rust | 1.70.0+ | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
-| Stellar CLI | Latest | `cargo install --locked stellar-cli --features opt` |
-| WASM Target | - | `rustup target add wasm32-unknown-unknown` |
+`Rotation System` — Rotates pieces clockwise with collision checks
 
-### Build & Test
+`Gravity System` — Moves pieces downward each tick automatically
+
+`Collision System` — Detects piece collisions with walls, floor, or existing blocks
+
+`Line Clearing System` — Removes completed lines and updates score/level
+
+`Game Logic` — Spawns new pieces, checks for game over, and updates board state
+
+# Build & Test
 ```bash
-# Clone the repository
-git clone https://github.com/salazarsebas/Cougr.git
-cd Cougr/examples/tetris
-
-# Build the contract
-cargo build --release
-
-# Run tests
+cargo build
 cargo test
-
-# Build for Soroban
 stellar contract build
 ```
 
-## 📦 Deployment
-
-### Testnet Deployment
+# Deploy to Testnet
 ```bash
-# Deploy to testnet
-stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/tetris.wasm \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet
+stellar contract deploy --wasm target/wasm32-unknown-unknown/release/tetris.wasm --source <secret-key> --network testnet
 ```
 
-**Deployed Contract:**
-- **Network**: Stellar Testnet
-- **Contract ID**: `CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF`
-- **Explorer**: `https://stellar.expert/explorer/testnet/contract/CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF`
+# Contract API
+| Function      | Parameters | Description                                                                             |
+| ------------- | ---------- | --------------------------------------------------------------------------------------- |
+| `init_game`   | `env`      | Initializes the game, creates empty board, and spawns initial pieces                    |
+| `move_left`   | `env`      | Moves current piece left if possible; returns success boolean                           |
+| `move_right`  | `env`      | Moves current piece right if possible; returns success boolean                          |
+| `move_down`   | `env`      | Moves current piece down (soft drop); locks piece if movement fails                     |
+| `rotate`      | `env`      | Rotates current piece clockwise; returns success boolean                                |
+| `drop`        | `env`      | Hard drops current piece until it locks; returns number of rows dropped                 |
+| `update_tick` | `env`      | Advances game tick with gravity; locks piece if it cannot move down                     |
+| `get_state`   | `env`      | Returns current `GameState` including board, pieces, score, level, and game over status |
 
-### Invoke Functions
-```bash
-# Initialize a new game
-stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet \
-  -- init_game
-
-# Move piece left
-stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet \
-  -- move_left
-
-# Update game tick (gravity + line clearing)
-stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet \
-  -- update_tick
-```
-
-## 🎯 Benefits of Using Cougr-Core
-
-### Traditional Soroban vs. Cougr-Core
-
-| Aspect | Traditional Soroban | With Cougr-Core ECS |
-|--------|-------------------|-------------------|
-| **Code Organization** | Monolithic contract logic | Modular components & systems |
-| **State Management** | Manual storage handling | Automatic entity-component management |
-| **Game Logic** | Tightly coupled functions | Reusable, composable systems |
-| **Scalability** | Difficult to extend | Easy to add new features |
-| **Code Reuse** | Limited | High - components are portable |
-| **Testing** | Complex integration tests | Unit testable components |
-
-### Cougr-Core Advantages
-
-1. **Entity-Component-System Pattern**
-   - Separates data (components) from logic (systems)
-   - Makes code more maintainable and testable
-   - Enables parallel processing of game logic
-
-2. **Simplified State Management**
-```rust
-   // Traditional Soroban
-   env.storage().instance().set(&DataKey::GameState, &state);
-   
-   // With Cougr-Core
-   world.spawn_empty()
-       .insert(Position { x: 5, y: 0 })
-       .insert(Tetromino { shape: Shape::I });
-```
-
-3. **Reusable Components**
-   - Components can be shared across different game types
-   - Systems can be reused for similar game mechanics
-   - Reduces development time for new games
-
-4. **Better Code Organization**
-   - Clear separation of concerns
-   - Easier to understand and debug
-   - Modular architecture
-
-## 🧪 Testing
-```bash
-# Run all tests
-cargo test
-
-# Run with output
-cargo test -- --nocapture
-
-# Test specific function
-cargo test test_rotate
-```
-
-### Test Coverage
-
-| Test | Description |
-|------|-------------|
-| `test_init_game` | Verifies game initialization |
-| `test_move_left` | Tests left movement |
-| `test_move_right` | Tests right movement |
-| `test_move_down` | Tests downward movement |
-| `test_rotate` | Tests piece rotation |
-| `test_update_tick` | Tests game tick and line clearing |
-| `test_game_over` | Tests end game detection |
-
-## 📁 Project Structure
-```
-examples/tetris/
-├── Cargo.toml          # Dependencies & build config
-├── .gitignore          # Git ignore patterns
-├── README.md           # This file
-└── src/
-    └── lib.rs          # Smart contract implementation
-```
-
-## 🔧 Configuration
-
-**Cargo.toml**
-```toml
-[dependencies]
-soroban-sdk = "23.0.2"
-cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
-```
-
-## 📚 Resources
-
-- [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
-- [Stellar Documentation](https://developers.stellar.org/)
-- [Cougr Repository](https://github.com/salazarsebas/Cougr)
-- [Rust Book](https://doc.rust-lang.org/book/)
-
-## 🤝 Contributing
-
-This example is part of the Cougr framework. Contributions are welcome!
-
-## 📄 License
-
-Licensed under MIT OR Apache-2.0
