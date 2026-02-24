@@ -1,221 +1,56 @@
-# Pokémon Mini On-Chain Game
+# Pokémon Mini
 
-A Pokémon-style mini game implemented as a Soroban smart contract using the **cougr-core** ECS framework on the Stellar blockchain.
+A Pokémon-style mini game demonstrating on-chain mechanics like deterministic movement, encounters, and turn-based battles using the `cougr-core` ECS framework on the Stellar blockchain via Soroban.
 
-## Overview
+# ECS Architecture
+Components
 
-This example demonstrates how to build deterministic on-chain game logic with:
+`Position` — Stores `x, y` coordinates of entities (player or creatures)
 
-| Feature | Description |
-|---------|-------------|
-| **Tile Map** | 8x8 grid with deterministic tile placement |
-| **Movement** | Grid-based with collision detection |
-| **Encounters** | Deterministic triggering on TallGrass tiles |
-| **Battle** | Turn-based 1v1 combat system |
+`Direction` — Stores facing direction of the player
 
----
+`Creature` — Stores stats like species, level, HP, attack, and defense
 
-## Why cougr-core?
+`BattleState` — Tracks current battle: turn, player/enemy HP, result
 
-| Aspect | Benefit |
-|--------|---------|
-| **ComponentTrait** | Standardized serialization for on-chain storage |
-| **Type Safety** | Unique `Symbol` identifiers per component |
-| **Storage Optimization** | Table vs Sparse storage strategies |
-| **Code Reusability** | Proven ECS patterns |
+`GameState` — Tracks player stats: move count, wins, losses, escapes, battle state
 
----
+Systems
 
-## Prerequisites
+`init_player()` — Creates the player entity with spawn position and starter creature
 
-| Tool | Installation |
-|------|--------------|
-| Rust | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| WASM Target | `rustup target add wasm32-unknown-unknown` |
-| Stellar CLI | `brew install stellar-cli` (macOS) |
+`move_player()` — Handles grid-based movement, collision detection, and encounter triggering
 
----
+`start_battle()` — Initializes a battle when an encounter occurs
 
-## Quick Start
+`process_battle_action()` — Executes player actions (Attack, Defend, Run) and resolves battle outcomes
 
-### Build
+`get_player_position() / get_player_creature()` — Query functions for player and creature state
 
+`update_player_creature()` — Updates creature stats after battle (e.g., healing on win)
+
+# Build & Test
 ```bash
-cd examples/pokemon_mini
-
-# Development build
 cargo build
-
-# Build WASM contract
+cargo test
 stellar contract build
 ```
 
-### Test
-
+# Deploy to Testnet
 ```bash
-cargo test
+stellar contract deploy --wasm target/wasm32-unknown-unknown/release/pokemon_mini.wasm --source <secret-key> --network testnet
 ```
 
-### Lint
+# Contract API
+| Function             | Parameters            | Description                                                                                                   |
+| -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `init_player`        | `env`                 | Initializes a new player at spawn with starter creature                                                       |
+| `get_player_state`   | `env`                 | Returns (x, y, move_count, in_battle, HP)                                                                     |
+| `get_creature_stats` | `env`                 | Returns creature stats (species_id, level, hp, max_hp, atk, def)                                              |
+| `get_tile`           | `x: i32, y: i32`      | Returns tile type at specified coordinates (0: Grass, 1: Wall, 2: Water, 3: TallGrass, 4: Spawn)              |
+| `get_map_size`       | —                     | Returns map dimensions `(width, height)`                                                                      |
+| `get_battle_stats`   | `env`                 | Returns (wins, losses, escapes)                                                                               |
+| `move_player`        | `env, direction: u32` | Moves player; direction 0=Up,1=Down,2=Left,3=Right; returns movement status (0=blocked, 1=moved, 2=encounter) |
+| `get_battle_state`   | `env`                 | Returns (in_battle, player_hp, enemy_hp, turn, result)                                                        |
+| `battle_action`      | `env, action: u32`    | Executes battle action (0=Attack,1=Defend,2=Run); returns action result (0=invalid,1=ongoing,2=finished)      |
 
-```bash
-cargo fmt --check
-cargo clippy -- -D warnings
-```
-
----
-
-## Contract Functions
-
-### Initialization
-
-| Function | Description |
-|----------|-------------|
-| `init_player()` | Create player at spawn (1,1) with starter creature |
-
-### Movement
-
-| Function | Parameters | Returns | Description |
-|----------|------------|---------|-------------|
-| `move_player` | `direction: u32` | `u32` | Move player (0=blocked, 1=moved, 2=encounter) |
-| `get_tile` | `x, y: i32` | `u32` | Get tile type at position |
-| `get_map_size` | - | `(i32, i32)` | Returns (8, 8) |
-
-**Direction Values:** 0=Up, 1=Down, 2=Left, 3=Right
-
-### State Queries
-
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `get_player_state` | `(x, y, moves, in_battle, hp)` | Player position and status |
-| `get_creature_stats` | `(species, level, hp, max_hp, atk, def)` | Creature stats |
-| `get_battle_stats` | `(wins, losses, escapes)` | Battle history |
-
-### Combat
-
-| Function | Parameters | Returns | Description |
-|----------|------------|---------|-------------|
-| `get_battle_state` | - | `(in_battle, player_hp, enemy_hp, turn, result)` | Current battle |
-| `battle_action` | `action: u32` | `u32` | Execute action (0=invalid, 1=continue, 2=ended) |
-
-**Action Values:** 0=Attack, 1=Defend, 2=Run
-
-**Result Values:** 0=None, 1=Win, 2=Lose, 3=Escaped
-
----
-
-## Map Layout
-
-```
-8x8 Grid:
-+--------+
-|WWWWWWWW|  W = Wall
-|WS..WTTW|  S = Spawn
-|W...WTTW|  T = TallGrass
-|W..T.TTW|  . = Grass
-|W......W|  ~ = Water
-|WTTT.~~W|
-|WTTT.~~W|
-|WWWWWWWW|
-+--------+
-```
-
----
-
-## Game Mechanics
-
-### Encounter System (Deterministic)
-
-Encounters trigger on TallGrass when: `(x + y + move_count) % 5 == 0`
-
-### Battle Damage Formula
-
-```
-damage = max(1, attacker_atk - defender_def)
-```
-
-- Player always acts first
-- Defending adds +3 to defense for that turn
-- Winning heals creature fully
-
----
-
-## Deployed Contract (Testnet)
-
-> **Contract ID:** `CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52`
-
-| Network | Status | Explorer |
-|---------|--------|----------|
-| Stellar Testnet | ✅ Live | [View on Stellar Lab](https://stellar-explorer.acachete.xyz/contract/CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52) |
-
----
-
-## Deployment
-
-### Testnet
-
-```bash
-# Generate keypair
-stellar keys generate --global alice --network testnet
-
-# Fund account
-# Visit: https://friendbot.stellar.org/?addr=<YOUR_ADDRESS>
-
-# Deploy
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/pokemon_mini.wasm \
-  --source alice \
-  --network testnet
-```
-
-### Playing
-
-```bash
-# Use the deployed contract
-CONTRACT_ID="CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52"
-
-# Initialize player
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- init_player
-
-# Get player state (returns: [x, y, moves, in_battle, hp])
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- get_player_state
-
-# Move right (direction: 0=Up, 1=Down, 2=Left, 3=Right)
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- move_player --direction 3
-
-# Attack in battle (action: 0=Attack, 1=Defend, 2=Run)
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- battle_action --action 0
-```
-
----
-
-## Project Structure
-
-```
-examples/pokemon_mini/
-├── Cargo.toml          # Dependencies (cougr-core, soroban-sdk)
-├── README.md           # This documentation
-├── .gitignore          # Ignore rules
-└── src/
-    ├── lib.rs          # Contract entry points + tests
-    ├── components.rs   # ECS components using ComponentTrait
-    ├── systems.rs      # Game logic (map, movement, battle)
-    └── simple_world.rs # Entity-component storage
-```
-
----
-
-## References
-
-| Resource | Link |
-|----------|------|
-| Soroban Docs | [developers.stellar.org](https://developers.stellar.org/docs/build/smart-contracts) |
-| Stellar CLI | [CLI Documentation](https://developers.stellar.org/docs/tools/cli) |
-| Cougr Repository | [github.com/salazarsebas/Cougr](https://github.com/salazarsebas/Cougr) |
-
-
----
-
-## License
-
-Part of the Cougr project. See main repository for license information.
