@@ -35,25 +35,25 @@ fn test_init_game() {
     let state = client.init_game();
 
     // Check initial values
-    assert_eq!(state.score, 0);
-    assert_eq!(state.lives, INITIAL_LIVES);
-    assert!(!state.game_over);
-    assert!(!state.won);
-    assert_eq!(state.power_mode_timer, 0);
+    assert_eq!(state.stats.score, 0);
+    assert_eq!(state.stats.lives, INITIAL_LIVES);
+    assert!(!state.status.game_over);
+    assert!(!state.status.won);
+    assert_eq!(state.stats.power_mode_timer, 0);
 
     // Check Pac-Man starting position
-    assert_eq!(state.pacman_pos.x, 1);
-    assert_eq!(state.pacman_pos.y, 1);
-    assert_eq!(state.pacman_dir, Direction::Right);
+    assert_eq!(state.pacman.position.x, 1);
+    assert_eq!(state.pacman.position.y, 1);
+    assert_eq!(state.pacman.direction, Direction::Right);
 
     // Check 4 ghosts were created
     assert_eq!(state.ghosts.len(), 4);
 
     // Check maze dimensions
-    assert_eq!(state.maze.len(), (MAZE_WIDTH * MAZE_HEIGHT));
+    assert_eq!(state.maze.grid.len(), (MAZE_WIDTH * MAZE_HEIGHT));
 
     // Check pellets exist
-    assert!(state.pellets_remaining > 0);
+    assert!(state.maze.pellets_remaining > 0);
 }
 
 #[test]
@@ -63,19 +63,19 @@ fn test_maze_layout() {
     let state = client.init_game();
 
     // Check corners are walls
-    assert_eq!(state.maze.get(0).unwrap(), CellType::Wall); // Top-left
-    assert_eq!(state.maze.get(9).unwrap(), CellType::Wall); // Top-right
-    assert_eq!(state.maze.get(90).unwrap(), CellType::Wall); // Bottom-left
-    assert_eq!(state.maze.get(99).unwrap(), CellType::Wall); // Bottom-right
+    assert_eq!(state.maze.grid.get(0).unwrap(), CellType::Wall); // Top-left
+    assert_eq!(state.maze.grid.get(9).unwrap(), CellType::Wall); // Top-right
+    assert_eq!(state.maze.grid.get(90).unwrap(), CellType::Wall); // Bottom-left
+    assert_eq!(state.maze.grid.get(99).unwrap(), CellType::Wall); // Bottom-right
 
     // Check power pellets in near-corner positions
     // Row 1: #P......P#
-    assert_eq!(state.maze.get(11).unwrap(), CellType::PowerPellet); // (1,1)
-    assert_eq!(state.maze.get(18).unwrap(), CellType::PowerPellet); // (8,1)
+    assert_eq!(state.maze.grid.get(11).unwrap(), CellType::PowerPellet); // (1,1)
+    assert_eq!(state.maze.grid.get(18).unwrap(), CellType::PowerPellet); // (8,1)
 
     // Row 8: #P......P#
-    assert_eq!(state.maze.get(81).unwrap(), CellType::PowerPellet); // (1,8)
-    assert_eq!(state.maze.get(88).unwrap(), CellType::PowerPellet); // (8,8)
+    assert_eq!(state.maze.grid.get(81).unwrap(), CellType::PowerPellet); // (1,8)
+    assert_eq!(state.maze.grid.get(88).unwrap(), CellType::PowerPellet); // (8,8)
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn test_change_direction_up() {
     client.change_direction(&Direction::Up);
 
     let state = client.get_game_state();
-    assert_eq!(state.pacman_dir, Direction::Up);
+    assert_eq!(state.pacman.direction, Direction::Up);
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn test_change_direction_down() {
     client.change_direction(&Direction::Down);
 
     let state = client.get_game_state();
-    assert_eq!(state.pacman_dir, Direction::Down);
+    assert_eq!(state.pacman.direction, Direction::Down);
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn test_change_direction_left() {
     client.change_direction(&Direction::Left);
 
     let state = client.get_game_state();
-    assert_eq!(state.pacman_dir, Direction::Left);
+    assert_eq!(state.pacman.direction, Direction::Left);
 }
 
 #[test]
@@ -146,7 +146,7 @@ fn test_change_direction_right() {
     client.change_direction(&Direction::Right);
 
     let state = client.get_game_state();
-    assert_eq!(state.pacman_dir, Direction::Right);
+    assert_eq!(state.pacman.direction, Direction::Right);
 }
 
 // =============================================================================
@@ -161,14 +161,14 @@ fn test_pacman_moves_right() {
     // Default direction is Right, starting at (1,1)
 
     let state_before = client.get_game_state();
-    let start_x = state_before.pacman_pos.x;
+    let start_x = state_before.pacman.position.x;
 
     client.update_tick();
 
     let state_after = client.get_game_state();
     // Should have moved right (unless blocked by wall)
     // Position (2,1) should be a pellet, so movement should succeed
-    assert_eq!(state_after.pacman_pos.x, start_x + 1);
+    assert_eq!(state_after.pacman.position.x, start_x + 1);
 }
 
 #[test]
@@ -179,13 +179,13 @@ fn test_pacman_moves_down() {
     client.change_direction(&Direction::Down);
 
     let state_before = client.get_game_state();
-    let start_y = state_before.pacman_pos.y;
+    let start_y = state_before.pacman.position.y;
 
     client.update_tick();
 
     let state_after = client.get_game_state();
     // Position (1,2) should be a pellet based on maze layout
-    assert_eq!(state_after.pacman_pos.y, start_y + 1);
+    assert_eq!(state_after.pacman.position.y, start_y + 1);
 }
 
 #[test]
@@ -201,7 +201,7 @@ fn test_pacman_blocked_by_wall() {
     let state_after = client.get_game_state();
 
     // Should stay in same position because wall blocks movement
-    assert_eq!(state_before.pacman_pos, state_after.pacman_pos);
+    assert_eq!(state_before.pacman.position, state_after.pacman.position);
 }
 
 // =============================================================================
@@ -215,8 +215,8 @@ fn test_regular_pellet_collection() {
     client.init_game();
 
     let state_before = client.get_game_state();
-    let score_before = state_before.score;
-    let pellets_before = state_before.pellets_remaining;
+    let score_before = state_before.stats.score;
+    let pellets_before = state_before.maze.pellets_remaining;
 
     // Move right to collect pellet at (2,1)
     client.update_tick();
@@ -224,15 +224,15 @@ fn test_regular_pellet_collection() {
     let state_after = client.get_game_state();
 
     // Score should increase by PELLET_POINTS
-    assert_eq!(state_after.score, score_before + PELLET_POINTS);
+    assert_eq!(state_after.stats.score, score_before + PELLET_POINTS);
 
     // Pellet count should decrease
-    assert_eq!(state_after.pellets_remaining, pellets_before - 1);
+    assert_eq!(state_after.maze.pellets_remaining, pellets_before - 1);
 
     // Cell should now be empty
-    let pos = state_after.pacman_pos;
+    let pos = state_after.pacman.position;
     let idx = pos.to_index();
-    assert_eq!(state_after.maze.get(idx).unwrap(), CellType::Empty);
+    assert_eq!(state_after.maze.grid.get(idx).unwrap(), CellType::Empty);
 }
 
 #[test]
@@ -248,7 +248,7 @@ fn test_power_pellet_collection() {
     assert_eq!(points, POWER_PELLET_POINTS);
 
     let state = client.get_game_state();
-    assert_eq!(state.power_mode_timer, POWER_MODE_DURATION);
+    assert_eq!(state.stats.power_mode_timer, POWER_MODE_DURATION);
 
     // All ghosts should be frightened
     for i in 0..state.ghosts.len() {
@@ -315,13 +315,13 @@ fn test_frightened_mode_timer_decrements() {
     client.eat_pellet();
 
     let state_1 = client.get_game_state();
-    assert_eq!(state_1.power_mode_timer, POWER_MODE_DURATION);
+    assert_eq!(state_1.stats.power_mode_timer, POWER_MODE_DURATION);
 
     // Run one tick
     client.update_tick();
 
     let state_2 = client.get_game_state();
-    assert_eq!(state_2.power_mode_timer, POWER_MODE_DURATION - 1);
+    assert_eq!(state_2.stats.power_mode_timer, POWER_MODE_DURATION - 1);
 }
 
 #[test]
@@ -332,7 +332,7 @@ fn test_frightened_mode_ends() {
     client.eat_pellet(); // Activate power mode
 
     let state_after_power = client.get_game_state();
-    assert_eq!(state_after_power.power_mode_timer, POWER_MODE_DURATION);
+    assert_eq!(state_after_power.stats.power_mode_timer, POWER_MODE_DURATION);
 
     // Verify that all ghosts are now frightened
     for i in 0..state_after_power.ghosts.len() {
@@ -345,15 +345,15 @@ fn test_frightened_mode_ends() {
     let mut final_state = state_after_power.clone();
     for _ in 0..3 {
         let state = client.get_game_state();
-        if state.game_over {
+        if state.status.game_over {
             break;
         }
         final_state = client.update_tick();
     }
 
     // Timer should have decreased (unless game ended)
-    if !final_state.game_over {
-        assert!(final_state.power_mode_timer < POWER_MODE_DURATION);
+    if !final_state.status.game_over {
+        assert!(final_state.stats.power_mode_timer < POWER_MODE_DURATION);
     }
 }
 
@@ -406,7 +406,7 @@ fn test_get_maze() {
     client.init_game();
 
     let maze = client.get_maze();
-    assert_eq!(maze.len(), (MAZE_WIDTH * MAZE_HEIGHT));
+    assert_eq!(maze.len(), (MAZE_WIDTH * MAZE_HEIGHT) as u32);
 }
 
 #[test]
@@ -434,7 +434,7 @@ fn test_game_over_prevents_direction_change() {
     // This tests that the game handles the game over state correctly
     // We can't easily force game over without playing, so we test the flow
     let state = client.get_game_state();
-    assert!(!state.game_over); // Game should not be over initially
+    assert!(!state.status.game_over); // Game should not be over initially
 }
 
 #[test]
@@ -445,7 +445,7 @@ fn test_game_over_prevents_tick() {
 
     // Verify game can process ticks when not over
     let state = client.update_tick();
-    assert!(!state.game_over || state.lives == 0 || state.pellets_remaining == 0);
+    assert!(!state.status.game_over || state.stats.lives == 0 || state.maze.pellets_remaining == 0);
 }
 
 // =============================================================================
@@ -537,7 +537,7 @@ fn test_multiple_direction_changes() {
     client.change_direction(&Direction::Right);
 
     let state = client.get_game_state();
-    assert_eq!(state.pacman_dir, Direction::Right);
+    assert_eq!(state.pacman.direction, Direction::Right);
 }
 
 // =============================================================================

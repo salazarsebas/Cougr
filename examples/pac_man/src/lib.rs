@@ -187,6 +187,70 @@ impl Position {
     }
 }
 
+/// PacMan Component
+/// Separates player-specific state for ECS decomposition.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct PacMan {
+    pub position: Position,
+    pub direction: Direction,
+    pub start_position: Position,
+}
+
+impl PacMan {
+    pub fn new(pos: Position) -> Self {
+        Self {
+            position: pos,
+            direction: Direction::Right,
+            start_position: pos,
+        }
+    }
+}
+
+/// Maze Component
+/// Encapsulates the world grid and collectible tracking.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct Maze {
+    pub grid: Vec<CellType>,
+    pub pellets_remaining: u32,
+}
+
+/// GameStats Component
+/// Acts as a resource for global game metrics.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct GameStats {
+    pub score: u32,
+    pub lives: u32,
+    pub power_mode_timer: u32,
+}
+
+impl GameStats {
+    pub fn new() -> Self {
+        Self {
+            score: 0,
+            lives: INITIAL_LIVES,
+            power_mode_timer: 0,
+        }
+    }
+}
+
+/// GameStatus Component
+/// Tracks the progression and lifecycle of the match.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct GameStatus {
+    pub game_over: bool,
+    pub won: bool,
+}
+
+impl GameStatus {
+    pub fn new() -> Self {
+        Self { game_over: false, won: false }
+    }
+}
+
 /// Ghost entity with position and behavior state
 ///
 /// Each ghost maintains its own position, direction, and mode.
@@ -248,29 +312,11 @@ impl Ghost {
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct GameState {
-    /// Current position of Pac-Man
-    pub pacman_pos: Position,
-    /// Current direction Pac-Man is facing
-    pub pacman_dir: Direction,
-    /// Starting position for respawns
-    pub pacman_start: Position,
-    /// Array of ghost entities (each with unique entity_id for cougr_core)
+    pub pacman: PacMan,
     pub ghosts: Vec<Ghost>,
-    /// Flat array representing the maze (row-major order)
-    pub maze: Vec<CellType>,
-    /// Current score
-    pub score: u32,
-    /// Remaining lives
-    pub lives: u32,
-    /// Whether the game has ended
-    pub game_over: bool,
-    /// Whether the player won (all pellets collected)
-    pub won: bool,
-    /// Remaining ticks of power mode
-    pub power_mode_timer: u32,
-    /// Number of pellets remaining to collect
-    pub pellets_remaining: u32,
-    /// Last collision events (cougr_core Event system integration)
+    pub maze: Maze,
+    pub stats: GameStats,
+    pub status: GameStatus,
     pub last_collision_events: Vec<Event>,
 }
 
@@ -309,45 +355,32 @@ impl PacManContract {
             panic!("Game already initialized");
         }
 
-        // Create the maze layout
-        let maze = Self::create_maze(&env);
-
-        // Count pellets in the maze
+        let grid = Self::create_maze(&env);
         let mut pellet_count: u32 = 0;
-        for i in 0..maze.len() {
-            let cell = maze.get(i).unwrap();
+        for i in 0..grid.len() {
+            let cell = grid.get(i).unwrap();
             if cell == CellType::Pellet || cell == CellType::PowerPellet {
                 pellet_count += 1;
             }
         }
 
-        // Create ghosts at their starting positions
+        let maze = Maze { grid, pellets_remaining: pellet_count };
+
         let mut ghosts: Vec<Ghost> = Vec::new(&env);
-        // Create ghosts with unique entity IDs for cougr_core collision tracking
-        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START, 4, 4)); // Ghost 1 - center area
-        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 1, 5, 4)); // Ghost 2 - center area
-        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 2, 4, 5)); // Ghost 3 - center area
-        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 3, 5, 5)); // Ghost 4 - center area
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START, 4, 4));
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 1, 5, 4));
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 2, 4, 5));
+        ghosts.push_back(Ghost::new(GHOST_ENTITY_ID_START + 3, 5, 5));
 
-        // Pac-Man starting position
-        let pacman_start = Position::new(1, 1);
-
-        // Create initial game state
-        // Initialize collision events vector using cougr_core Event system
+        let pacman = PacMan::new(Position::new(1, 1));
         let collision_events: Vec<Event> = Vec::new(&env);
 
         let state = GameState {
-            pacman_pos: pacman_start,
-            pacman_dir: Direction::Right,
-            pacman_start,
+            pacman,
             ghosts,
             maze,
-            score: 0,
-            lives: INITIAL_LIVES,
-            game_over: false,
-            won: false,
-            power_mode_timer: 0,
-            pellets_remaining: pellet_count,
+            stats: GameStats::new(),
+            status: GameStatus::new(),
             last_collision_events: collision_events,
         };
 
@@ -378,11 +411,11 @@ impl PacManContract {
     pub fn change_direction(env: Env, direction: Direction) {
         let mut state = Self::get_state(&env);
 
-        if state.game_over {
+        if state.status.game_over {
             panic!("Game is over");
         }
 
-        state.pacman_dir = direction;
+        state.pacman.direction = direction;
         env.storage().instance().set(&DataKey::GameState, &state);
     }
 
@@ -403,37 +436,19 @@ impl PacManContract {
     pub fn update_tick(env: Env) -> GameState {
         let mut state = Self::get_state(&env);
 
-        if state.game_over {
+        if state.status.game_over {
             panic!("Game is over");
         }
 
-        // Move Pac-Man
-        Self::move_pacman(&env, &mut state);
+        // Execute Systems
+        systems::player_movement_system(&mut state.pacman, &state.maze);
+        systems::collectible_system(&mut state.pacman, &mut state.maze, &mut state.stats, &mut state.ghosts);
+        systems::ghost_movement_system(&state.pacman, &mut state.ghosts, &state.maze);
+        systems::collision_system(&env, &mut state.pacman, &mut state.ghosts, &mut state.stats, &mut state.status, &mut state.last_collision_events);
 
-        // Check for pellet collection at new position
-        Self::check_pellet_collection(&env, &mut state);
-
-        // Move ghosts
-        Self::move_ghosts(&env, &mut state);
-
-        // Check for ghost collisions
-        Self::check_ghost_collisions(&env, &mut state);
-
-        // Decrement power mode timer
-        if state.power_mode_timer > 0 {
-            state.power_mode_timer -= 1;
-
-            // End frightened mode when timer expires
-            if state.power_mode_timer == 0 {
-                Self::end_frightened_mode(&env, &mut state);
-            }
-        }
-
-        // Check win condition
-        if state.pellets_remaining == 0 {
-            state.game_over = true;
-            state.won = true;
-        }
+        // Progress and State Management Systems
+        systems::game_progress_system::handle_power_timer(&mut state.stats, &mut state.ghosts);
+        systems::game_progress_system::check_status(&mut state.maze, &mut state.status);
 
         // Save updated state
         env.storage().instance().set(&DataKey::GameState, &state);
@@ -451,25 +466,25 @@ impl PacManContract {
     pub fn eat_pellet(env: Env) -> u32 {
         let mut state = Self::get_state(&env);
 
-        if state.game_over {
+        if state.status.game_over {
             return 0;
         }
 
-        let idx = state.pacman_pos.to_index();
-        let cell = state.maze.get(idx).unwrap();
+        let idx = state.pacman.position.to_index();
+        let cell = state.maze.grid.get(idx).unwrap();
 
         let points = match cell {
             CellType::Pellet => {
-                state.maze.set(idx, CellType::Empty);
-                state.score += PELLET_POINTS;
-                state.pellets_remaining -= 1;
+                state.maze.grid.set(idx, CellType::Empty);
+                state.stats.score += PELLET_POINTS;
+                state.maze.pellets_remaining -= 1;
                 PELLET_POINTS
             }
             CellType::PowerPellet => {
-                state.maze.set(idx, CellType::Empty);
-                state.score += POWER_PELLET_POINTS;
-                state.pellets_remaining -= 1;
-                Self::activate_power_mode(&env, &mut state);
+                state.maze.grid.set(idx, CellType::Empty);
+                state.stats.score += POWER_PELLET_POINTS;
+                state.maze.pellets_remaining -= 1;
+                systems::collectible_system::activate_power_mode(&mut state.stats, &mut state.ghosts);
                 POWER_PELLET_POINTS
             }
             _ => 0,
@@ -488,22 +503,22 @@ impl PacManContract {
 
     /// Get the current score
     pub fn get_score(env: Env) -> u32 {
-        Self::get_state(&env).score
+        Self::get_state(&env).stats.score
     }
 
     /// Get the remaining lives
     pub fn get_lives(env: Env) -> u32 {
-        Self::get_state(&env).lives
+        Self::get_state(&env).stats.lives
     }
 
     /// Get Pac-Man's current position
     pub fn get_pacman_position(env: Env) -> Position {
-        Self::get_state(&env).pacman_pos
+        Self::get_state(&env).pacman.position
     }
 
     /// Get the current maze state
     pub fn get_maze(env: Env) -> Vec<CellType> {
-        Self::get_state(&env).maze
+        Self::get_state(&env).maze.grid
     }
 
     /// Get the complete game state
@@ -516,7 +531,7 @@ impl PacManContract {
     /// # Returns
     /// A tuple of (game_over, won)
     pub fn check_game_over(env: Env) -> (bool, bool) {
-        let state = Self::get_state(&env);
+        let state = Self::get_state(&env).status;
         (state.game_over, state.won)
     }
 
@@ -534,7 +549,7 @@ impl PacManContract {
     /// returning a serialized Position using ComponentTrait.
     pub fn get_pacman_core_position(env: Env) -> CorePosition {
         let state = Self::get_state(&env);
-        state.pacman_pos.to_core_position()
+        state.pacman.position.to_core_position()
     }
 
     /// Serialize Pac-Man's position using cougr_core ComponentTrait
@@ -543,7 +558,7 @@ impl PacManContract {
     /// for component data, enabling ECS-style data handling.
     pub fn get_serialized_pacman_position(env: Env) -> soroban_sdk::Bytes {
         let state = Self::get_state(&env);
-        let core_pos = state.pacman_pos.to_core_position();
+        let core_pos = state.pacman.position.to_core_position();
         // Use cougr_core's ComponentTrait for serialization
         core_pos.serialize(&env)
     }
@@ -608,20 +623,42 @@ impl PacManContract {
 
         maze
     }
+}
 
-    /// Move Pac-Man in the current direction
-    fn move_pacman(_env: &Env, state: &mut GameState) {
-        let mut new_pos = state.pacman_pos;
+/// ECS Systems for Pac-Man
+/// Logic is decomposed into individual systems according to the Cougr pattern.
+mod systems {
+    use super::*;
 
-        // Calculate new position based on direction
-        match state.pacman_dir {
+    /// PlayerMovementSystem: Handles Pac-Man movement and maze boundary wrapping.
+    pub fn player_movement_system(pacman: &mut PacMan, maze: &Maze) {
+        let mut new_pos = pacman.position;
+
+        match pacman.direction {
             Direction::Up => new_pos.y -= 1,
             Direction::Down => new_pos.y += 1,
             Direction::Left => new_pos.x -= 1,
             Direction::Right => new_pos.x += 1,
         }
 
-        // Handle maze wrapping (tunnel behavior)
+        new_pos = wrap_position(new_pos);
+
+        let idx = new_pos.to_index();
+        if maze.grid.get(idx).unwrap() != CellType::Wall {
+            pacman.position = new_pos;
+        }
+    }
+
+    /// GhostMovementSystem: Logic for ghost AI, alternating between chase and frightened.
+    pub fn ghost_movement_system(pacman: &PacMan, ghosts: &mut Vec<Ghost>, maze: &Maze) {
+        for i in 0..ghosts.len() {
+            let mut ghost = ghosts.get(i).unwrap();
+            update_ghost(&mut ghost, pacman.position, maze);
+            ghosts.set(i, ghost);
+        }
+    }
+
+    fn wrap_position(mut new_pos: Position) -> Position {
         if new_pos.x < 0 {
             new_pos.x = (MAZE_WIDTH - 1) as i32;
         } else if new_pos.x >= MAZE_WIDTH as i32 {
@@ -632,108 +669,38 @@ impl PacManContract {
         } else if new_pos.y >= MAZE_HEIGHT as i32 {
             new_pos.y = 0;
         }
-
-        // Check for wall collision
-        let idx = new_pos.to_index();
-        let cell = state.maze.get(idx).unwrap();
-
-        if cell != CellType::Wall {
-            state.pacman_pos = new_pos;
-        }
-        // If wall, Pac-Man stays in place
+        new_pos
     }
 
-    /// Check and handle pellet collection at Pac-Man's position
-    fn check_pellet_collection(_env: &Env, state: &mut GameState) {
-        let idx = state.pacman_pos.to_index();
-        let cell = state.maze.get(idx).unwrap();
+    fn update_ghost(ghost: &mut Ghost, pacman_pos: Position, maze: &Maze) {
+        if ghost.frightened_timer > 0 {
+            ghost.frightened_timer -= 1;
+            if ghost.frightened_timer == 0 {
+                ghost.mode = GhostMode::Chase;
+            }
+        }
 
-        match cell {
-            CellType::Pellet => {
-                state.maze.set(idx, CellType::Empty);
-                state.score += PELLET_POINTS;
-                state.pellets_remaining -= 1;
-            }
-            CellType::PowerPellet => {
-                state.maze.set(idx, CellType::Empty);
-                state.score += POWER_PELLET_POINTS;
-                state.pellets_remaining -= 1;
-                // Activate power mode inline
-                state.power_mode_timer = POWER_MODE_DURATION;
-                // Set all ghosts to frightened mode
-                for i in 0..state.ghosts.len() {
-                    let mut ghost = state.ghosts.get(i).unwrap();
-                    ghost.mode = GhostMode::Frightened;
-                    ghost.frightened_timer = POWER_MODE_DURATION;
-                    state.ghosts.set(i, ghost);
-                }
-            }
-            _ => {}
+        ghost.direction = calculate_ghost_direction(ghost, pacman_pos, maze);
+
+        let mut new_pos = ghost.position;
+        apply_direction(&mut new_pos, ghost.direction);
+        new_pos = wrap_position(new_pos);
+
+        if maze.grid.get(new_pos.to_index()).unwrap() != CellType::Wall {
+            ghost.position = new_pos;
         }
     }
 
-    /// Move all ghosts according to their AI behavior
-    fn move_ghosts(_env: &Env, state: &mut GameState) {
-        let pacman_pos = state.pacman_pos;
-
-        for i in 0..state.ghosts.len() {
-            let mut ghost = state.ghosts.get(i).unwrap();
-
-            // Update frightened timer
-            if ghost.frightened_timer > 0 {
-                ghost.frightened_timer -= 1;
-                if ghost.frightened_timer == 0 {
-                    ghost.mode = GhostMode::Chase;
-                }
-            }
-
-            // Calculate best direction based on mode
-            let new_dir = Self::calculate_ghost_direction(state, &ghost, pacman_pos);
-            ghost.direction = new_dir;
-
-            // Calculate new position
-            let mut new_pos = ghost.position;
-            match ghost.direction {
-                Direction::Up => new_pos.y -= 1,
-                Direction::Down => new_pos.y += 1,
-                Direction::Left => new_pos.x -= 1,
-                Direction::Right => new_pos.x += 1,
-            }
-
-            // Handle wrapping
-            if new_pos.x < 0 {
-                new_pos.x = (MAZE_WIDTH - 1) as i32;
-            } else if new_pos.x >= MAZE_WIDTH as i32 {
-                new_pos.x = 0;
-            }
-            if new_pos.y < 0 {
-                new_pos.y = (MAZE_HEIGHT - 1) as i32;
-            } else if new_pos.y >= MAZE_HEIGHT as i32 {
-                new_pos.y = 0;
-            }
-
-            // Check for wall collision
-            let idx = new_pos.to_index();
-            let cell = state.maze.get(idx).unwrap();
-
-            if cell != CellType::Wall {
-                ghost.position = new_pos;
-            }
-
-            state.ghosts.set(i, ghost);
+    fn apply_direction(pos: &mut Position, dir: Direction) {
+        match dir {
+            Direction::Up => pos.y -= 1,
+            Direction::Down => pos.y += 1,
+            Direction::Left => pos.x -= 1,
+            Direction::Right => pos.x += 1,
         }
     }
 
-    /// Calculate the best direction for a ghost to move
-    ///
-    /// In Chase mode, ghosts move toward Pac-Man.
-    /// In Frightened mode, ghosts move away from Pac-Man.
-    fn calculate_ghost_direction(
-        state: &GameState,
-        ghost: &Ghost,
-        pacman_pos: Position,
-    ) -> Direction {
-        // Get all possible directions
+    fn calculate_ghost_direction(ghost: &Ghost, pacman_pos: Position, maze: &Maze) -> Direction {
         let directions = [
             Direction::Up,
             Direction::Down,
@@ -743,123 +710,132 @@ impl PacManContract {
         let mut best_dir = ghost.direction;
         let mut best_score: i32 = i32::MIN;
 
-        for dir in directions.iter() {
-            // Calculate new position for this direction
+        for &dir in directions.iter() {
             let mut test_pos = ghost.position;
-            match dir {
-                Direction::Up => test_pos.y -= 1,
-                Direction::Down => test_pos.y += 1,
-                Direction::Left => test_pos.x -= 1,
-                Direction::Right => test_pos.x += 1,
-            }
+            apply_direction(&mut test_pos, dir);
+            test_pos = wrap_position(test_pos);
 
-            // Handle wrapping
-            if test_pos.x < 0 {
-                test_pos.x = (MAZE_WIDTH - 1) as i32;
-            } else if test_pos.x >= MAZE_WIDTH as i32 {
-                test_pos.x = 0;
-            }
-            if test_pos.y < 0 {
-                test_pos.y = (MAZE_HEIGHT - 1) as i32;
-            } else if test_pos.y >= MAZE_HEIGHT as i32 {
-                test_pos.y = 0;
-            }
-
-            // Check if this position is a wall
-            let idx = test_pos.to_index();
-            let cell = state.maze.get(idx).unwrap();
-            if cell == CellType::Wall {
+            if maze.grid.get(test_pos.to_index()).unwrap() == CellType::Wall {
                 continue;
             }
 
-            // Calculate Manhattan distance to Pac-Man
             let new_dx = pacman_pos.x - test_pos.x;
             let new_dy = pacman_pos.y - test_pos.y;
             let distance = new_dx.abs() + new_dy.abs();
 
-            // Score based on mode
             let score = match ghost.mode {
-                GhostMode::Chase => -distance,     // Minimize distance
-                GhostMode::Frightened => distance, // Maximize distance
+                GhostMode::Chase => -distance,
+                GhostMode::Frightened => distance,
             };
 
             if score > best_score {
                 best_score = score;
-                best_dir = *dir;
+                best_dir = dir;
             }
         }
-
         best_dir
     }
 
-    /// Check for collisions between Pac-Man and ghosts
-    /// Check for collisions between Pac-Man and ghosts
-    ///
-    /// Uses cougr_core's CollisionEvent to track collision events,
-    /// enabling standardized event-driven game logic.
-    fn check_ghost_collisions(env: &Env, state: &mut GameState) {
-        let pacman_pos = state.pacman_pos;
+    /// CollectibleSystem: Manages pellet and power pellet consumption.
+    pub fn collectible_system(pacman: &mut PacMan, maze: &mut Maze, stats: &mut GameStats, ghosts: &mut Vec<Ghost>) {
+        let idx = pacman.position.to_index();
+        let cell = maze.grid.get(idx).unwrap();
 
-        // Clear previous collision events
-        state.last_collision_events = Vec::new(env);
+        match cell {
+            CellType::Pellet => {
+                maze.grid.set(idx, CellType::Empty);
+                stats.score += PELLET_POINTS;
+                maze.pellets_remaining -= 1;
+            }
+            CellType::PowerPellet => {
+                maze.grid.set(idx, CellType::Empty);
+                stats.score += POWER_PELLET_POINTS;
+                maze.pellets_remaining -= 1;
+                activate_power_mode(stats, ghosts);
+            }
+            _ => {}
+        }
+    }
 
-        for i in 0..state.ghosts.len() {
-            let mut ghost = state.ghosts.get(i).unwrap();
+    pub fn activate_power_mode(stats: &mut GameStats, ghosts: &mut Vec<Ghost>) {
+        stats.power_mode_timer = POWER_MODE_DURATION;
+        for i in 0..ghosts.len() {
+            let mut ghost = ghosts.get(i).unwrap();
+            ghost.mode = GhostMode::Frightened;
+            ghost.frightened_timer = POWER_MODE_DURATION;
+            ghosts.set(i, ghost);
+        }
+    }
 
-            if ghost.position == pacman_pos {
-                // Create collision event using cougr_core's CollisionEvent
-                let collision_event = ghost.create_collision_event();
+    /// CollisionSystem: Checks for interactions between Pac-Man and Ghosts.
+    pub fn collision_system(
+        env: &Env,
+        pacman: &mut PacMan,
+        ghosts: &mut Vec<Ghost>,
+        stats: &mut GameStats,
+        status: &mut GameStatus,
+        events: &mut Vec<Event>,
+    ) {
+        *events = Vec::new(env);
 
-                // Serialize collision event using cougr_core's EventTrait
-                let event_data = collision_event.serialize(env);
-                let event = Event::new(CollisionEvent::event_type(), event_data);
-                state.last_collision_events.push_back(event);
+        for i in 0..ghosts.len() {
+            let mut ghost = ghosts.get(i).unwrap();
+            if ghost.position == pacman.position {
+                let event = Event::new(
+                    CollisionEvent::event_type(),
+                    ghost.create_collision_event().serialize(env),
+                );
+                events.push_back(event);
 
                 match ghost.mode {
                     GhostMode::Chase => {
-                        // Pac-Man loses a life
-                        state.lives -= 1;
-
-                        if state.lives == 0 {
-                            state.game_over = true;
-                            state.won = false;
+                        stats.lives -= 1;
+                        if stats.lives == 0 {
+                            status.game_over = true;
+                            status.won = false;
                         } else {
-                            // Respawn Pac-Man at start
-                            state.pacman_pos = state.pacman_start;
-                            state.pacman_dir = Direction::Right;
+                            pacman.position = pacman.start_position;
+                            pacman.direction = Direction::Right;
                         }
                     }
                     GhostMode::Frightened => {
-                        // Pac-Man eats the ghost
-                        state.score += GHOST_POINTS;
+                        stats.score += GHOST_POINTS;
                         ghost.respawn();
-                        state.ghosts.set(i, ghost);
+                        ghosts.set(i, ghost);
                     }
                 }
             }
         }
     }
 
-    /// Activate power mode (called when eating a power pellet)
-    fn activate_power_mode(_env: &Env, state: &mut GameState) {
-        state.power_mode_timer = POWER_MODE_DURATION;
+    /// GameProgressSystem: Detects global level transitions.
+    pub mod game_progress_system {
+        use super::*;
 
-        // Set all ghosts to frightened mode
-        for i in 0..state.ghosts.len() {
-            let mut ghost = state.ghosts.get(i).unwrap();
-            ghost.mode = GhostMode::Frightened;
-            ghost.frightened_timer = POWER_MODE_DURATION;
-            state.ghosts.set(i, ghost);
+        pub fn check_status(maze: &mut Maze, status: &mut GameStatus) {
+            if maze.pellets_remaining == 0 {
+                status.game_over = true;
+                status.won = true;
+            }
         }
-    }
 
-    /// End frightened mode for all ghosts
-    fn end_frightened_mode(_env: &Env, state: &mut GameState) {
-        for i in 0..state.ghosts.len() {
-            let mut ghost = state.ghosts.get(i).unwrap();
-            ghost.mode = GhostMode::Chase;
-            ghost.frightened_timer = 0;
-            state.ghosts.set(i, ghost);
+        /// Updates power mode timers and reverts ghost behavior when expired.
+        pub fn handle_power_timer(stats: &mut GameStats, ghosts: &mut Vec<Ghost>) {
+            if stats.power_mode_timer > 0 {
+                stats.power_mode_timer -= 1;
+                if stats.power_mode_timer == 0 {
+                    end_frightened_mode(ghosts);
+                }
+            }
+        }
+
+        pub fn end_frightened_mode(ghosts: &mut Vec<Ghost>) {
+            for i in 0..ghosts.len() {
+                let mut ghost = ghosts.get(i).unwrap();
+                ghost.mode = GhostMode::Chase;
+                ghost.frightened_timer = 0;
+                ghosts.set(i, ghost);
+            }
         }
     }
 }
