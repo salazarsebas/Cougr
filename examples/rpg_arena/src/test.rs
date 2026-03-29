@@ -1,7 +1,7 @@
 #![cfg(test)]
 
-use crate::{RPGArenaContract, RPGArenaContractClient, Action, BattleState, CombatantState};
-use soroban_sdk::{Env, Address, testutils::Address as _};
+use crate::{Action, BattleState, CombatantState, RPGArenaContract, RPGArenaContractClient};
+use soroban_sdk::{testutils::Address as _, Address, Env};
 
 fn setup_game(env: &Env) -> (RPGArenaContractClient, Address, Address) {
     let contract_id = env.register_contract(None, RPGArenaContract);
@@ -18,7 +18,7 @@ fn test_initialization() {
 
     client.init_battle(&p1, &p2);
     let state = client.get_state();
-    
+
     assert_eq!(state.p1_hp, 100);
     assert_eq!(state.p2_hp, 100);
     assert_eq!(state.current_turn, p1);
@@ -55,7 +55,7 @@ fn test_defend_interaction() {
 
     // P1 defends
     client.submit_action(&p1, &Action::Defend);
-    
+
     // P2 attacks P1
     client.submit_action(&p2, &Action::Attack);
 
@@ -75,9 +75,9 @@ fn test_special_ability_and_cooldown() {
 
     // P1 uses Special
     client.submit_action(&p1, &Action::Special);
-    
+
     let state = client.get_state();
-    assert_eq!(state.p2_hp, 80); 
+    assert_eq!(state.p2_hp, 80);
 
     // P2 attacks normally
     client.submit_action(&p2, &Action::Attack);
@@ -94,7 +94,7 @@ fn test_status_effect_application_and_expiration() {
 
     client.submit_action(&p1, &Action::Special);
     // P2 HP = 80 now
-    
+
     // P2 attacks (P2's turn, status_effect_system runs for P2 at the end of their turn)
     client.submit_action(&p2, &Action::Attack);
     // P2 was poisoned. Damage is 5. So P2 HP = 80 - 5 = 75.
@@ -157,7 +157,7 @@ fn test_battle_completion() {
         // P2 attacks
         client.submit_action(&p2, &Action::Attack);
     }
-    
+
     let state = client.get_state();
     assert_eq!(state.p2_hp, 0);
     assert_eq!(state.status, 1); // P1 wins

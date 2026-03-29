@@ -214,7 +214,15 @@ impl RPGArenaContract {
         // System 1: Action Validation System
         let val = Self::action_validation_system(&world, &player, &action);
         if !val.0 {
-            panic!("Invalid action: {:?}", val.1);
+            if val.1 == symbol_short!("notturn") {
+                panic!("notturn");
+            } else if val.1 == symbol_short!("cooldown") {
+                panic!("cooldown");
+            } else if val.1 == symbol_short!("gameover") {
+                panic!("gameover");
+            } else {
+                panic!("invalid");
+            }
         }
 
         // System 2 & 3: Damage Resolution & Status Application System

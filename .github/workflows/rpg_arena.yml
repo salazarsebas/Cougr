@@ -14,7 +14,7 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     defaults:
       run:
         working-directory: examples/rpg_arena
@@ -40,7 +40,7 @@ jobs:
         run: cargo test
 
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli || echo "stellar-cli cached"
+        run: brew install stellar-cli
 
       - name: Stellar Contract Build
         run: stellar contract build
