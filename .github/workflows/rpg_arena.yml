@@ -1,0 +1,46 @@
+name: RPG Arena Validation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/rpg_arena/**'
+      - '.github/workflows/rpg_arena.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/rpg_arena/**'
+      - '.github/workflows/rpg_arena.yml'
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: examples/rpg_arena
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+          components: rustfmt, clippy
+
+      - name: Cache Cargo Registry
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check Formatting
+        run: cargo fmt --check
+
+      - name: Clippy Warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Cargo Test
+        run: cargo test
+
+      - name: Install Stellar CLI
+        run: brew install stellar-cli
+
+      - name: Stellar Contract Build
+        run: stellar contract build
