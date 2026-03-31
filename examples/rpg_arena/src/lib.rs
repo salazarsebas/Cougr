@@ -314,85 +314,85 @@ impl RPGArenaContract {
     }
 
     fn damage_resolution_system(
-        env: &Env,
+        _env: &Env,
         world: &mut ECSWorldState,
         player: &Address,
         action: &Action,
     ) {
         let is_p1 = *player == world.player_one;
 
-        let (
-            attacker_stats,
-            defender_stats,
-            defender_statuses,
-            attacker_statuses,
-            attacker_cooldowns,
-        ) = if is_p1 {
-            (
-                &mut world.p1_combatant,
-                &mut world.p2_combatant,
-                &mut world.p2_statuses,
-                &mut world.p1_statuses,
-                &mut world.p1_cooldowns,
-            )
-        } else {
-            (
-                &mut world.p2_combatant,
-                &mut world.p1_combatant,
-                &mut world.p1_statuses,
-                &mut world.p2_statuses,
-                &mut world.p2_cooldowns,
-            )
-        };
-
-        // Determine effective defense (base + DefBuff)
-        let mut def = defender_stats.defense;
-        for i in 0..defender_statuses.len() {
-            let st = defender_statuses.get(i).unwrap();
-            if st.effect_kind == 2 {
-                // DefBuff
-                def += st.magnitude;
+        // Determine effective defense (base + active DefBuff on the defender).
+        // Reads are done before any mutable borrows to keep borrow scopes non-overlapping.
+        let effective_def = {
+            let base = if is_p1 {
+                world.p2_combatant.defense
+            } else {
+                world.p1_combatant.defense
+            };
+            let defender_statuses = if is_p1 {
+                &world.p2_statuses
+            } else {
+                &world.p1_statuses
+            };
+            let mut def = base;
+            for i in 0..defender_statuses.len() {
+                let st = defender_statuses.get(i).unwrap();
+                if st.effect_kind == 2 {
+                    def += st.magnitude;
+                }
             }
-        }
+            def
+        };
 
         match action {
             Action::Attack => {
-                let dmg = 15u32.saturating_sub(def);
-                defender_stats.hp = defender_stats.hp.saturating_sub(dmg);
+                let dmg = 15u32.saturating_sub(effective_def);
+                if is_p1 {
+                    world.p2_combatant.hp = world.p2_combatant.hp.saturating_sub(dmg);
+                } else {
+                    world.p1_combatant.hp = world.p1_combatant.hp.saturating_sub(dmg);
+                }
             }
             Action::Defend => {
-                // Apply a DefBuff for 1 turn
-                let mut buff_id = world.next_entity_id;
-                world.next_entity_id += 1;
-                attacker_statuses.push_back(StatusEffectComponent {
+                // duration: 2 so the buff survives the end-of-turn status tick and
+                // is still active when the opponent resolves their next attack.
+                let buff = StatusEffectComponent {
                     effect_kind: 2,
-                    duration: 1, // Will apply to incoming damage this turn / next turn
+                    duration: 2,
                     magnitude: 10,
-                    entity_id: buff_id,
-                });
+                    entity_id: world.next_entity_id,
+                };
+                world.next_entity_id += 1;
+                if is_p1 {
+                    world.p1_statuses.push_back(buff);
+                } else {
+                    world.p2_statuses.push_back(buff);
+                }
             }
             Action::Special => {
-                let dmg = 25u32.saturating_sub(def);
-                defender_stats.hp = defender_stats.hp.saturating_sub(dmg);
-
-                // Add poison status
-                let mut psn_id = world.next_entity_id;
-                world.next_entity_id += 1;
-                defender_statuses.push_back(StatusEffectComponent {
+                let dmg = 25u32.saturating_sub(effective_def);
+                let poison = StatusEffectComponent {
                     effect_kind: 1,
                     duration: 3,
                     magnitude: 5,
-                    entity_id: psn_id,
-                });
-
-                // Add cooldown
-                let mut cd_id = world.next_entity_id;
+                    entity_id: world.next_entity_id,
+                };
                 world.next_entity_id += 1;
-                attacker_cooldowns.push_back(CooldownComponent {
+                let cooldown = CooldownComponent {
                     action_kind: 1,
                     remaining_turns: 3,
-                    entity_id: cd_id,
-                });
+                    entity_id: world.next_entity_id,
+                };
+                world.next_entity_id += 1;
+                if is_p1 {
+                    world.p2_combatant.hp = world.p2_combatant.hp.saturating_sub(dmg);
+                    world.p2_statuses.push_back(poison);
+                    world.p1_cooldowns.push_back(cooldown);
+                } else {
+                    world.p1_combatant.hp = world.p1_combatant.hp.saturating_sub(dmg);
+                    world.p1_statuses.push_back(poison);
+                    world.p2_cooldowns.push_back(cooldown);
+                }
             }
         }
     }
