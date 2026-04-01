@@ -1,13 +1,13 @@
 #![cfg(test)]
 
-use crate::{Action, BattleState, CombatantState, RPGArenaContract, RPGArenaContractClient};
+use crate::{Action, RPGArenaContract, RPGArenaContractClient};
 use soroban_sdk::{testutils::Address as _, Address, Env};
 
-fn setup_game(env: &Env) -> (RPGArenaContractClient, Address, Address) {
-    let contract_id = env.register_contract(None, RPGArenaContract);
-    let client = RPGArenaContractClient::new(&env, &contract_id);
-    let p1 = Address::generate(&env);
-    let p2 = Address::generate(&env);
+fn setup_game(env: &Env) -> (RPGArenaContractClient<'_>, Address, Address) {
+    let contract_id = env.register(RPGArenaContract, ());
+    let client = RPGArenaContractClient::new(env, &contract_id);
+    let p1 = Address::generate(env);
+    let p2 = Address::generate(env);
     (client, p1, p2)
 }
 
@@ -23,7 +23,7 @@ fn test_initialization() {
     assert_eq!(state.p2_hp, 100);
     assert_eq!(state.current_turn, p1);
     assert_eq!(state.status, 0); // Ongoing
-    assert_eq!(client.is_finished(), false);
+    assert!(!client.is_finished());
 
     let p1_state = client.get_combatant(&p1);
     assert_eq!(p1_state.hp, 100);
@@ -161,7 +161,7 @@ fn test_battle_completion() {
     let state = client.get_state();
     assert_eq!(state.p2_hp, 0);
     assert_eq!(state.status, 1); // P1 wins
-    assert_eq!(client.is_finished(), true);
+    assert!(client.is_finished());
 
     // Further actions should be rejected with panic
     client.submit_action(&p1, &Action::Attack);
