@@ -1,0 +1,55 @@
+name: Tower Defense CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/tower_defense/**'
+      - '.github/workflows/tower_defense.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/tower_defense/**'
+      - '.github/workflows/tower_defense.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    name: CI
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: examples/tower_defense
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: examples/tower_defense
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build
+        run: cargo build
+
+      - name: Test
+        run: cargo test
+
+      - name: Install Stellar CLI
+        run: brew install stellar-cli
+
+      - name: Stellar contract build
+        run: stellar contract build

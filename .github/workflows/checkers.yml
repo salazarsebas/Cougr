@@ -1,0 +1,69 @@
+name: Checkers Example CI
+
+on:
+  push:
+    paths:
+      - "examples/checkers/**"
+      - ".github/workflows/checkers.yml"
+  pull_request:
+    paths:
+      - "examples/checkers/**"
+      - ".github/workflows/checkers.yml"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  checkers:
+    name: Lint · Test · Build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: examples/checkers
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache Cargo registry and build artefacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            examples/checkers/target
+          key: ${{ runner.os }}-checkers-${{ hashFiles('examples/checkers/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-checkers-
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Run Clippy (all targets, deny warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Install Stellar CLI
+        run: |
+          curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify Stellar CLI
+        run: stellar version
+
+      - name: Build Soroban WASM contract
+        run: stellar contract build
+
+      - name: Verify WASM artefact exists
+        run: |
+          ls -lh target/wasm32v1-none/release/checkers.wasm
+          echo "WASM build successful ✓"
