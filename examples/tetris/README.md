@@ -86,46 +86,39 @@ stellar contract invoke \
   -- update_tick
 ```
 
-## 🎯 Benefits of Using Cougr-Core
+## 🏗️ Architecture
 
-### Traditional Soroban vs. Cougr-Core
+This example uses Cougr as the core architecture. `SimpleWorld` owns all mutable game state; systems are plain functions that operate on it; the world is persisted to Soroban instance storage alongside a lightweight `GameState` metadata struct.
 
-| Aspect | Traditional Soroban | With Cougr-Core ECS |
-|--------|-------------------|-------------------|
-| **Code Organization** | Monolithic contract logic | Modular components & systems |
-| **State Management** | Manual storage handling | Automatic entity-component management |
-| **Game Logic** | Tightly coupled functions | Reusable, composable systems |
-| **Scalability** | Difficult to extend | Easy to add new features |
-| **Code Reuse** | Limited | High - components are portable |
-| **Testing** | Complex integration tests | Unit testable components |
+### Components (`src/components.rs`)
 
-### Cougr-Core Advantages
+| Component | Data | Used by |
+|-----------|------|---------|
+| `PieceComponent` | shape, x, y, rotation | Active tetromino entity |
 
-1. **Entity-Component-System Pattern**
-   - Separates data (components) from logic (systems)
-   - Makes code more maintainable and testable
-   - Enables parallel processing of game logic
+### Systems (`src/systems.rs`)
 
-2. **Simplified State Management**
-```rust
-   // Traditional Soroban
-   env.storage().instance().set(&DataKey::GameState, &state);
-   
-   // With Cougr-Core
-   world.spawn_empty()
-       .insert(Position { x: 5, y: 0 })
-       .insert(Tetromino { shape: Shape::I });
+| System | Responsibility |
+|--------|---------------|
+| `collision_system` | Returns true if a piece position/rotation overlaps the board or walls |
+| `gravity_system` | Queries the active piece entity and moves it down one row |
+| `lock_system` | Writes the piece onto the board, clears full lines, despawns the entity |
+
+### Runtime shape
+
+```
+init_game()
+  └─ SimpleWorld::new()
+  └─ spawn_entity() → attach PieceComponent
+  └─ save world + GameState to instance storage
+
+update_tick() / move_left() / move_right() / rotate() / drop()
+  └─ load world from storage
+  └─ run system (gravity_system / shift_piece / lock_system)
+  └─ save world + GameState back to storage
 ```
 
-3. **Reusable Components**
-   - Components can be shared across different game types
-   - Systems can be reused for similar game mechanics
-   - Reduces development time for new games
-
-4. **Better Code Organization**
-   - Clear separation of concerns
-   - Easier to understand and debug
-   - Modular architecture
+State that doesn't belong to any entity (score, level, next piece, game-over flag) lives in `GameState`, stored separately — the same pattern used by `flappy_bird` and `geometry_dash`.
 
 ## 🧪 Testing
 ```bash
@@ -158,7 +151,9 @@ examples/tetris/
 ├── .gitignore          # Git ignore patterns
 ├── README.md           # This file
 └── src/
-    └── lib.rs          # Smart contract implementation
+    ├── lib.rs          # Contract entry points, GameState, storage helpers
+    ├── components.rs   # PieceComponent (TetrominoShape, position, rotation)
+    └── systems.rs      # collision_system, gravity_system, lock_system
 ```
 
 ## 🔧 Configuration
@@ -166,8 +161,8 @@ examples/tetris/
 **Cargo.toml**
 ```toml
 [dependencies]
-soroban-sdk = "23.0.2"
-cougr-core = { tag = "v0.0.1", git = "https://github.com/salazarsebas/Cougr.git" }
+soroban-sdk = "25.1.0"
+cougr-core = { path = "../../" }
 ```
 
 ## 📚 Resources

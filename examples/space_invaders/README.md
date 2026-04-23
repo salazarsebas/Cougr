@@ -31,53 +31,49 @@ This example demonstrates how to build on-chain game logic on the Stellar blockc
 
 ---
 
-## 🔧 Why Cougr-Core?
+## 🔧 Architecture
 
-**Cougr-Core** provides an ECS (Entity-Component-System) architecture specifically designed for Soroban smart contracts. Here's how it benefits this project:
+This example uses Cougr as the core architecture. `SimpleWorld` owns all entity state; systems are plain functions that query and mutate it; the world is persisted to Soroban instance storage alongside a `GameMeta` struct for non-entity data.
 
-### Benefits of Using Cougr-Core
+### Components (`src/components.rs`)
 
-| Benefit | Description | Example in This Project |
-|---------|-------------|------------------------|
-| **Modular Components** | Reusable data structures attached to entities | `EntityPosition`, `Velocity`, `Health` used by Ship, Invaders, and Bullets |
-| **Separation of Concerns** | Logic (Systems) separated from data (Components) | Movement System updates all entities with Velocity |
-| **Type Safety** | Rust's type system prevents component misuse | `CougrPosition` ensures consistent coordinate handling |
-| **WASM Optimization** | ECS optimizes memory access patterns for WASM | Efficient iteration over entity components |
-| **Scalability** | Easy to add new features without refactoring | Adding new entity types only requires new components |
-| **On-Chain Ready** | Designed for blockchain state persistence | Components serialize to Soroban storage |
+| Component | Data | Used by |
+|-----------|------|---------|
+| `Position` | x, y | Ship, invaders, bullets |
+| `Velocity` | dx, dy | Bullets |
+| `Health` | current HP | Ship |
+| `ShipTag` | marker | Player ship entity |
+| `InvaderTag` | points, active | Invader entities |
+| `BulletTag` | owner (0=player, 1=enemy) | Bullet entities |
 
-### ECS Architecture in Practice
+### Systems (`src/systems.rs`)
 
-```rust
-// Using cougr-core's Position component
-use cougr_core::Position as CougrPosition;
+| System | Responsibility |
+|--------|---------------|
+| `movement_system` | Applies each bullet's `Velocity` to its `Position`; despawns out-of-bounds bullets |
+| `collision_system` | Player bullets vs invaders, enemy bullets vs ship; returns (score_gained, ship_hit) |
+| `invader_movement_system` | Moves the formation, descends on wall contact, returns game-over flag |
+| `enemy_shoot_system` | Spawns an enemy bullet entity each interval |
 
-// Entity with Position, Velocity, and Health components
-pub struct Bullet {
-    pub position: EntityPosition,   // Where the bullet is
-    pub velocity: Velocity,         // How it moves
-    pub active: bool,               // Entity state
-}
+### Runtime shape
 
-// Movement System: Apply velocity to position
-impl Bullet {
-    pub fn update(&mut self) {
-        self.velocity.apply_to(&mut self.position);
-    }
-}
+```
+init_game()
+  └─ SimpleWorld::new()
+  └─ spawn ship entity → Position, Health, ShipTag
+  └─ spawn 32 invader entities → Position, InvaderTag
+  └─ save world + GameMeta to instance storage
+
+update_tick()
+  └─ load world from storage
+  └─ movement_system   (bullets move)
+  └─ collision_system  (hits resolved, entities despawned)
+  └─ invader_movement_system
+  └─ enemy_shoot_system
+  └─ save world + GameMeta back to storage
 ```
 
-### Cougr-Core vs Traditional Approach
-
-| Aspect | Traditional | With Cougr-Core |
-|--------|-------------|-----------------|
-| Entity Data | Scattered structs | Unified Component pattern |
-| Position Tracking | Manual x/y fields | `EntityPosition` + `CougrPosition` |
-| Movement Logic | Per-entity methods | Velocity component + System |
-| Health Management | Ad-hoc fields | `Health` component with damage API |
-| Entity Creation | Manual construction | `SimpleWorld::spawn_entity()` + components |
-
----
+Non-entity state (score, tick, cooldown, invader direction, game-over flag) lives in `GameMeta`, stored separately alongside the world.
 
 ## 🏗️ Quick Start
 
@@ -143,7 +139,6 @@ cargo test
 | `get_ship_position` | `i32` | Ship X coordinate |
 | `check_game_over` | `bool` | Game over status |
 | `get_active_invaders` | `u32` | Remaining invader count |
-| `get_entity_count` | `u32` | Cougr-core entity count |
 
 ---
 
@@ -233,8 +228,9 @@ examples/space_invaders/
 ├── Cargo.toml          # Dependencies including cougr-core
 ├── README.md           # This documentation
 └── src/
-    ├── lib.rs          # Contract entry points & ECS systems
-    ├── game_state.rs   # ECS Components (Position, Velocity, Health)
+    ├── lib.rs          # Contract entry points, GameMeta, storage helpers
+    ├── components.rs   # Position, Velocity, Health, ShipTag, InvaderTag, BulletTag
+    ├── systems.rs      # movement, collision, invader_movement, enemy_shoot systems
     └── test.rs         # Unit tests (13 tests)
 ```
 
