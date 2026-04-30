@@ -45,7 +45,7 @@ pub fn piece_coords(shape: TetrominoShape, rot: u32) -> [(i32, i32); 4] {
 }
 
 /// Returns true if the given piece position/rotation collides with the board or walls.
-pub fn collision_system(board: &Vec<u32>, shape: TetrominoShape, x: i32, y: i32, rot: u32) -> bool {
+pub fn collision_system(board: &[u32], shape: TetrominoShape, x: i32, y: i32, rot: u32) -> bool {
     for (dx, dy) in piece_coords(shape, rot) {
         let ax = x + dx;
         let ay = y + dy;
@@ -86,7 +86,7 @@ pub fn gravity_system(world: &mut SimpleWorld, env: &Env, board: &Vec<u32>) -> b
 pub fn lock_system(
     world: &mut SimpleWorld,
     env: &Env,
-    board: &Vec<u32>,
+    board: &[u32],  // ✅ Correct
 ) -> (Vec<u32>, u32) {
     let entities = world.get_entities_with_component(&symbol_short!("piece"), env);
     if entities.is_empty() {
