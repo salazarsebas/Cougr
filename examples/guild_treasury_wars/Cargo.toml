@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = { path = "../.." }
+cougr-core = "1.0.0"
 soroban-sdk = "25.1.0"
 
 [dev-dependencies]
@@ -19,4 +19,4 @@ soroban-sdk = { version = "25.1.0", features = ["testutils"] }
 opt-level = "z"
 overflow-checks = true
 lto = true
-codegen-units = 1
+codegen-units = 1 
