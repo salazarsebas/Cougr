@@ -1,16 +1,17 @@
 [package]
-name = "tower_defense"
-version = "0.0.1"
+name = "trading_card_game"
+version = "0.1.0"
 edition = "2021"
-authors = ["Cougr Contributors"]
-description = "Tower defense on-chain game example using cougr-core ECS framework"
+publish = false
+description = "Trading Card Game on-chain using Cougr-Core ECS framework — demonstrates atomic multi-action turns via BatchBuilder on Stellar Soroban"
+license = "MIT OR Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = { path = "../../" }
 soroban-sdk = "25.1.0"
+cougr-core = "1.0.0"
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }
@@ -18,10 +19,13 @@ soroban-sdk = { version = "25.1.0", features = ["testutils"] }
 [profile.release]
 opt-level = "z"
 overflow-checks = true
-lto = true
-codegen-units = 1
+debug = 0
+strip = "symbols"
+debug-assertions = false
 panic = "abort"
+codegen-units = 1
+lto = true
 
 [profile.release-with-logs]
 inherits = "release"
-debug-assertions = true
+debug-assertions = true 
