@@ -13,17 +13,54 @@ Examples are the primary onboarding surface for external developers building gam
 Every example must declare `cougr-core` using the published crate on crates.io, **not** a local path dependency.
 
 ```toml
-# Correct
+# Correct — external release
 [dependencies]
-cougr-core = "1.0"
+cougr-core = "1.1"
 soroban-sdk = "25.1.0"
 
-# Wrong — breaks for external users
+# Wrong for published examples — breaks for external users
 [dependencies]
 cougr-core = { path = "../../" }
 ```
 
 Path dependencies silently work inside the monorepo but fail for any developer who installs the example independently. The published crate is the contract.
+
+### 1.1 Path Dependencies in Monorepo Development
+
+Some canonical examples depend on APIs that have not yet been published to crates.io (e.g. `circuits`, `session`, `SorobanGame`). These examples **must** use path dependencies during monorepo development but **must** switch to published versions before any release tag is cut.
+
+**When path dependencies are permitted:**
+
+- The example exercises an API that exists only in the workspace copy of `cougr-core` (e.g. `cougr_core::circuits::*`, `cougr_core::session::*`, `cougr_core::test::*`).
+- The example is under active development inside the monorepo and no crate version on crates.io yet includes the required API.
+
+**When path dependencies must be replaced:**
+
+- Before cutting a release tag (including release candidates), every example's `Cargo.toml` must be updated to reference the published crate version.
+- If the required API is available in a published version, the path dependency must be replaced immediately, even outside a release cycle.
+
+**How to mark a path-dependency example:**
+
+Add a comment above the dependency line explaining the exception:
+
+```toml
+# path dep — pending cougr-core 1.x publication of circuits::*
+cougr-core = { path = "../../" }
+```
+
+CI must fail if any example still carries a path dependency at release-tag time.
+
+**Current examples using path dependencies (as of 1.1.0):**
+
+| Example | Reason for path dependency |
+|---|---|
+| `spawn_and_move` | Exercises `SorobanGame` / `impl_soroban_game!` |
+| `tic_tac_toe` | Exercises `impl_soroban_game!` and `impl_rich_component!` |
+| `session_arena` | Exercises `session::SessionManager` (Beta) |
+| `hidden_hand` | Exercises `circuits::HiddenHandBuilder` (Experimental) |
+| `fog_explorer` | Exercises `circuits::FogExplorerBuilder` (Experimental) |
+| `dice_duel` | Exercises `circuits::FairDiceBuilder` (Experimental) |
+| `blind_auction` | Exercises `circuits::SealedBidBuilder` (Experimental) |
 
 ---
 
@@ -121,13 +158,20 @@ Tests must use the `soroban-sdk` `testutils` feature and `Env::default()`. Do no
 
 A canonical example is a maintained reference architecture. It is held to the full standard in this document and is expected to stay current as `cougr-core` evolves. Canonical examples are the ones new contributors should read first.
 
-Current canonical examples:
+Current canonical examples (aligned with the 1.1.0 release):
 
-| Example | Pattern demonstrated |
-|---|---|
-| `snake` | Arcade loop, `GameApp` tick model, basic ECS |
-| `battleship` | Hidden-information, commit-reveal, `privacy::stable` Merkle primitives |
-| `guild_arena` | Account abstraction, social recovery, multi-device authorization |
+| Example | Category | Pattern demonstrated |
+|---|---|---|
+| `spawn_and_move` | Starter | Complete idiomatic Cougr pattern: `SorobanGame` + `impl_component_observed!` + typed ECS |
+| `tic_tac_toe` | Rich components | Turn-based game with `impl_rich_component!` for `Address` and `Vec` fields |
+| `session_arena` | Session UX | `session::SessionManager`, session lifecycle, and multi-round state (Beta) |
+| `hidden_hand` | ZK circuits | `circuits::HiddenHandBuilder` — hidden-card ZK proof flow (Experimental) |
+| `fog_explorer` | ZK circuits | `circuits::FogExplorerBuilder` — fog-of-war exploration with Merkle proofs (Experimental) |
+| `dice_duel` | ZK circuits | `circuits::FairDiceBuilder` — fair dice roll with on-chain verification (Experimental) |
+| `blind_auction` | ZK circuits | `circuits::SealedBidBuilder` — sealed-bid auction with commit-reveal ZK (Experimental) |
+| `snake` | Arcade (GameApp) | Arcade loop, `GameApp` tick model, basic ECS |
+| `battleship` | Hidden information | Commit-reveal and selective state disclosure using `privacy::stable` Merkle primitives |
+| `guild_arena` | Authentication & recovery | Account abstraction, social recovery, multi-device authorization |
 
 ### Transitional examples
 
@@ -146,18 +190,44 @@ Transitional examples are still expected to pass `cargo test` and `stellar contr
 
 Use the following table to decide which Cougr APIs an example should use and document.
 
-| API | Use when |
-|---|---|
-| `GameApp` | Any example with more than one system or stage |
-| `ScheduleStage` | Systems must run in a defined order within a tick |
-| `SimpleWorld` | The example stores and queries entities with multiple components |
-| `SimpleQueryBuilder` | The example scans entities by component type (more than one entity type) |
-| `auth` (Beta) | The example demonstrates session keys, multi-device flows, or account recovery |
-| `privacy::stable` | The example demonstrates commit-reveal, Merkle proofs, or selective disclosure |
-| `privacy::experimental` | The example demonstrates Groth16 proof submission or BN254/BLS12-381 operations |
-| `ops` standards | The example needs pausability, access control, or ownership transfer |
+| API | Use when | Stability |
+|---|---|---|
+| `SorobanGame` trait | Any example that loads/saves `SimpleWorld` to Soroban storage; implement once with `impl_soroban_game!` | Stable |
+| `impl_soroban_game!` macro | Wiring `SorobanGame` to a `#[contract]` struct; replaces manual `load_world` / `save_world` boilerplate | Stable |
+| `GameApp` | Any example with more than one system or stage | Stable |
+| `ScheduleStage` | Systems must run in a defined order within a tick | Stable |
+| `SimpleWorld` | The example stores and queries entities with multiple components | Stable |
+| `SimpleQueryBuilder` | The example scans entities by component type (more than one entity type) | Stable |
+| `impl_rich_component!` | A component contains `Address` or `Vec` fields that need Soroban-native storage | Stable |
+| `session::SessionManager` | The example manages multi-round player sessions, timeouts, or session-key lifecycle | Beta |
+| `circuits::HiddenHandBuilder` | The example demonstrates hidden-card ZK proof flows | Experimental |
+| `circuits::FogExplorerBuilder` | The example demonstrates fog-of-war exploration with Merkle proof verification | Experimental |
+| `circuits::FairDiceBuilder` | The example demonstrates fair dice roll with on-chain Groth16 verification | Experimental |
+| `circuits::SealedBidBuilder` | The example demonstrates sealed-bid auctions with commit-reveal ZK proofs | Experimental |
+| `test::GameHarness` | Writing integration tests that exercise full game rounds in a sandboxed Soroban environment; pair with `Scenario` and `ReplayLog` | Experimental |
+| `auth` (Beta) | The example demonstrates session keys, multi-device flows, or account recovery | Beta |
+| `privacy::stable` | The example demonstrates commit-reveal, Merkle proofs, or selective disclosure | Stable |
+| `privacy::experimental` | The example demonstrates Groth16 proof submission or BN254/BLS12-381 operations | Experimental |
+| `ops` standards | The example needs pausability, access control, or ownership transfer | Stable |
 
 When an API is used, the README must explain **why** that API was chosen, not just that it was used.
+
+### API–Example Cross Reference
+
+The following table maps each canonical example to its primary Cougr APIs:
+
+| Example | Primary APIs |
+|---|---|
+| `spawn_and_move` | `SorobanGame`, `impl_soroban_game!`, `impl_component_observed!`, `SimpleWorld`, `SimpleQueryBuilder` |
+| `tic_tac_toe` | `SorobanGame`, `impl_soroban_game!`, `impl_rich_component!`, `GameApp` |
+| `session_arena` | `SorobanGame`, `session::SessionManager`, `GameApp` |
+| `hidden_hand` | `SorobanGame`, `circuits::HiddenHandBuilder`, `privacy::experimental` |
+| `fog_explorer` | `SorobanGame`, `circuits::FogExplorerBuilder`, `privacy::stable` |
+| `dice_duel` | `SorobanGame`, `circuits::FairDiceBuilder`, `privacy::experimental` |
+| `blind_auction` | `SorobanGame`, `circuits::SealedBidBuilder`, `privacy::experimental` |
+| `snake` | `GameApp`, `ScheduleStage`, `SimpleWorld`, `SimpleQueryBuilder` |
+| `battleship` | `privacy::stable`, `GameApp`, `SimpleWorld` |
+| `guild_arena` | `auth`, `ops::Ownable`, `ops::RecoveryGuard`, `GameApp` |
 
 ---
 
@@ -169,7 +239,7 @@ Copy this checklist into a follow-up cleanup issue for each example:
 ## Example quality checklist — `<example-name>`
 
 ### Dependencies
-- [ ] Uses published `cougr-core` version, not a path dependency
+- [ ] Uses published `cougr-core` version, not a path dependency — **or** carries an annotated path dependency exception per §1.1
 
 ### Build validation
 - [ ] `cargo test` passes
@@ -208,5 +278,6 @@ Copy this checklist into a follow-up cleanup issue for each example:
 
 ### Classification
 - [ ] Marked as canonical or transitional in the README
+- [ ] If canonical: category matches one listed in §7 (Starter, Rich components, Session UX, ZK circuits, Arcade, Hidden information, Authentication & recovery)
 - [ ] If transitional: banner note present pointing to preferred alternative
 ```
