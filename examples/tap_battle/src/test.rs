@@ -9,6 +9,7 @@
 //! - Round scoring and winner declaration
 //! - Session expiry
 //! - Persistent profile stats
+//! - Session renewal and fallback behavior
 
 #![cfg(test)]
 
@@ -45,14 +46,14 @@ fn setup_player(env: &Env, contract_id: &Address) -> Address {
 /// Helper: Set up a session for a player (bypassing crypto for testing).
 fn setup_session(env: &Env, contract_id: &Address, player: &Address) {
     env.as_contract(contract_id, || {
-        let session = SessionState {
-            player: player.clone(),
-            expires_at: env.ledger().sequence() as u64 + 1000,
-            ops_remaining: 100,
-        };
-        env.storage()
-            .persistent()
-            .set(&DataKey::Session(player.clone()), &session);
+        let session_scope = cougr_core::accounts::SessionBuilder::new(env)
+            .allow_action(soroban_sdk::symbol_short!("tap"))
+            .allow_action(soroban_sdk::Symbol::new(env, "use_power_up"))
+            .max_operations(100)
+            .expires_in(1000)
+            .build_scope();
+        cougr_core::session::SessionManager::approve(env, player, session_scope)
+            .expect("session approval failed");
 
         env.storage()
             .persistent()
@@ -138,7 +139,7 @@ fn test_session_creation() {
 
     // Validate session works
     env.as_contract(&contract_id, || {
-        let session_player = auth::validate_session(&env, &player);
+        let session_player = auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
         assert_eq!(session_player, player);
     });
 }
@@ -154,14 +155,12 @@ fn test_session_ops_decrement() {
 
     env.as_contract(&contract_id, || {
         // Initial ops: 100
-        auth::validate_session(&env, &player);
+        auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
 
-        let session: SessionState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Session(player.clone()))
-            .unwrap();
-        assert_eq!(session.ops_remaining, 99);
+        let keys = cougr_core::accounts::SessionStorage::load_all(&env, &player);
+        let session = keys.last().expect("session missing");
+        let status = cougr_core::session::SessionManager::status(&env, &player, &session.key_id).unwrap();
+        assert_eq!(status.remaining_operations, 99);
     });
 }
 
@@ -176,21 +175,21 @@ fn test_session_ops_exhausted() {
 
     // Create session with only 1 operation
     env.as_contract(&contract_id, || {
-        let session = SessionState {
-            player: player.clone(),
-            expires_at: env.ledger().sequence() as u64 + 1000,
-            ops_remaining: 1,
-        };
-        env.storage()
-            .persistent()
-            .set(&DataKey::Session(player.clone()), &session);
+        let session_scope = cougr_core::accounts::SessionBuilder::new(&env)
+            .allow_action(soroban_sdk::symbol_short!("tap"))
+            .allow_action(soroban_sdk::Symbol::new(&env, "use_power_up"))
+            .max_operations(1)
+            .expires_in(1000)
+            .build_scope();
+        cougr_core::session::SessionManager::approve(&env, &player, session_scope)
+            .expect("session approval failed");
     });
 
     env.as_contract(&contract_id, || {
         // First validation succeeds
-        auth::validate_session(&env, &player);
+        auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
         // Second should panic — no operations left
-        auth::validate_session(&env, &player);
+        auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
     });
 }
 
@@ -442,7 +441,7 @@ fn test_default_profile() {
 // Session Expiry Tests
 // ============================================================================
 
-/// Test that session expires when ledger sequence exceeds expires_at.
+/// Test that session expires when ledger sequence/timestamp exceeds expires_at.
 /// This covers the "session expiry during round" acceptance criterion.
 #[test]
 #[should_panic(expected = "session expired")]
@@ -453,16 +452,16 @@ fn test_session_expiry_during_round() {
     let player_a = setup_player(&env, &contract_id);
     let player_b = setup_player(&env, &contract_id);
 
-    // Create a session that expires at ledger 10
+    // Create a session that expires at timestamp 10
     env.as_contract(&contract_id, || {
-        let session = SessionState {
-            player: player_a.clone(),
-            expires_at: 10,
-            ops_remaining: 100,
-        };
-        env.storage()
-            .persistent()
-            .set(&DataKey::Session(player_a.clone()), &session);
+        let session_scope = cougr_core::accounts::SessionBuilder::new(&env)
+            .allow_action(soroban_sdk::symbol_short!("tap"))
+            .allow_action(soroban_sdk::Symbol::new(&env, "use_power_up"))
+            .max_operations(100)
+            .expires_at(10)
+            .build_scope();
+        cougr_core::session::SessionManager::approve(&env, &player_a, session_scope)
+            .expect("session approval failed");
 
         env.storage()
             .persistent()
@@ -479,11 +478,13 @@ fn test_session_expiry_during_round() {
     });
 
     // Advance ledger past session expiry
-    env.ledger().set_sequence_number(15);
+    env.ledger().with_mut(|li| {
+        li.timestamp = 15;
+    });
 
     // Session validation should panic with "session expired"
     env.as_contract(&contract_id, || {
-        auth::validate_session(&env, &player_a);
+        auth::validate_session(&env, &player_a, soroban_sdk::symbol_short!("tap"));
     });
 }
 
@@ -516,4 +517,45 @@ fn test_combo_breaks_outside_window() {
         assert_eq!(r3.combo, 1);
         assert_eq!(r3.multiplier, 1);
     });
+}
+
+// ============================================================================
+// SessionManager Pattern Tests (consistent with session_arena)
+// ============================================================================
+
+#[test]
+fn test_renew_session_extends_play_window() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register(TapBattleContract, ());
+    let client = TapBattleContractClient::new(&env, &contract_id);
+
+    let player = setup_player(&env, &contract_id);
+    setup_session(&env, &contract_id, &player);
+
+    let key_id = client.get_latest_session_key(&player);
+    let status_before = client.session_status(&player, &key_id);
+
+    let renewed = client.renew_session(&player, &key_id, &20_000);
+    assert!(renewed.expires_at > status_before.expires_in);
+}
+
+#[test]
+fn test_fallback_tap_uses_direct_auth_after_session_expires() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register(TapBattleContract, ());
+    let client = TapBattleContractClient::new(&env, &contract_id);
+
+    let player = setup_player(&env, &contract_id);
+    setup_session(&env, &contract_id, &player);
+
+    let key_id = client.get_latest_session_key(&player);
+
+    env.ledger().with_mut(|li| {
+        li.timestamp = 10_000;
+    });
+
+    let res = client.fallback_tap(&player, &key_id);
+    assert_eq!(res.count, 1);
 }

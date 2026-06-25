@@ -1,7 +1,7 @@
 # 🎮 Tap Battle — Mobile-First Competitive Tapping Game
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
-[![Tests](https://img.shields.io/badge/tests-15%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
+[![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
 [![Stellar](https://img.shields.io/badge/Stellar-Testnet-blue)](https://stellar.org)
 
 A competitive tapping game implemented as a **Soroban smart contract** using `cougr-core`'s ECS framework with **passkey authentication** (secp256r1/WebAuthn) on the Stellar blockchain.
@@ -21,7 +21,9 @@ Passkeys use the **secp256r1** curve (the same as WebAuthn/FIDO2), enabling biom
 
 ---
 
-## 🚀 Mobile-First Authentication Flow
+## 🚀 Mobile-First Authentication Flow & SessionManager Lifecycle
+
+Tap Battle uses `cougr-core` 1.1.0's `session::SessionManager` as the beta-standard API for session approval, execution, renewal, and status queries. For a minimal, canonical demonstration of the session lifecycle without passkeys, see the [session_arena](../session_arena/README.md) example.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -30,19 +32,24 @@ Passkeys use the **secp256r1** curve (the same as WebAuthn/FIDO2), enabling biom
 │    → Secp256r1Storage persists the key on-chain          │
 │    → No seed phrases, no mnemonics                       │
 ├─────────────────────────────────────────────────────────┤
-│ 2. AUTHENTICATION + SESSION                              │
+│ 2. AUTHENTICATION + SESSION APPROVAL                     │
 │    Player authenticates via passkey (Face ID / Touch ID)  │
 │    → verify_secp256r1() validates the signature           │
-│    → SessionBuilder creates a gameplay session            │
+│    → SessionManager::approve creates gameplay session     │
 │    → Session scoped to: tap, use_power_up                 │
 ├─────────────────────────────────────────────────────────┤
-│ 3. GAMEPLAY (gasless via session key)                     │
-│    Rapid tapping → tap(session_key) increments counter    │
+│ 3. GAMEPLAY (gasless via SessionManager)                  │
+│    Rapid tapping → tap(session_key) executes action       │
+│    SessionManager::execute_action enforces scope/budget   │
 │    Combos: consecutive taps within time window = multi    │
 │    Power-ups: spend combo charges for burst effects       │
-│    Round ends after N ledger sequences                    │
 ├─────────────────────────────────────────────────────────┤
-│ 4. RESULT                                                │
+│ 4. RENEWAL & FALLBACK                                   │
+│    SessionManager::status prompts renewal before expiry   │
+│    SessionManager::renew extends session window           │
+│    SessionManager::fallback_execute falls back to direct  │
+├─────────────────────────────────────────────────────────┤
+│ 5. RESULT                                                │
 │    Compare scores → winner determined                    │
 │    Stats recorded on-chain in PlayerProfile               │
 └─────────────────────────────────────────────────────────┘
@@ -66,18 +73,22 @@ Secp256r1Storage::store(&env, &player, &key);
 verify_secp256r1(&env, &pubkey, &message, &signature)?;
 ```
 
-### Session Builder (`session_builder`)
+### Session Manager (`SessionManager`)
 
 ```rust
-use cougr_core::auth::SessionBuilder;
+use cougr_core::accounts::SessionBuilder;
+use cougr_core::session::SessionManager;
 
-// Create scoped session for gasless gameplay
+// Create scoped session scope
 let scope = SessionBuilder::new(&env)
     .allow_action(symbol_short!("tap"))
-    .allow_action(symbol_short!("use_power"))
+    .allow_action(Symbol::new(&env, "use_power_up"))
     .max_operations(500)
-    .expires_at(ledger_sequence + duration)
+    .expires_in(duration)
     .build_scope();
+
+// Approve session via SessionManager
+SessionManager::approve(&env, &player, scope)?;
 ```
 
 ### ECS Components
@@ -89,7 +100,7 @@ let scope = SessionBuilder::new(&env)
 | `PowerUp` | `charges`, `kind` | Charged abilities from combos |
 | `RoundState` | `started_at`, `duration`, `scores`, `finished` | Match state |
 | `PlayerProfile` | `total_wins`, `total_taps`, `best_combo` | Persistent stats |
-| `SessionState` | `player`, `expires_at`, `ops_remaining` | Active session |
+| `SessionState` | `player`, `expires_at`, `ops_remaining` | Legacy session definition |
 
 ---
 
@@ -102,12 +113,16 @@ let scope = SessionBuilder::new(&env)
 | `register_passkey` | `player`, `pubkey: BytesN<65>` | - | Register a secp256r1 passkey |
 | `authenticate_and_start_session` | `player`, `signature`, `challenge`, `duration` | `Address` | Auth + create session |
 
-### Gameplay
+### Gameplay & Session Lifecycle
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
 | `tap` | `session_key` | `TapResult` | Submit a tap (gasless) |
 | `use_power_up` | `session_key`, `power_up: u32` | - | Activate a power-up |
+| `renew_session` | `owner`, `key_id`, `expires_in` | `ActiveSession` | Extend session lifetime |
+| `session_status` | `owner`, `key_id` | `SessionStatus` | Check session health |
+| `fallback_tap` | `owner`, `key_id` | `TapResult` | Tap with session/direct fallback |
+| `get_latest_session_key`| `player` | `BytesN<32>` | Get latest session key ID |
 | `start_round` | `player_a`, `player_b`, `duration` | - | Start a match |
 | `get_round` | - | `RoundState` | Get round state (auto-finalizes) |
 | `get_profile` | `player` | `PlayerProfile` | Get persistent stats |
@@ -174,7 +189,7 @@ stellar contract build
 cargo test
 ```
 
-**Test Results**: 15 tests passing ✅
+**Test Results**: 19 tests passing ✅
 
 | Test | Description |
 |---|---|
@@ -193,6 +208,10 @@ cargo test
 | `test_round_scoring_and_winner` | Scores tracked per player |
 | `test_profile_stats` | Profile tracks taps and combos |
 | `test_default_profile` | Default profile for new players |
+| `test_session_expiry_during_round` | Session expires correctly |
+| `test_combo_breaks_outside_window` | Combo breaks outside window |
+| `test_renew_session_extends_play_window` | Session renewal extends window |
+| `test_fallback_tap_uses_direct_auth_after_session_expires` | Fallback tap works |
 
 ---
 
@@ -205,9 +224,9 @@ examples/tap_battle/
 └── src/
     ├── lib.rs          # Contract entry points
     ├── types.rs        # ECS Components (PasskeyIdentity, TapCounter, etc.)
-    ├── auth.rs         # AuthSystem + SessionSystem (secp256r1 + SessionBuilder)
+    ├── auth.rs         # AuthSystem + SessionSystem (secp256r1 + SessionManager)
     ├── game.rs         # TapSystem, ComboSystem, PowerUpSystem, RoundSystem
-    └── test.rs         # Unit tests (15 tests)
+    └── test.rs         # Unit tests (19 tests)
 ```
 
 ---
