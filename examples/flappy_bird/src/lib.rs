@@ -462,4 +462,16 @@ mod tests {
         assert_eq!(x1, x2);
         assert_eq!(y1, y2);
     }
+    #[test]
+    fn test_gameapp_tick_integration() {
+        let env = Env::default();
+        let mut app = GameApp::new(&env);
+        app.add_system_with_config(
+            "flappy_tick_boundary",
+            |_world: &mut SimpleWorld, _env: &Env| {},
+            SystemConfig::new().in_stage(ScheduleStage::Update),
+        );
+        app.run(&env).unwrap();
+    }
+
 }

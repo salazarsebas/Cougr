@@ -98,4 +98,29 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_invalid_action_after_crash_is_ignored() {
+        let env = Env::default();
+        let player = Address::generate(&env);
+        let contract_id = env.register(GeometryDashContract, ());
+        let client = GeometryDashContractClient::new(&env, &contract_id);
+
+        client.init_game(&player, &0);
+        for _ in 0..10 {
+            client.update_tick(&player);
+        }
+        assert_eq!(client.get_state(&player), GameStatus::Crashed);
+        let pos = client.get_pos(&player);
+        client.jump(&player);
+        client.update_tick(&player);
+        assert_eq!(client.get_pos(&player), pos);
+    }
+
+    #[test]
+    fn test_gameapp_tick_integration() {
+        let env = Env::default();
+        crate::systems::run_gameapp_tick(&env);
+    }
+
 }

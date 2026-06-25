@@ -1,184 +1,68 @@
-# Tetris Smart Contract
+# Tetris On-Chain Game
 
-An on-chain Tetris game implementation using the Cougr-Core ECS framework on Stellar's Soroban platform.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
-## 📋 Overview
+## Purpose and pattern
 
-This example demonstrates how to build a fully functional game as a smart contract using:
-- **Soroban** - Stellar's smart contract platform
-- **Cougr-Core** - ECS framework for on-chain games
-- **Rust** - Smart contract programming language
+This example demonstrates a falling-block board simulation on Soroban with Cougr ECS concepts. It remains transitional while the arcade examples converge on the canonical `snake` `GameApp` architecture.
 
-## 🎮 Game Features
+## Public contract API
 
-| Feature | Description |
-|---------|-------------|
-| **Game Board** | 20x10 grid with collision detection |
-| **Tetrominoes** | All 7 classic shapes (I, J, L, O, S, T, Z) |
-| **Rotation** | Full 360° rotation system |
-| **Line Clearing** | Automatic detection and scoring |
-| **Scoring** | Points based on lines cleared |
-| **Leveling** | Difficulty increases every 10 lines |
+| Function | Parameters | Return type | Description |
+|---|---|---:|---|
+| `init_game` | `none` | `GameState` | Initializes an empty board and current/next pieces. |
+| `move_left` | `none` | `bool` | Attempts to move the active piece left. |
+| `move_right` | `none` | `bool` | Attempts to move the active piece right. |
+| `move_down` | `none` | `bool` | Soft-drops the active piece or locks it if blocked. |
+| `rotate` | `none` | `bool` | Attempts clockwise rotation. |
+| `drop` | `none` | `u32` | Hard-drops and locks the active piece; returns rows dropped. |
+| `update_tick` | `none` | `GameState` | Runs one gravity tick. |
+| `get_state` | `none` | `GameState` | Returns stored board and piece state. |
 
-## 🚀 Quick Start
+## Architecture overview
 
-### Prerequisites
+```text
+contract entrypoint
+  ├─ reads game state from Soroban storage
+  ├─ applies input or tick systems
+  └─ writes updated state back to storage
+```
 
-| Tool | Version | Installation |
-|------|---------|-------------|
-| Rust | 1.70.0+ | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` |
-| Stellar CLI | Latest | `cargo install --locked stellar-cli --features opt` |
-| WASM Target | - | `rustup target add wasm32v1-none` |
+Board and active piece state are contract types. `components.rs` documents the piece components used for Cougr-facing structure; `systems.rs` owns movement, collision, locking, scoring, and tick helpers.
 
-### Build & Test
+## Storage model
+
+| Storage class | Data | Why |
+|---|---|---|
+| Instance storage | Per-contract game state where used by this example. | Keeps small arcade state close to the contract instance. |
+| Persistent storage | Player- or world-scoped state where the example needs durable keyed state. | Keeps game progress available across invocations. |
+| Temporary storage | Not used. | The examples favor deterministic recalculation over ephemeral caches. |
+
+## Main gameplay flow
+
+1. Call the initialization function to create the starting state.
+2. Submit an input action such as movement, jump, flap, rotation, or shoot.
+3. Call the tick/update function to run deterministic simulation logic.
+4. Query public getters for score, position, active state, or terminal status.
+5. Stop when the game-over/completed condition is reached, or reset/reinitialize where supported.
+
+## Cougr APIs used
+
+- `ComponentTrait` and custom component modules document the ECS data boundary.
+- `SimpleWorld`, `SimpleQueryBuilder`, `GameApp`, `ScheduleStage`, or `SystemConfig` are used where this transitional example has already adopted the maintained runtime shape.
+- Auth, privacy, ZK, and standards APIs are intentionally not used; these arcade examples focus on deterministic game logic.
+
+## Build and test commands
+
 ```bash
-cd examples/tetris
-
-# Build the contract
-cargo build --release
-
-# Run tests
 cargo test
-
-# Build for Soroban
 stellar contract build
 ```
 
-## 📦 Deployment
+## Known limitations
 
-### Testnet Deployment
-```bash
-# Deploy to testnet
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/tetris.wasm \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet
-```
-
-**Deployed Contract:**
-- **Network**: Stellar Testnet
-- **Contract ID**: `CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF`
-- **Explorer**: `https://stellar.expert/explorer/testnet/contract/CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF`
-
-### Invoke Functions
-```bash
-# Initialize a new game
-stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet \
-  -- init_game
-
-# Move piece left
-stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet \
-  -- move_left
-
-# Update game tick (gravity + line clearing)
-stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
-  --source <YOUR_SECRET_KEY> \
-  --network testnet \
-  -- update_tick
-```
-
-## 🎯 Benefits of Using Cougr-Core
-
-### Traditional Soroban vs. Cougr-Core
-
-| Aspect | Traditional Soroban | With Cougr-Core ECS |
-|--------|-------------------|-------------------|
-| **Code Organization** | Monolithic contract logic | Modular components & systems |
-| **State Management** | Manual storage handling | Automatic entity-component management |
-| **Game Logic** | Tightly coupled functions | Reusable, composable systems |
-| **Scalability** | Difficult to extend | Easy to add new features |
-| **Code Reuse** | Limited | High - components are portable |
-| **Testing** | Complex integration tests | Unit testable components |
-
-### Cougr-Core Advantages
-
-1. **Entity-Component-System Pattern**
-   - Separates data (components) from logic (systems)
-   - Makes code more maintainable and testable
-   - Enables parallel processing of game logic
-
-2. **Simplified State Management**
-```rust
-   // Traditional Soroban
-   env.storage().instance().set(&DataKey::GameState, &state);
-   
-   // With Cougr-Core
-   world.spawn_empty()
-       .insert(Position { x: 5, y: 0 })
-       .insert(Tetromino { shape: Shape::I });
-```
-
-3. **Reusable Components**
-   - Components can be shared across different game types
-   - Systems can be reused for similar game mechanics
-   - Reduces development time for new games
-
-4. **Better Code Organization**
-   - Clear separation of concerns
-   - Easier to understand and debug
-   - Modular architecture
-
-## 🧪 Testing
-```bash
-# Run all tests
-cargo test
-
-# Run with output
-cargo test -- --nocapture
-
-# Test specific function
-cargo test test_rotate
-```
-
-### Test Coverage
-
-| Test | Description |
-|------|-------------|
-| `test_init_game` | Verifies game initialization |
-| `test_move_left` | Tests left movement |
-| `test_move_right` | Tests right movement |
-| `test_move_down` | Tests downward movement |
-| `test_rotate` | Tests piece rotation |
-| `test_update_tick` | Tests game tick and line clearing |
-| `test_game_over` | Tests end game detection |
-
-## 📁 Project Structure
-```
-examples/tetris/
-├── Cargo.toml          # Dependencies & build config
-├── .gitignore          # Git ignore patterns
-├── README.md           # This file
-└── src/
-    └── lib.rs          # Smart contract implementation
-```
-
-## 🔧 Configuration
-
-**Cargo.toml**
-```toml
-[dependencies]
-soroban-sdk = "25.1.0"
-cougr-core = "1.0.0"
-```
-
-## 📚 Resources
-
-- [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
-- [Stellar Documentation](https://developers.stellar.org/)
-- [Cougr Repository](https://github.com/salazarsebas/Cougr)
-- [Rust Book](https://doc.rust-lang.org/book/)
-
-## 🤝 Contributing
-
-This example is part of the Cougr framework. Contributions are welcome!
-
-## 📄 License
-
-Licensed under MIT OR Apache-2.0
+- Transitional code may preserve older storage or scheduling patterns for compatibility reference.
+- No authentication, matchmaking, real-time rendering, or production randomness is included.
+- One contract instance generally represents one game or one keyed set of player games.
+- For new work, prefer the canonical `snake` module split and `GameApp` tick wiring.

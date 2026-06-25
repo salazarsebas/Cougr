@@ -277,9 +277,8 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "cougr-core"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee5f72b6d594ecb5ea5d42340cced45bbf8e13bf1506e48209eab64a4d7a931d"
 dependencies = [
  "soroban-sdk",
  "wee_alloc",

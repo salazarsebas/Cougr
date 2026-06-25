@@ -254,3 +254,24 @@ fn test_no_move_when_game_over() {
         assert_eq!(pos, new_pos);
     }
 }
+
+#[test]
+fn test_invalid_ship_action_out_of_bounds_is_ignored() {
+    let env = Env::default();
+    let contract_id = env.register(SpaceInvadersContract, ());
+    let client = SpaceInvadersContractClient::new(&env, &contract_id);
+    client.init_game();
+
+    for _ in 0..100 {
+        client.move_ship(&-1i32);
+    }
+    let at_left_edge = client.get_ship_position();
+    client.move_ship(&-1i32);
+    assert_eq!(client.get_ship_position(), at_left_edge);
+}
+
+#[test]
+fn test_gameapp_tick_integration() {
+    let env = Env::default();
+    super::systems::run_gameapp_tick(&env);
+}

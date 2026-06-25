@@ -348,3 +348,22 @@ fn test_no_movement_when_game_inactive() {
 
     panic!("Game never became inactive");
 }
+
+#[test]
+fn test_invalid_player_action_is_ignored() {
+    let env = Env::default();
+    let contract_id = env.register(PongContract, ());
+    let client = PongContractClient::new(&env, &contract_id);
+
+    let before = client.init_game();
+    let after = client.move_paddle(&99u32, &1i32);
+
+    assert_eq!(before.player1_paddle_y, after.player1_paddle_y);
+    assert_eq!(before.player2_paddle_y, after.player2_paddle_y);
+}
+
+#[test]
+fn test_gameapp_tick_integration() {
+    let env = Env::default();
+    super::systems::run_gameapp_tick(&env);
+}

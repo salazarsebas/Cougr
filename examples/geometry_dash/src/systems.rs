@@ -225,3 +225,17 @@ pub fn mode_system(world: &mut SimpleWorld, env: &Env) {
         }
     }
 }
+
+/// Exercises the Cougr `GameApp` tick path for this transitional example.
+#[cfg(test)]
+pub fn run_gameapp_tick(env: &Env) {
+    use cougr_core::{GameApp, ScheduleStage, SystemConfig};
+
+    let mut app = GameApp::new(env);
+    app.add_system_with_config(
+        "geometry_dash_tick_boundary",
+        |_world: &mut SimpleWorld, _env: &Env| {},
+        SystemConfig::new().in_stage(ScheduleStage::Update),
+    );
+    app.run(env).unwrap();
+}
