@@ -8,58 +8,17 @@
 
 #![no_std]
 
-use cougr_core::component::ComponentTrait;
+mod components;
+mod systems;
+#[cfg(test)]
+mod test;
+
+use components::{Board, Players, TurnState, GAME_ENTITY};
+use systems::detect_winner;
+
 use cougr_core::game::SorobanGame;
-use cougr_core::{impl_component, impl_rich_component, impl_soroban_game};
+use cougr_core::impl_soroban_game;
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol, Vec};
-
-// ─── Components ───────────────────────────────────────────────────────────────
-
-/// Board state: 9 cells where 0 = empty, 1 = X, 2 = O.
-/// Uses impl_rich_component! because Vec<u32> requires XDR codec.
-#[contracttype]
-#[derive(Clone, Debug)]
-pub struct Board {
-    pub cells: Vec<u32>,
-}
-
-impl_rich_component!(Board, "board");
-
-impl Board {
-    fn new(env: &Env) -> Self {
-        let mut cells = Vec::new(env);
-        for _ in 0..9u32 {
-            cells.push_back(0u32);
-        }
-        Self { cells }
-    }
-}
-
-/// Both players' wallet addresses.
-/// Uses impl_rich_component! because Address requires XDR codec.
-#[contracttype]
-#[derive(Clone, Debug)]
-pub struct Players {
-    pub player_x: Address,
-    pub player_o: Address,
-}
-
-impl_rich_component!(Players, "players");
-
-/// Turn and game-over state — plain fixed-size fields; no XDR needed.
-#[contracttype]
-#[derive(Clone, Debug)]
-pub struct TurnState {
-    pub is_x_turn: bool,
-    pub move_count: u32,
-    pub status: u32, // 0 = in progress, 1 = X wins, 2 = O wins, 3 = draw
-}
-
-impl_component!(TurnState, "turnst", Table, {
-    is_x_turn: bool,
-    move_count: u32,
-    status: u32
-});
 
 // ─── API return types ─────────────────────────────────────────────────────────
 
@@ -84,8 +43,6 @@ pub struct MoveResult {
 
 // ─── Contract ────────────────────────────────────────────────────────────────
 
-const GAME_ENTITY: u32 = 1;
-
 #[contract]
 pub struct TicTacToeContract;
 
@@ -101,7 +58,15 @@ impl TicTacToeContract {
 
         world.set_rich(&env, GAME_ENTITY, &Board::new(&env));
         world.set_rich(&env, GAME_ENTITY, &Players { player_x, player_o });
-        world.set_typed(&env, GAME_ENTITY, &TurnState { is_x_turn: true, move_count: 0, status: 0 });
+        world.set_typed(
+            &env,
+            GAME_ENTITY,
+            &TurnState {
+                is_x_turn: true,
+                move_count: 0,
+                status: 0,
+            },
+        );
 
         TicTacToeContract::save_world(&env, &world);
         Self::read_game_state(&env, &world)
@@ -111,11 +76,14 @@ impl TicTacToeContract {
     pub fn make_move(env: Env, player: Address, position: u32) -> MoveResult {
         let mut world = TicTacToeContract::load_world(&env);
 
-        let players: Players = world.get_rich::<Players>(&env, GAME_ENTITY)
+        let players: Players = world
+            .get_rich::<Players>(&env, GAME_ENTITY)
             .unwrap_or_else(|| panic!("game not initialised"));
-        let turn: TurnState = world.get_typed::<TurnState>(&env, GAME_ENTITY)
+        let turn: TurnState = world
+            .get_typed::<TurnState>(&env, GAME_ENTITY)
             .unwrap_or_else(|| panic!("game not initialised"));
-        let mut board: Board = world.get_rich::<Board>(&env, GAME_ENTITY)
+        let mut board: Board = world
+            .get_rich::<Board>(&env, GAME_ENTITY)
             .unwrap_or_else(|| panic!("game not initialised"));
 
         // Validate
@@ -145,15 +113,23 @@ impl TicTacToeContract {
         board.cells.set(position, mark);
 
         let new_move_count = turn.move_count + 1;
-        let new_status = Self::detect_winner(&board.cells, new_move_count);
-        let new_is_x_turn = if new_status == 0 { !turn.is_x_turn } else { turn.is_x_turn };
+        let new_status = detect_winner(&board.cells, new_move_count);
+        let new_is_x_turn = if new_status == 0 {
+            !turn.is_x_turn
+        } else {
+            turn.is_x_turn
+        };
 
         world.set_rich(&env, GAME_ENTITY, &board);
-        world.set_typed(&env, GAME_ENTITY, &TurnState {
-            is_x_turn: new_is_x_turn,
-            move_count: new_move_count,
-            status: new_status,
-        });
+        world.set_typed(
+            &env,
+            GAME_ENTITY,
+            &TurnState {
+                is_x_turn: new_is_x_turn,
+                move_count: new_move_count,
+                status: new_status,
+            },
+        );
 
         TicTacToeContract::save_world(&env, &world);
 
@@ -205,7 +181,8 @@ impl TicTacToeContract {
     /// Reset the board but keep the same players.
     pub fn reset_game(env: Env) -> GameState {
         let world = TicTacToeContract::load_world(&env);
-        let players: Players = world.get_rich::<Players>(&env, GAME_ENTITY)
+        let players: Players = world
+            .get_rich::<Players>(&env, GAME_ENTITY)
             .unwrap_or_else(|| panic!("game not initialised"));
         Self::init_game(env, players.player_x, players.player_o)
     }
@@ -213,12 +190,19 @@ impl TicTacToeContract {
     // ─── Internal helpers ─────────────────────────────────────────────────────
 
     fn read_game_state(env: &Env, world: &cougr_core::simple_world::SimpleWorld) -> GameState {
-        let board: Board = world.get_rich::<Board>(env, GAME_ENTITY)
+        let board: Board = world
+            .get_rich::<Board>(env, GAME_ENTITY)
             .unwrap_or_else(|| Board::new(env));
-        let players: Players = world.get_rich::<Players>(env, GAME_ENTITY)
+        let players: Players = world
+            .get_rich::<Players>(env, GAME_ENTITY)
             .unwrap_or_else(|| panic!("players not found"));
-        let turn: TurnState = world.get_typed::<TurnState>(env, GAME_ENTITY)
-            .unwrap_or(TurnState { is_x_turn: true, move_count: 0, status: 0 });
+        let turn: TurnState = world
+            .get_typed::<TurnState>(env, GAME_ENTITY)
+            .unwrap_or(TurnState {
+                is_x_turn: true,
+                move_count: 0,
+                status: 0,
+            });
 
         GameState {
             cells: board.cells,
@@ -230,31 +214,15 @@ impl TicTacToeContract {
         }
     }
 
-    fn failure(env: &Env, world: &cougr_core::simple_world::SimpleWorld, msg: Symbol) -> MoveResult {
+    fn failure(
+        env: &Env,
+        world: &cougr_core::simple_world::SimpleWorld,
+        msg: Symbol,
+    ) -> MoveResult {
         MoveResult {
             success: false,
             game_state: Self::read_game_state(env, world),
             message: msg,
         }
     }
-
-    fn detect_winner(cells: &Vec<u32>, move_count: u32) -> u32 {
-        const LINES: [[u32; 3]; 8] = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-            [0, 4, 8], [2, 4, 6],             // diagonals
-        ];
-        for line in LINES.iter() {
-            let a = cells.get(line[0]).unwrap_or(0);
-            let b = cells.get(line[1]).unwrap_or(0);
-            let c = cells.get(line[2]).unwrap_or(0);
-            if a != 0 && a == b && b == c {
-                return a; // 1 = X wins, 2 = O wins
-            }
-        }
-        if move_count >= 9 { 3 } else { 0 }
-    }
 }
-
-#[cfg(test)]
-mod test;
