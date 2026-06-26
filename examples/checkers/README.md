@@ -1,105 +1,29 @@
-# Checkers — Cougr ECS Example
+# Checkers
 
-A fully on-chain two-player Checkers game implemented as a Soroban smart
-contract. This example demonstrates how the Cougr Entity Component System
-(ECS) model applies to a board game with non-trivial rule enforcement —
-combining grid movement, mandatory captures, king promotion, and win
-detection inside a single deterministic contract.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
----
+A fully on-chain two-player Checkers game implemented as a Soroban smart contract.
 
-## Why Checkers?
+## Purpose and pattern
 
-Tic-Tac-Toe establishes the basics of turn management and a fixed board.
-Checkers is the natural next step:
+This example demonstrates a turn-based board game with non-trivial rule enforcement —
+diagonal grid movement, mandatory captures, multi-hop chain captures, king promotion,
+and win detection — implemented as plain Rust functions over `#[contracttype]` structs.
+It showcases the simplest possible Cougr-adjacent pattern: component-shaped data types
+with hand-written contract storage access, predating the `ComponentTrait`/`GameApp`
+conventions used by newer examples. It is a useful reference for understanding what a
+Soroban board-game contract looks like with no ECS framework involvement at all.
 
-| Feature | Tic-Tac-Toe | Checkers |
-|---|---|---|
-| Fixed grid | ✓ | ✓ |
-| Two-player turns | ✓ | ✓ |
-| Piece movement rules | — | ✓ |
-| Capture mechanics | — | ✓ |
-| Forced-move enforcement | — | ✓ |
-| Piece promotion | — | ✓ |
-| Multi-hop chain captures | — | ✓ |
-| Stalemate detection | — | ✓ |
+## Public contract API
 
----
-
-## Board Layout
-
-Standard 8×8 English Draughts. Only dark squares (where `row + col` is odd)
-are ever occupied.
-
-```
-     col 0   1   2   3   4   5   6   7
-row 0  [ ] [P1] [ ] [P1] [ ] [P1] [ ] [P1]
-row 1  [P1] [ ] [P1] [ ] [P1] [ ] [P1] [ ]
-row 2  [ ] [P1] [ ] [P1] [ ] [P1] [ ] [P1]
-row 3  [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ]
-row 4  [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ]
-row 5  [P2] [ ] [P2] [ ] [P2] [ ] [P2] [ ]
-row 6  [ ] [P2] [ ] [P2] [ ] [P2] [ ] [P2]
-row 7  [P2] [ ] [P2] [ ] [P2] [ ] [P2] [ ]
-```
-
-**Piece encoding** (stored as `i32` in a flat 64-element vector):
-
-| Value | Meaning |
-|---|---|
-| `0` | Empty |
-| `1` | Player One man |
-| `2` | Player One king |
-| `-1` | Player Two man |
-| `-2` | Player Two king |
-
-Player One moves from row 0 toward row 7 (+1 row per step).  
-Player Two moves from row 7 toward row 0 (−1 row per step).  
-Kings may move diagonally in all four directions.
-
----
-
-## ECS Architecture
-
-### Components
-
-| Component | Fields | Purpose |
-|---|---|---|
-| `BoardComponent` | `cells: Vec<i32>` | 8×8 flat grid of piece values |
-| `TurnComponent` | `current_player: u32`, `move_number: u32` | Whose turn it is and how many moves have been played |
-| `GameStatusComponent` | `status: GameStatus`, `winner: u32` | Active / Finished and optional winner (1 or 2) |
-| `ChainCapture` *(internal)* | `row: u32`, `col: u32` | Tracks the landing square during a multi-hop capture sequence |
-
-### Systems
-
-| System | Responsibility |
-|---|---|
-| `MoveValidationSystem` | Checks diagonal legality, occupancy, and bounds for both steps and jumps |
-| `CaptureSystem` | Identifies the jumped piece, removes it, and detects further chain-capture options |
-| `PromotionSystem` | Promotes a man to king when it reaches the opponent's back rank |
-| `TurnSystem` | Advances the turn after a non-capturing move or when no further captures exist from the landing square; holds the turn during chain captures |
-| `EndConditionSystem` | Declares a winner when one side has no pieces or no legal moves |
-
----
-
-## Contract API
-
-```rust
-/// Initialise a new game.
-fn init_game(env: Env, player_one: Address, player_two: Address)
-
-/// Submit a move from (from_row, from_col) to (to_row, to_col).
-fn submit_move(env: Env, player: Address, from_row: u32, from_col: u32, to_row: u32, to_col: u32)
-
-/// Return the full game state snapshot.
-fn get_state(env: Env) -> GameState
-
-/// Return the current board cells (64 values, row-major order).
-fn get_board(env: Env) -> BoardState
-
-/// Return the Address of the player whose turn it currently is.
-fn get_current_player(env: Env) -> Address
-```
+| Function | Parameters | Returns | Description |
+|---|---|---|---|
+| `init_game` | `player_one: Address`, `player_two: Address` | `Result<(), CheckersError>` | Seeds the standard 8×8 opening position; Player One moves first. Returns `AlreadyInitialised` if called more than once. |
+| `submit_move` | `player: Address`, `from_row: u32`, `from_col: u32`, `to_row: u32`, `to_col: u32` | `Result<(), CheckersError>` | Validates and applies a step or capture, resolves chain captures, promotes kings, and advances or holds the turn. Returns one of the `CheckersError` variants on any rule violation. |
+| `get_state` | — | `Result<GameState, CheckersError>` | Full snapshot: board, turn, status, and both player addresses. |
+| `get_board` | — | `Result<BoardState, CheckersError>` | Raw 64-cell board array, row-major order. |
+| `get_current_player` | — | `Result<Address, CheckersError>` | The `Address` of the player whose turn it currently is. |
 
 ### Error codes
 
@@ -108,7 +32,7 @@ fn get_current_player(env: Env) -> Address
 | `AlreadyInitialised` | 1 | `init_game` called more than once |
 | `NotInitialised` | 2 | Any call before `init_game` |
 | `NotAPlayer` | 3 | Caller is not `player_one` or `player_two` |
-| `WrongTurn` | 4 | Caller is the correct player but it is not their turn |
+| `WrongTurn` | 4 | Caller is a registered player but it is not their turn |
 | `NotYourPiece` | 5 | Source square is empty or owned by the opponent |
 | `DestinationOccupied` | 6 | Target square is already occupied |
 | `IllegalMove` | 7 | Move is not a legal diagonal step or jump |
@@ -118,206 +42,106 @@ fn get_current_player(env: Env) -> Address
 | `ChainCapturePieceMismatch` | 11 | During a chain capture the origin square was not the chain square |
 | `NotDarkSquare` | 12 | Destination square is a light square (row + col is even) |
 
----
+## Architecture overview
 
-## Rules Implemented
-
-1. **Diagonal movement only** — men move one square diagonally forward; kings
-   move one square diagonally in any direction.
-2. **Captures (jumps)** — a piece jumps over an adjacent opponent piece into
-   the empty square beyond. The captured piece is removed immediately.
-3. **Forced captures** — if any capture is available for the current player,
-   they *must* make a capture. A non-capture step is rejected with
-   `MustCapture`.
-4. **Chain captures (multi-hop)** — after a capture, if the landing piece can
-   continue capturing, the same player must do so. The turn is held and the
-   active square is tracked via `ChainCapture`. The player may only move the
-   same piece until no further captures are available.
-5. **Promotion** — a man reaching the opponent's back rank (row 7 for Player
-   One, row 0 for Player Two) is immediately promoted to a king. Promotion
-   happens before chain-capture detection, so a newly crowned king may
-   continue capturing if further opportunities exist.
-6. **Win condition** — a player wins when the opponent has no pieces remaining
-   on the board, or when the opponent has no legal move (step or capture)
-   available on their turn.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Rust 1.70 or newer
-- `wasm32v1-none` target: `rustup target add wasm32v1-none`
-- Stellar CLI: `cargo install --locked stellar-cli --features opt`
-
-### Run the tests
-
-```bash
-cd examples/checkers
-cargo test
-```
-
-### Check formatting and lints
-
-```bash
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-```
-
-### Build the Soroban WASM contract
-
-```bash
-stellar contract build
-```
-
-The compiled WASM artefact is written to:
+There is no `GameApp` tick loop. `submit_move` runs a fixed validation/update pipeline
+synchronously on each call:
 
 ```
-target/wasm32v1-none/release/checkers.wasm
+submit_move
+  └─ identify caller, check turn order, bounds, and dark-square rule
+  └─ MoveValidationSystem  (systems.rs: legal_steps / legal_captures)
+       → confirms the requested move is a legal step or capture for this piece
+  └─ forced-capture check   (systems.rs: any_capture_available)
+       → rejects a non-capture move if any capture exists for the player
+  └─ apply move + remove captured piece
+  └─ PromotionSystem        (systems.rs: maybe_promote)
+       → crowns a man reaching the opponent's back rank
+  └─ chain-capture detection (systems.rs: legal_captures on the landing square)
+       → holds the turn and records the active square if another capture is available
+  └─ EndConditionSystem     (systems.rs: check_winner)
+       → declares a winner on piece-count exhaustion or no legal moves
+  └─ TurnSystem
+       → advances current_player, or holds it during a chain capture
 ```
 
-### Deploy to Testnet (optional)
+`components.rs` holds the data shapes (`BoardComponent`, `TurnComponent`,
+`GameStatusComponent`, `GameStatus`, the public `GameState`/`BoardState` view types, the
+internal `ChainCapture` tracker, and the small `SmallVec4` fixed-capacity collection).
+`systems.rs` holds the pure, storage-free game-logic functions (move/capture legality,
+promotion, win detection, board initialisation). `lib.rs` is the only module that touches
+`env.storage()`; it loads components, calls into `systems.rs`, and writes the results
+back.
 
-```bash
-# Generate or reuse an identity
-stellar keys generate --global alice --network testnet
+## Storage model
 
-# Deploy
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/checkers.wasm \
-  --source alice \
-  --network testnet \
-  --alias checkers_contract
-```
-
-### Invoke on Testnet
-
-```bash
-# Initialise a game
-stellar contract invoke \
-  --id checkers_contract \
-  --source alice \
-  --network testnet \
-  -- init_game \
-  --player_one <PLAYER_ONE_ADDRESS> \
-  --player_two <PLAYER_TWO_ADDRESS>
-
-# Submit a move
-stellar contract invoke \
-  --id checkers_contract \
-  --source alice \
-  --network testnet \
-  -- submit_move \
-  --player <PLAYER_ADDRESS> \
-  --from_row 2 --from_col 1 \
-  --to_row 3 --to_col 0
-
-# Read the current board
-stellar contract invoke \
-  --id checkers_contract \
-  --network testnet \
-  -- get_board
-```
-
----
-
-## Project Layout
-
-```
-examples/checkers/
-├── Cargo.toml          # Package manifest and dependency pinning
-├── README.md           # This file
-└── src/
-    ├── lib.rs          # Contract implementation (components + systems + API)
-    └── test.rs         # Integration test suite
-```
-
----
-
-## Test Coverage
-
-| Scenario | Test |
-|---|---|
-| Standard starting position | `test_init_sets_standard_start_position` |
-| Double-init rejection | `test_double_init_fails` |
-| State before init | `test_get_state_before_init_fails` |
-| Legal diagonal step | `test_legal_diagonal_step_advances_piece` |
-| Turn advancement | `test_turn_advances_after_step` |
-| Light-square rejection | `test_move_to_light_square_rejected` |
-| Wrong-piece rejection | `test_move_wrong_piece_rejected` |
-| Empty-square move rejection | `test_move_empty_square_rejected` |
-| Horizontal move rejection | `test_horizontal_move_rejected` |
-| Backward move (man) rejection | `test_backward_move_man_rejected` |
-| Out-of-bounds rejection | `test_out_of_bounds_rejected` |
-| Wrong-turn rejection | `test_wrong_turn_player_rejected` |
-| Unknown address rejection | `test_unknown_address_rejected` |
-| Capture execution + removal | `test_capture_removes_opponent_piece` |
-| Forced-capture enforcement | `test_forced_capture_prevents_step` |
-| King promotion at back rank | `test_man_promoted_to_king_at_back_rank` |
-| Win detection (no pieces) | `test_win_when_opponent_has_no_pieces` |
-| Move after game over | `test_move_after_game_over_rejected` |
-| King backward movement | `test_king_can_move_backward` |
-| Board size invariant | `test_get_board_returns_64_cells` |
-| Current-player query | `test_get_current_player_switches_each_turn` |
-
----
-
-## Design Notes
-
-### Storage Keys
-
-Soroban persistent storage is keyed by `Symbol`. This contract uses five
-top-level keys:
+All state lives in **persistent storage**, under five top-level `Symbol` keys:
 
 | Key | Contents |
 |---|---|
-| `BOARD` | `BoardComponent` (64 cells) |
-| `TURN` | `TurnComponent` |
-| `STATUS` | `GameStatusComponent` |
+| `BOARD` | `BoardComponent` — 64-cell flat grid |
+| `TURN` | `TurnComponent` — current player and move number |
+| `STATUS` | `GameStatusComponent` — active/finished and winner |
 | `P1` | `Address` of Player One |
 | `P2` | `Address` of Player Two |
-| `CHAIN` | `ChainCapture` (present only during a multi-hop sequence) |
+| `CHAIN` | `ChainCapture` — present only while a multi-hop capture sequence is in progress |
 
-The `CHAIN` key is absent when no multi-hop is in progress. Its presence is
-the signal to `TurnSystem` that the current turn is not yet complete.
+Persistent storage (rather than instance storage) is used because each key is read and
+rewritten independently inside `submit_move` — the board, turn, and status are not bundled
+into one aggregate struct in this example, so per-key persistent entries map directly onto
+that access pattern. The `CHAIN` key is removed as soon as a turn fully ends; its absence
+is what tells `submit_move` that no multi-hop sequence is active, so it doubles as both
+data and a lightweight state flag.
 
-### `no_std` Compatibility
+## Main gameplay flow
 
-The contract is compiled with `#![no_std]` as required by Soroban. All
-collections use `soroban_sdk::Vec` rather than `std::vec::Vec`. Internal
-helper logic that needs small fixed-size arrays uses a local `SmallVec4<T>`
-type backed by a stack-allocated `[T; 4]` array.
+1. Deployer calls `init_game(player_one, player_two)`. The board is seeded with the
+   standard 12-piece-per-side opening position; Player One moves first.
+2. Player One calls `submit_move` with a `(from_row, from_col)` → `(to_row, to_col)` pair.
+   The contract checks turn order, bounds, the dark-square rule, piece ownership, and
+   move geometry (diagonal step or jump).
+3. If any capture is available for the mover anywhere on the board, a non-capture move is
+   rejected with `MustCapture` — captures are mandatory, not optional.
+4. On a legal capture, the jumped piece is removed. If the landing square has a further
+   capture available, the turn is **held**: the same player must continue jumping with the
+   same piece (tracked via the `CHAIN` key) until no further capture exists.
+5. A man reaching the opponent's back rank is promoted to a king immediately after the
+   move that lands it there, before chain-capture continuation is checked.
+6. After each move, `EndConditionSystem` checks whether either side has no pieces left or
+   no legal move available; if so, `STATUS` flips to `Finished` with a recorded winner.
+7. Players alternate `submit_move` calls until a winner is recorded; `get_state`,
+   `get_board`, and `get_current_player` provide read-only views at any point.
 
-### Capture Validation Strategy
+## Cougr APIs used
 
-Capture legality is checked by `MoveValidationSystem` against the list
-returned by `legal_captures`. This list is also used to:
+None. `Cargo.toml` declares `cougr-core` as a dependency, but the contract source does
+not import or call into it — no `ComponentTrait`, `impl_component!`, `GameApp`,
+`SimpleWorld`/`SimpleQueryBuilder`, `auth`, or `privacy` APIs are used anywhere in
+`components.rs`, `systems.rs`, or `lib.rs`. Per the API usage guidance in
+`EXAMPLE_STANDARD.md` §8, none of those APIs apply here: there is exactly one fixed-shape
+game state per contract instance (no dynamic entity population to scan with
+`SimpleWorld`/`SimpleQueryBuilder`), one synchronous validation pipeline per call (no need
+for `GameApp`/`ScheduleStage` ordering across stages), no session-key or multi-device flow
+(no need for `auth`), and no hidden information or proof submission (no need for
+`privacy::stable` or `privacy::experimental`). This example is kept as a transitional
+reference precisely because it predates Cougr's component/ECS conventions — see `snake`
+for the current recommended approach to structuring an example around `GameApp` and Cougr
+components.
 
-- determine whether a forced capture exists anywhere on the board
-  (`any_capture_available`),
-- detect chain-capture continuation opportunities after a jump lands.
+## Build and test commands
 
-This avoids duplicating directional logic and keeps the validation surface
-small and testable.
+```bash
+cargo test
+stellar contract build
+```
 
----
+## Known limitations
 
-## Relation to Other Examples
-
-| Example | What it adds over this one |
-|---|---|
-| `tic_tac_toe` | Simpler board, no movement or capture |
-| `checkers` (this) | Grid movement, captures, forced rules, promotion, chains |
-| `chess` | More piece types, complex movement geometry, check/checkmate |
-| `battleship` | Hidden state, commit-reveal, coordinate bombing |
-
-Checkers occupies the middle of the complexity ladder: rich enough to
-demonstrate real rule enforcement without the combinatorial complexity of
-chess.
-
----
-
-## License
-
-MIT OR Apache-2.0
+- Does not use `GameApp`, `ScheduleStage`, `SimpleWorld`, or any other `cougr-core` API —
+  game logic is invoked directly from contract entrypoints over plain `#[contracttype]`
+  structs, since a two-player, one-decision-per-call board game does not require a tick
+  scheduler or entity queries.
+- No timeout/forfeit mechanism for an unresponsive player.
+- No draw detection (e.g., repetition or no-progress rules); a game can only end by piece
+  exhaustion or a player having no legal move.
+- No spectator or replay API beyond the three read-only getters.
