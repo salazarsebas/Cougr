@@ -1,193 +1,97 @@
-# Memory Match Contract
+# Memory Match
 
-A memory match card game implemented as a Soroban smart contract using the Cougr ECS framework.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
-## Overview
+An on-chain Memory Match card game built with the [Cougr](../../README.md) ECS framework on Stellar Soroban.
 
-The Memory Match contract implements a classic memory card game where players flip cards to find matching pairs. The game features:
+## Purpose and pattern
 
-- 16 cards arranged in a 4x4 grid (8 matching pairs)
-- Turn-based gameplay with card revealing mechanics
-- Match detection and automatic card hiding for non-matches
-- Game state tracking and reset functionality
-- Player authorization to prevent unauthorized access
+This example demonstrates a single-player, turn-based reveal-and-match game where pairs of
+cards are flipped and compared against each other rather than against fixed rules. It
+showcases Cougr's `ComponentTrait` pattern for typed, byte-serializable game state: cards,
+the board, and game progress are each modeled as a `#[contracttype]` struct with manual
+`serialize`/`deserialize`, rather than being scanned through `SimpleWorld`/`SimpleQueryBuilder`.
+This is a lighter-weight integration suited to a single fixed-shape game state (16 cards, one
+board, one player) with no dynamic entity population.
 
-## Architecture
+## Public contract API
 
-The contract is built using the Cougr ECS (Entity Component System) framework with the following components:
+| Function | Parameters | Returns | Description |
+|---|---|---|---|
+| `init_game` | `player: Address` | `GameState` | Seeds a fresh 16-card board (8 deterministic pairs) for `player` and returns the initial state. |
+| `reveal_card` | `player: Address`, `position: u32` | `RevealInfo` | Reveals the card at `position`. Resolves a pair once two cards are revealed (match, no-match, or game-over). Panics if not initialized, the caller isn't the registered player, the game is over, two cards are already revealed, the position is out of range, or the card is already revealed/matched. |
+| `get_game_state` | — | `GameState` | Current board view, revealed/matched counts, move count, and game-over flag. |
+| `reset_game` | `player: Address` | `GameState` | Hides all cards and clears progress, keeping the same board layout. Panics if not initialized or the caller isn't the registered player. |
 
-### Components
+## Architecture overview
 
-- **CardComponent**: Represents individual cards with their state (Hidden, Revealed, Matched) and value
-- **BoardComponent**: Manages the game board, tracking revealed cards and matched pairs
-- **GameStateComponent**: Tracks overall game state including player, moves, and game over status
-
-### World State
-
-The `ECSWorldState` struct encapsulates all game components and provides methods for:
-- Card lookup and state updates
-- Game state management
-- Serialization/deserialization for contract storage
-
-## Contract Functions
-
-### Core Functions
-
-- `init_game(env: Env, player: Address) -> GameState`
-  - Initializes a new game with the specified player
-  - Returns the initial game state
-
-- `reveal_card(env: Env, player: Address, position: u32) -> RevealInfo`
-  - Reveals a card at the specified position
-  - Handles match detection and game logic
-  - Returns information about the reveal operation
-
-- `get_game_state(env: Env) -> GameState`
-  - Returns the current game state
-  - Useful for UI updates and state queries
-
-- `reset_game(env: Env, player: Address) -> GameState`
-  - Resets the game to initial state
-  - Only authorized players can reset
-
-### Game Rules
-
-1. Players can only reveal 2 cards at a time
-2. After revealing 2 cards, they are automatically processed:
-   - If matching: cards remain revealed and marked as matched
-   - If not matching: cards are hidden again
-3. The game ends when all 8 pairs are found
-4. Only the initializing player can make moves or reset the game
-
-## Card Layout
-
-The game uses a deterministic card layout for testing and consistency:
+There is no `GameApp` tick loop — `reveal_card` runs a fixed pipeline synchronously on each
+invocation:
 
 ```
-Positions:  0  1  2  3  4  5  6  7
-Values:    0  1  2  3  4  5  6  7
-
-Positions:  8  9 10 11 12 13 14 15
-Values:    0  1  2  3  4  5  6  7
+reveal_card
+  └─ ValidationSystem     → checks caller, game-over state, two-card limit, position bounds
+  └─ RevealSystem          → flips the card to Revealed, increments the move counter
+  └─ (when 2 cards are revealed)
+       └─ PairResolutionSystem → compares values; marks Matched + checks for game-over,
+                                  or hides both cards again on a mismatch
 ```
 
-Cards at positions (0,8), (1,9), (2,10), etc., form matching pairs.
+`reset_game` runs a separate `ResetSystem` that rehides every card and zeroes progress
+counters without regenerating the board layout. `components.rs` defines the data
+(`CardComponent`, `BoardComponent`, `GameStateComponent`, the `ECSWorldState` aggregate, and
+the public `GameState`/`RevealInfo`/`RevealResult` types); `systems.rs` holds the pure
+validation, reveal, resolution, reset, and projection functions; `lib.rs` owns the single
+`ECSWorldState` and is the only module that touches contract storage.
 
-## Building and Testing
+## Storage model
 
-### Prerequisites
+The entire game lives under one instance-storage key (`WORLD_KEY`, `symbol_short!("WORLD")`)
+as a single `ECSWorldState` struct bundling all 16 card components, the board component, and
+the game-state component. Instance storage is used — not persistent or temporary — because
+there is exactly one game per contract instance and the state must survive for the lifetime
+of that instance with no per-entry TTL management.
 
-- Rust toolchain
-- Soroban CLI tools
-- Cougr framework dependencies
+## Main gameplay flow
 
-### Build
+1. Deployer calls `init_game(player)`; 16 cards are created with a deterministic layout
+   (positions 0–7 and 8–15 hold matching values 0–7), all starting `Hidden`.
+2. Player calls `reveal_card(player, position)` for a hidden card; it flips to `Revealed`
+   and the move counter increments.
+3. Once two cards are revealed, the contract compares their values:
+   - **Match**: both cards become `Matched`, `matched_pairs` increments, and reveals are
+     re-enabled. If all 8 pairs are now matched, the game is marked over.
+   - **No match**: both cards flip back to `Hidden` and reveals are re-enabled.
+4. Player repeats step 2–3 until `matched_pairs` reaches 8 and `game_over` is `true`.
+5. Player (or anyone reading state) calls `get_game_state` at any point to read the board,
+   or calls `reset_game` to rehide all cards and start over on the same layout.
 
-```bash
-cargo build
-```
+## Cougr APIs used
 
-### Run Tests
+- `cougr_core::component::ComponentTrait` — gives each component (`CardComponent`,
+  `BoardComponent`, `GameStateComponent`) a `component_type()` symbol and explicit byte-level
+  `serialize`/`deserialize`. This is the only Cougr API the example uses: the game has one
+  fixed-shape `ECSWorldState` per contract instance (16 cards, one board, one player) rather
+  than a dynamic entity population, so `SimpleWorld`/`SimpleQueryBuilder` scanning would add
+  overhead with no benefit. There is a single decision point per call (reveal or reset), so
+  `GameApp`/`ScheduleStage` staged ticking is not needed either, and the game has no hidden
+  information, multi-device auth, or proof-verification requirements that would call for
+  `auth`, `privacy::stable`, `privacy::experimental`, or `ops` standards.
+
+## Build and test commands
 
 ```bash
 cargo test
+stellar contract build
 ```
 
-### Test Coverage
+## Known limitations
 
-The contract includes comprehensive tests covering:
-
-- Game initialization
-- Card revealing mechanics
-- Match detection
-- Non-match handling
-- Game reset functionality
-- Error conditions (unauthorized access, invalid positions, etc.)
-- Edge cases and game completion
-
-## Usage Example
-
-```rust
-use soroban_sdk::{Env, Address};
-use memory_match::MemoryMatchContractClient;
-
-// Initialize environment and contract
-let env = Env::default();
-let contract_id = env.register(MemoryMatchContract, ());
-let client = MemoryMatchContractClient::new(&env, &contract_id);
-
-// Create player and initialize game
-let player = Address::generate(&env);
-let game_state = client.init_game(&player);
-
-// Reveal first card
-let reveal_info = client.reveal_card(&player, &0);
-println!("Card value: {}", reveal_info.value);
-
-// Reveal matching card
-let match_info = client.reveal_card(&player, &8);
-assert!(matches!(match_info.result, RevealResult::MatchFound));
-```
-
-## Data Structures
-
-### GameState
-
-```rust
-pub struct GameState {
-    pub board_state: Vec<u32>,  // 0=Hidden, 1-8=Revealed, 9=Matched
-    pub revealed_count: u32,
-    pub matched_pairs: u32,
-    pub total_pairs: u32,
-    pub moves_count: u32,
-    pub game_over: bool,
-}
-```
-
-### RevealInfo
-
-```rust
-pub struct RevealInfo {
-    pub result: RevealResult,
-    pub position: u32,
-    pub value: u32,
-    pub positions: Vec<u32>,
-}
-```
-
-### RevealResult
-
-```rust
-pub enum RevealResult {
-    CardRevealed,
-    MatchFound,
-    NoMatch,
-    GameOver,
-}
-```
-
-## Storage
-
-The contract uses Soroban's instance storage to persist the `ECSWorldState`. The state is stored under a fixed key and includes all game components, allowing the game to be resumed across contract invocations.
-
-## Security Considerations
-
-- Player authorization ensures only the game creator can make moves
-- Input validation prevents invalid card positions
-- State consistency is maintained through atomic updates
-- No external dependencies or privileged operations
-
-## Future Enhancements
-
-Potential improvements for future versions:
-
-- Multiple game modes (different grid sizes, card counts)
-- Score tracking and leaderboards
-- Time limits or move counters
-- Multiplayer support
-- Card shuffling for random layouts
-- Visual themes and customization
-
-## License
-
-This contract is part of the Cougr framework examples and follows the same licensing terms.
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked directly
+  from contract entrypoints rather than through a tick-based scheduler, since a single-player
+  game with one decision point per call does not need staged scheduling.
+- The card layout is fixed and deterministic (not shuffled), so the pairing is the same for
+  every game; randomized layouts are out of scope for this example.
+- `reset_game` reuses the same fixed layout rather than generating a new one.
+- No timeout/forfeit mechanism, scoring across multiple games, or multiplayer support.
