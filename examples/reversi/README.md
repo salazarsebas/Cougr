@@ -1,237 +1,88 @@
 # Reversi
 
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
+
 An on-chain Reversi (Othello) game built with the [Cougr](../../README.md) ECS framework on Stellar Soroban.
 
-## Overview
+## Purpose and pattern
 
-This example implements a complete Reversi (Othello) game as a Soroban smart contract. The focus is on the smart contract logic, showcasing how `cougr-core` simplifies on-chain turn-based game development with isolated systems and typed components.
+This example demonstrates a turn-based, perfect-information board game where every move
+mutates shared board state and can trigger automatic turn-skipping. It showcases Cougr's
+`ComponentTrait` pattern for typed, byte-serializable game state — components are plain
+Rust structs annotated with `#[contracttype]` that implement `ComponentTrait` directly,
+rather than being scanned through `SimpleWorld`/`SimpleQueryBuilder`. This is a lighter-weight
+integration suited to a single fixed-shape game state (one board, two players) with no
+dynamic entity population.
 
-## ECS Design
+## Public contract API
 
-### Components
+| Function | Parameters | Returns | Description |
+|---|---|---|---|
+| `init_game` | `player_one: Address`, `player_two: Address` | — | Initializes an 8×8 board with the standard opening position; `player_one` plays Black and moves first. Panics if already initialized. |
+| `submit_move` | `player: Address`, `row: u32`, `col: u32` | — | Validates and applies a move (requires `player.require_auth()`), flips bracketed opponent pieces, recomputes score, and advances turn/pass state. Panics on illegal move, wrong turn, or finished game. |
+| `get_state` | — | `GameState` | Current player, pass-count state, and active/finished status. |
+| `get_board` | — | `BoardState` | Raw 64-cell board array (row-major, 0=empty/1=black/2=white), plus width/height. |
+| `get_score` | — | `ScoreState` | Black/white piece counts and winner (0=ongoing, 1=black, 2=white, 3=draw). |
 
-All components derive `Clone + Debug`, annotated with `#[contracttype]` for XDR-serialisation, and implement `ComponentTrait` for Cougr's byte-level storage layer.
+## Architecture overview
 
-```rust
-pub struct BoardComponent {
-    pub cells: Vec<u32>,  // 64 elements, row-major; 0=empty, 1=black, 2=white
-    pub width: u32,       // always 8
-    pub height: u32,      // always 8
-}
-
-pub struct TurnComponent {
-    pub current_player: u32, // 1=black, 2=white
-    pub pass_count: u32,     // 0=normal, 1=opponent skipped, 2=both locked → game ends
-}
-
-pub struct GameStatusComponent {
-    pub status: u32,  // 0=active, 1=finished
-}
-
-pub struct ScoreComponent {
-    pub black_count: u32,
-    pub white_count: u32,
-}
-```
-
-The entire game state is stored under a single `"WORLD"` key as `ECSWorldState`:
-
-```rust
-pub struct ECSWorldState {
-    pub board:      BoardComponent,
-    pub turn:       TurnComponent,
-    pub status:     GameStatusComponent,
-    pub score:      ScoreComponent,
-    pub player_one: Address,  // plays BLACK (1)
-    pub player_two: Address,  // plays WHITE (2)
-}
-```
-
-### Systems
-
-Systems run in sequence inside `submit_move`:
-
-1. **MoveValidationSystem** — rejects occupied cells and moves with no bracketed pieces
-2. **FlipResolutionSystem** — places piece and flips all bracketed opponent pieces in 8 directions
-3. **ScoringSystem** — recomputes piece counts from board state
-4. **TurnSystem + PassSystem** — advances to opponent; auto-skips if opponent has no legal move; signals game end when both have no moves
-5. **EndConditionSystem** — sets status=1 when pass_count≥2 or board is full
-
-## Contract API
-
-### Functions
-
-| Function | Description |
-|----------|-------------|
-| `init_game(player_one, player_two)` | Initialise board; Black moves first |
-| `submit_move(player, row, col)` | Place piece; panics on illegal move or wrong turn |
-| `get_state() → GameState` | Current player, pass_count state, active/finished |
-| `get_board() → BoardState` | Raw cell array (row-major, 0-indexed) |
-| `get_score() → ScoreState` | Piece counts and winner (0=ongoing, 1=black, 2=white, 3=draw) |
-
-### Return Types
-
-```rust
-pub struct GameState {
-    pub current_player: u32,  // 1=black, 2=white
-    pub pass_count: u32,      // 0, 1, or 2
-    pub status: u32,          // 0=active, 1=finished
-}
-
-pub struct BoardState {
-    pub cells: Vec<u32>,  // 64 values, row-major
-    pub width: u32,       // 8
-    pub height: u32,      // 8
-}
-
-pub struct ScoreState {
-    pub black_count: u32,
-    pub white_count: u32,
-    pub winner: u32,  // 0=ongoing, 1=black, 2=white, 3=draw
-}
-```
-
-## Rules
-
-- Black moves first. Players alternate turns.
-- A move must flip at least one opponent piece in a straight line (horizontal, vertical, or diagonal).
-- If a player has no legal move, their turn is automatically skipped (`pass_count` = 1).
-- Game ends when both players have no legal moves (`pass_count` = 2) or the board is full.
-- The player with more pieces wins.
-
-## Implementation Patterns
-
-### Flip Algorithm
-
-Reversi's core mechanic: a move is legal only if it brackets at least one opponent piece in a straight line, ending with one of the mover's own pieces. The contract checks all 8 directions using a direction-vector table:
-
-```rust
-const DIRS: [(i32, i32); 8] = [
-    (-1, -1), (-1, 0), (-1, 1),   // NW  N  NE
-    ( 0, -1),          ( 0, 1),   // W      E
-    ( 1, -1), ( 1, 0), ( 1, 1),   // SW  S  SE
-];
-```
-
-`flips_in_dir` walks one step at a time from `(row+dr, col+dc)`:
-- Counts consecutive opponent pieces.
-- Returns the count if it finds one of the player's own pieces at the end (bracket found).
-- Returns 0 if it hits an empty cell or the board edge (no bracket).
-
-`FlipResolutionSystem` then re-walks each direction where `flips_in_dir > 0` and overwrites those cells with the mover's colour. `Vec::set` on a `soroban_sdk::Vec` mutates in place, so the board component is taken by value and returned.
-
-### Pass State Machine
-
-`pass_count` is recomputed from scratch every turn — it is not accumulated:
+There is no `GameApp` tick loop — `submit_move` runs all systems synchronously in a fixed
+pipeline on each invocation:
 
 ```
-After every move:
-  if opponent has legal moves     → pass_count = 0  (normal alternation)
-  elif current has legal moves    → pass_count = 1  (opponent auto-passed, current continues)
-  else                            → pass_count = 2  (both locked → EndConditionSystem ends game)
+submit_move
+  └─ MoveValidationSystem   → rejects occupied cells or moves that flip nothing
+  └─ FlipResolutionSystem   → places the piece, flips bracketed pieces in all 8 directions
+  └─ ScoringSystem          → recomputes black/white piece counts from the board
+  └─ TurnSystem/PassSystem  → advances to the opponent, or auto-passes if they have no legal move
+  └─ EndConditionSystem     → marks the game finished when both players pass or the board is full
 ```
 
-This is handled by `TurnSystem` delegating to `PassSystem` when the opponent has no moves.
+Each system is a pure function over `components.rs` types (`BoardComponent`, `TurnComponent`,
+`GameStatusComponent`, `ScoreComponent`); `lib.rs` owns the single `ECSWorldState` aggregate
+and is the only place that touches contract storage.
 
-## Test Coverage
+## Storage model
 
-| Category | Tests | What is verified |
-|----------|-------|-----------------|
-| Initialisation | 3 | Board layout, opening score (2-2), initial turn state |
-| Move validation | 2 | Occupied-cell rejection, no-flip rejection |
-| Flip mechanics | 3 | Horizontal, vertical, and diagonal flips |
-| Score tracking | 1 | Counts update correctly after a flip |
-| Turn management | 2 | Turn alternation, wrong-player rejection |
-| Pass / sequence | 2 | Normal pass_count=0, multi-move game stays active |
-| Re-initialisation | 1 | Second `init_game` call is rejected |
-| **Total** | **14** | |
+The entire game lives under one instance-storage key (`WORLD_KEY`, `symbol_short!("WORLD")`)
+as a single `ECSWorldState` struct bundling the board, turn, status, score, and both player
+addresses. Instance storage is used — not persistent or temporary — because there is exactly
+one game per contract instance and the state must survive for the lifetime of that instance
+with no per-entry TTL management.
 
-## Board Layout
+## Main gameplay flow
 
-Cells are stored row-major: `cells[row * 8 + col]`.
+1. Deployer calls `init_game(player_one, player_two)`; board is seeded with the four-piece
+   opening position, Black (`player_one`) to move, status active.
+2. Black calls `submit_move(player, row, col)`. The contract checks turn order and move
+   legality (the move must bracket at least one opponent piece in a straight line).
+3. On a legal move: the piece is placed, bracketed opponent pieces flip, score is
+   recomputed, and turn passes to White — unless White has no legal move, in which case
+   Black continues and `pass_count` is set to 1.
+4. Players alternate `submit_move` calls. If neither player has a legal move
+   (`pass_count` reaches 2) or the board fills, `EndConditionSystem` sets status to finished.
+5. Either player calls `get_score` to read the final piece counts and winner.
 
-```
-     0   1   2   3   4   5   6   7
-  0  .   .   .   .   .   .   .   .
-  1  .   .   .   .   .   .   .   .
-  2  .   .   .   .   .   .   .   .
-  3  .   .   .   W   B   .   .   .
-  4  .   .   .   B   W   .   .   .
-  5  .   .   .   .   .   .   .   .
-  6  .   .   .   .   .   .   .   .
-  7  .   .   .   .   .   .   .   .
-```
+## Cougr APIs used
 
-## Development
+- `cougr_core::component::ComponentTrait` — gives each component (`BoardComponent`,
+  `TurnComponent`, `GameStatusComponent`, `ScoreComponent`) a `component_type()` symbol and
+  byte-level `serialize`/`deserialize`, chosen here because the game has a single fixed set
+  of components per instance rather than a dynamic entity population that would benefit from
+  `SimpleWorld`/`SimpleQueryBuilder` scanning.
 
-Requires Rust with `wasm32v1-none` target and [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools/cli/stellar-cli).
+## Build and test commands
 
 ```bash
-# Run tests
 cargo test
-
-# Format check
-cargo fmt --check
-
-# Lint
-cargo clippy --all-targets --all-features -- -D warnings
-
-# Build WASM
 stellar contract build
 ```
 
-## Playing the Game
+## Known limitations
 
-After building the WASM (`stellar contract build`), deploy and play on Testnet:
-
-```bash
-# Generate two player identities and fund them via Friendbot
-stellar keys generate reversi_black
-stellar keys generate reversi_white
-stellar keys fund reversi_black --network testnet
-stellar keys fund reversi_white --network testnet
-
-# Deploy the contract
-CONTRACT_ID=$(stellar contract deploy \
-  --wasm target/wasm32v1-none/release/reversi.wasm \
-  --network testnet \
-  --source reversi_black)
-
-# Initialise (reversi_black plays Black, reversi_white plays White)
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
-  -- init_game \
-  --player_one reversi_black \
-  --player_two reversi_white
-
-# Black places at row=3, col=2 (flips (3,3) horizontally)
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
-  -- submit_move \
-  --player reversi_black \
-  --row 3 --col 2
-
-# Check the board after the move
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
-  -- get_board
-# → {"cells":[0,0,...,1,1,1,0,...,1,2,0,...],"width":8,"height":8}
-#   (3,2)=1  (3,3)=1  (3,4)=1  — three Black pieces in a row
-
-# Check whose turn it is
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
-  -- get_state
-# → {"current_player":2,"pass_count":0,"status":0}
-#   current_player=2 → White's turn, game active
-
-# Check the score
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
-  -- get_score
-# → {"black_count":4,"white_count":1,"winner":0}
-#   winner=0 → game ongoing
-
-# White responds at row=2, col=3
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_white \
-  -- submit_move \
-  --player reversi_white \
-  --row 2 --col 3
-```
-
-`submit_move` panics (transaction fails) on an illegal move or wrong turn — the chain rejects it cleanly. `get_score` returns `winner = 0` while the game is active and `1` (Black), `2` (White), or `3` (draw) once it ends.
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked directly
+  from contract entrypoints rather than through a tick-based scheduler, since a turn-based
+  game with one decision point per call does not need staged scheduling.
+- No timeout/forfeit mechanism for an unresponsive player.
+- No spectator or replay API beyond the three read-only getters.
