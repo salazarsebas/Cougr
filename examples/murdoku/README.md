@@ -271,6 +271,15 @@ cargo test --features zk
 
 ---
 
+## Known Limitations
+
+- **ZK trusted setup is development-only.** The Groth16 verifier keys shipped here come from a development setup and are not production-safe. See [Known Constraints](#known-constraints) above for the full ZK caveats (trusted setup, client-side proving, circuit size).
+- **Difficulty is unverified creator metadata.** The contract validates Latin-square correctness on submission but does not independently grade or rank difficulty — the `difficulty` field is taken from the creator at face value.
+- **No ranked leaderboard or rewards.** A per-puzzle solver count is tracked, but the example intentionally omits scoring, ranked leaderboards, and reward distribution to keep the reference focused on the ECS + auth + ZK pattern.
+- **Puzzle catalog grows without an on-chain cap.** Submissions increment `PUZZLE_COUNT` without an upper bound. Reads are paginated via `offset`/`limit`, but production deployments expecting very large catalogs should add submission limits and indexed lookups.
+
+---
+
 ## Classification
 
 Marked as **Canonical**. Murdoku is the reference full-stack example for Cougr, showcasing how to build games that combine ECS, session-key-based social logins (via Pollar), and multi-step transaction authorization. Use this as the template for production-grade full-stack game contracts.
