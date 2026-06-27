@@ -1,8 +1,9 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{Env};
-use cougr_core::{SimpleWorld, GameApp, ScheduleStage, SystemConfig};
+
+use cougr_core::{GameApp, ScheduleStage, SimpleWorld, SystemConfig};
+use soroban_sdk::Env;
 
 #[test]
 fn test_init_game() {

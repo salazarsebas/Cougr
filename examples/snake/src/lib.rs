@@ -764,6 +764,7 @@ mod tests {
 
         let _ = initial_food_pos; // Suppress unused warning
     }
+
     #[test]
     fn test_gameapp_tick_integration() {
         let env = Env::default();
@@ -775,5 +776,4 @@ mod tests {
         );
         app.run(&env).unwrap();
     }
-
 }

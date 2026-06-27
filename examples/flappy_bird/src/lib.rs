@@ -312,6 +312,5 @@ impl FlappyBirdContract {
 }
 
 #[cfg(test)]
-
 #[cfg(test)]
 mod test;
