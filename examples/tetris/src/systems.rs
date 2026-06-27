@@ -1,12 +1,11 @@
 use crate::components::{GameState, Piece, TetrominoShape};
+use cougr_core::SimpleWorld;
 #[cfg(test)]
 use cougr_core::{GameApp, ScheduleStage, SystemConfig};
-use cougr_core::SimpleWorld;
 use soroban_sdk::{symbol_short, Env, Vec};
 
 pub(crate) const BOARD_WIDTH: i32 = 10;
 pub(crate) const BOARD_HEIGHT: i32 = 20;
-
 
 pub(crate) fn save_state(env: &Env, state: &GameState) {
     env.storage().instance().set(&symbol_short!("game"), state);
@@ -233,7 +232,6 @@ pub(crate) fn get_piece_coords(shape: TetrominoShape, rot: u32) -> [(i32, i32); 
         },
     }
 }
-
 
 /// Runs a no-op Cougr `GameApp` tick to keep the transitional Tetris example
 /// covered by the same scheduler integration path as the canonical arcade loop.

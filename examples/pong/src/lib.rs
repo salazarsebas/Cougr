@@ -4,9 +4,11 @@ mod components;
 mod systems;
 
 pub use components::{BallComponent, ECSWorldState, GameState, PaddleComponent, ScoreComponent};
-#[cfg(test)]
-pub(crate) use systems::{BALL_SPEED, FIELD_HEIGHT, FIELD_WIDTH, PADDLE_HEIGHT, PADDLE_SPEED, WINNING_SCORE};
 use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
+#[cfg(test)]
+pub(crate) use systems::{
+    BALL_SPEED, FIELD_HEIGHT, FIELD_WIDTH, PADDLE_HEIGHT, PADDLE_SPEED, WINNING_SCORE,
+};
 
 const ECS_WORLD_KEY: Symbol = symbol_short!("ECSWORLD");
 
@@ -122,7 +124,6 @@ impl PongContract {
     pub fn reset_game(env: Env) -> GameState {
         Self::init_game(env)
     }
-
 }
 
 #[cfg(test)]

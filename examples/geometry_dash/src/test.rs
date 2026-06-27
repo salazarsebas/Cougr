@@ -122,5 +122,4 @@ mod tests {
         let env = Env::default();
         crate::systems::run_gameapp_tick(&env);
     }
-
 }

@@ -158,4 +158,3 @@ pub struct GameState {
     pub player2_score: u32,
     pub game_active: bool,
 }
-

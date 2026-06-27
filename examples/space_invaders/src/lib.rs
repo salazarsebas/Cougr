@@ -422,4 +422,5 @@ impl SpaceInvadersContract {
             .instance()
             .get(&DataKey::EntityCount)
             .unwrap_or(0)
-    }}
+    }
+}
