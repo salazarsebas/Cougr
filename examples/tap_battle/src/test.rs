@@ -159,7 +159,8 @@ fn test_session_ops_decrement() {
 
         let keys = cougr_core::accounts::SessionStorage::load_all(&env, &player);
         let session = keys.last().expect("session missing");
-        let status = cougr_core::session::SessionManager::status(&env, &player, &session.key_id).unwrap();
+        let status =
+    cougr_core::session::SessionManager::status(&env, &player, &session.key_id).unwrap();
         assert_eq!(status.remaining_operations, 99);
     });
 }
