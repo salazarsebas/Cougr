@@ -1,7 +1,9 @@
 # Verifiable Chess with ZK Move Validation
 
 > **Transitional example**: This example uses an older Cougr pattern and is preserved
-> for compatibility reference. For the current recommended approach, see `snake`.
+> for compatibility reference. For the current recommended approach to ZK-backed game
+> logic specifically, see `hidden_hand`, which uses `cougr_core::circuits`' pre-built
+> circuit builders instead of constructing a `CustomCircuit` by hand.
 
 A simplified chess implementation on Stellar Soroban that demonstrates **zero-knowledge proof
 verification** for move legality using the [Cougr](../../README.md) ZK framework. Move
@@ -89,7 +91,10 @@ instance, with no per-entry TTL management needed.
   verification key and checks the proof verifies. This is the canonical use case the
   `privacy::experimental` guidance in the Cougr API table calls out (Groth16 proof submission
   / pairing-based verification), as opposed to `privacy::stable`, which is for commit-reveal
-  and Merkle-proof patterns this example does not use.
+  and Merkle-proof patterns this example does not use. Newer examples (`hidden_hand`,
+  `fog_explorer`, `dice_duel`, `blind_auction`) use the higher-level `cougr_core::circuits`
+  pre-built builders instead of hand-rolling a `CustomCircuit`; this example predates that
+  module and is kept as a reference for the lower-level builder API.
 - `cougr_core::privacy::{Groth16Proof, VerificationKey}` — the concrete proof and key types
   the `CustomCircuit` builder and verifier operate on; stored on-chain (`VerificationKey`) or
   passed per-call (`Groth16Proof`, decoded from the `proof: Bytes` argument) so the contract

@@ -361,6 +361,6 @@ fn test_proof_record_update() {
     client.new_game(&white, &black);
 
     let initial_state = client.get_state();
-    assert_eq!(initial_state.proof_record.verified, false);
+    assert!(!initial_state.proof_record.verified);
     assert_eq!(initial_state.proof_record.last_proof.len(), 0);
 }
