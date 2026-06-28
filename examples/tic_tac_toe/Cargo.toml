@@ -11,11 +11,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = "25.1.0"
-<<<<<<< HEAD
-cougr-core = { path = "../../" }
-=======
 cougr-core = "1.1.0"
->>>>>>> e1e5837 (feat(examples): bump cougr-core to 1.1.0 across all examples)
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }
