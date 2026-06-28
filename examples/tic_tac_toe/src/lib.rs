@@ -8,7 +8,6 @@
 
 #![no_std]
 
-use cougr_core::component::ComponentTrait;
 use cougr_core::game::SorobanGame;
 use cougr_core::{impl_component, impl_rich_component, impl_soroban_game};
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol, Vec};
