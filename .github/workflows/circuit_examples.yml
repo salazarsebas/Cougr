@@ -59,7 +59,7 @@ jobs:
         run: cargo test
 
       - name: Install Stellar CLI
-        run: brew install stellar-cli
+        uses: stellar/stellar-cli@v25.1.0
 
       - name: Stellar contract build
         working-directory: examples/${{ matrix.example }}
