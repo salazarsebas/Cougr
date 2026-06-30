@@ -139,7 +139,8 @@ fn test_session_creation() {
 
     // Validate session works
     env.as_contract(&contract_id, || {
-        let session_player = auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
+        let session_player =
+            auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
         assert_eq!(session_player, player);
     });
 }
@@ -160,7 +161,7 @@ fn test_session_ops_decrement() {
         let keys = cougr_core::accounts::SessionStorage::load_all(&env, &player);
         let session = keys.last().expect("session missing");
         let status =
-    cougr_core::session::SessionManager::status(&env, &player, &session.key_id).unwrap();
+            cougr_core::session::SessionManager::status(&env, &player, &session.key_id).unwrap();
         assert_eq!(status.remaining_operations, 99);
     });
 }
