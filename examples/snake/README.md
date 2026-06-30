@@ -164,10 +164,13 @@ stellar contract build
 cargo test
 ```
 
+**Recommended Testing Approach:**
+For comprehensive testing, use the `GameHarness` and `Scenario` APIs provided by `cougr-core`'s `testutils` feature (see [sandbox_tests.rs](file:///Users/kevinbrenes/Cougr/examples/snake/src/sandbox_tests.rs)). This allows writing replayable multi-turn scenarios to verify movement trajectories, direction change validation, and tick updates.
+
 **Expected Output:**
 ```
-running 30 tests
-test result: ok. 30 passed; 0 failed; 0 ignored
+running 31 tests
+test result: ok. 31 passed; 0 failed; 0 ignored
 ```
 
 ### 4. Lint

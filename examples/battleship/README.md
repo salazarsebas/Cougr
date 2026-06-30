@@ -151,6 +151,9 @@ cargo build --release --target wasm32v1-none
 cargo test
 ```
 
+**Recommended Testing Approach:**
+For verification of complex setup commitment sequences and attack/reveal turn-based interactions, utilize `GameHarness` and `Scenario` (see [sandbox_tests.rs](file:///Users/kevinbrenes/Cougr/examples/battleship/src/sandbox_tests.rs)). This ensures cryptographic commitments and Merkle proofs verify correctly across turns.
+
 **Test Coverage (10 tests):**
 - ✅ Game initialization
 - ✅ Board commitment

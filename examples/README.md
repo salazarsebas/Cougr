@@ -83,11 +83,17 @@ them as the default onboarding path.
 
 The maintained reference architectures for Cougr should be read in this order:
 
-- `spawn_and_move`: **start here** — canonical onboarding example showing the full modern Cougr pattern
-- `tic_tac_toe`: turn-based game with rich components (`impl_rich_component!`) for `Address` and `Vec` fields
+- `spawn_and_move`: **start here** — canonical onboarding example showing the full modern Cougr pattern (`SorobanGame`, `impl_component_observed!`, typed ECS)
+- `tic_tac_toe`: turn-based game showing rich components (`impl_rich_component!`, `impl_soroban_game!`) for `Address` and `Vec` fields
+- `session_arena`: session lifecycle, authorization scopes, and fallback direct-auth flows (`SessionManager`)
 - `snake`: canonical arcade loop and `GameApp` tick model
 - `battleship`: canonical hidden-information / commit-reveal flow using `privacy::stable` Merkle primitives
 - `guild_arena`: canonical account recovery and multi-device authorization flow
+- **ZK Circuit Reference Examples**:
+  - `hidden_hand`: private card deals via `circuits::hidden_cards`
+  - `fog_explorer`: private line-of-sight map verification via `circuits::fog_of_war`
+  - `dice_duel`: verifiable on-chain dice rolling via `circuits::fair_dice`
+  - `blind_auction`: sealed-bid auction reveals via `circuits::sealed_bid`
 
 ## Conventions
 

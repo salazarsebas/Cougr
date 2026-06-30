@@ -1,83 +1,75 @@
 # spawn_and_move
 
-The canonical Cougr starter game demonstrating the full ECS lifecycle on Soroban.
+**Canonical** example demonstrating `SorobanGame`, `impl_component_observed!`, and typed ECS.
 
-A player calls `spawn` to enter the world and receives an entity ID. They then call
-`move_entity` with a direction to walk around a 2D grid. Every position change emits
-an indexed Soroban event so off-chain clients can track movement in real time without
-polling.
+## Purpose and pattern
 
-## What this example demonstrates
+This example showcases a starter 2D grid world. A player can spawn an entity and move it in four directions. It demonstrates how to declare components, use observed components that automatically emit indexing events when modified, and load/save world state via `SorobanGame`.
 
-| Pattern | Where |
-|---|---|
-| `impl_component_observed!` — ECS component with indexer events | `Position` |
-| `impl_component!` — private ECS component (no events needed) | `Moves` |
-| `SorobanGame` + `impl_soroban_game!` — standard load/save | `SpawnAndMove` |
-| Typed ECS access (`get_typed`, `set_typed_observed`) | `move_entity` |
-| Multi-entity independence | test suite |
+## Public contract API
 
-## Quick start
+| Function | Parameters | Returns | Description |
+|---|---|---|---|
+| `spawn` | - | `u32` | Spawns a new entity at origin `(0,0)` and returns its generated entity ID. |
+| `move_entity` | `entity_id: u32`, `direction: u32` | - | Moves the entity in the specified direction if moves remain. |
+| `position` | `entity_id: u32` | `Option<Position>` | Retrieves the current `Position` of the given entity. |
+| `moves` | `entity_id: u32` | `Option<Moves>` | Retrieves the current `Moves` component of the given entity. |
+| `entity_count` | - | `u32` | Retrieves the total number of entities spawned in the world. |
 
-```toml
-# Cargo.toml
-[dependencies]
-cougr-core = "1.1.0"
-soroban-sdk = "25.1.0"
+## Architecture overview
+
+```
+                    ┌────────────────────────┐
+                    │  spawn_and_move Client │
+                    └───────────┬────────────┘
+                                │ Calls
+                     ┌──────────▼──────────┐
+                     │ SpawnAndMove Game   │
+                     │ (Soroban Contract)  │
+                     └──────────┬──────────┘
+                                │ Loads / Saves
+                     ┌──────────▼──────────┐
+                     │     SimpleWorld     │
+                     └──────────┬──────────┘
+                                │ Stores
+               ┌────────────────┴────────────────┐
+        ┌──────▼──────┐                   ┌──────▼──────┐
+        │  Position   │                   │    Moves    │
+        │ (Observed)  │                   │  (Standard) │
+        └─────────────┘                   └─────────────┘
 ```
 
-```rust
-use cougr_core::game::SorobanGame;
-use cougr_core::{impl_component_observed, impl_soroban_game};
-use soroban_sdk::{contract, contractimpl, contracttype, Env};
+When a client calls `move_entity`, the contract loads the `SimpleWorld` using `SpawnAndMove::load_world`, queries/modifies the `Position` and `Moves` components of the entity using typed ECS accessors, and saves the world state back using `SpawnAndMove::save_world`.
 
-#[contracttype]
-#[derive(Clone, Debug)]
-pub struct Position { pub x: i32, pub y: i32 }
-impl_component_observed!(Position, "position", Table, { x: i32, y: i32 });
+## Storage model
 
-#[contract]
-pub struct MyGame;
-impl_soroban_game!(MyGame, "world");
+All game components and entity metadata are stored in Soroban **Instance Storage** via the underlying `SimpleWorld`. This keeps the hot-loop gameplay state localized and loaded efficiently in a single storage read/write lifecycle per transaction.
 
-#[contractimpl]
-impl MyGame {
-    pub fn spawn(env: Env) -> u32 {
-        let mut world = MyGame::load_world(&env);
-        let player = world.spawn_entity();
-        world.set_typed_observed(&env, player, &Position { x: 0, y: 0 });
-        MyGame::save_world(&env, &world);
-        player
-    }
-}
-```
+## Main gameplay flow
 
-## Build and test
+1. **Initialization / Spawn**: The user calls `spawn`. An entity is spawned at `(0,0)` with 10 moves remaining. A `("COUGR", "set", "position")` event is emitted.
+2. **Action / Movement**: The user calls `move_entity` with `direction` (0=North, 1=East, 2=South, 3=West). The remaining moves decrement, the position updates, and a position set event is emitted.
+3. **Query**: The user reads the entity's position or moves remaining.
+
+## Cougr APIs used
+
+- `SorobanGame` and `impl_soroban_game!`: Wires up standard boilerplate for loading/saving world state from instance storage.
+- `impl_component_observed!`: Implements component layout with automated indexer events on set.
+- `impl_component!`: Defines standard components without indexing event overhead.
+- `SimpleWorld`: Provides structured, entity-component key-value management.
+
+## Recommended testing approach
+
+Tests in this project should utilize the `cougr-core` `testutils` feature, specifically `GameHarness` and `Scenario`. The `GameHarness` registers the contract, while the `Scenario` allows executing multi-step and multi-turn movement verification with intermediate assertions.
+
+## Build and test commands
 
 ```bash
 cargo test
 stellar contract build
 ```
 
-## Directions
+## Known limitations
 
-| Value | Direction | Effect |
-|---|---|---|
-| `0` | North | `y += 1` |
-| `1` | East | `x += 1` |
-| `2` | South | `y -= 1` |
-| `3` | West | `x -= 1` |
-
-## Events emitted
-
-Every `set_typed_observed` call publishes a Soroban event with topics
-`("COUGR", "set", "position")` and data `{ entity_id, data }`. Subscribe to
-this topic from your frontend or indexer to track all position changes in
-real time.
-
-## Next steps
-
-- Add an `Address` field to a `Players` component using `impl_rich_component!`
-- Add win conditions and a game-over state
-- Explore ZK hidden state with `impl_component_observed!` + `zk::stable` for
-  fog-of-war mechanics
+- Simple grid coordinates without map size constraints or collision checks.
+- Unauthenticated entity movement (any caller can move any entity ID).
