@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::{TicTacToeContract, TicTacToeContractClient};
-use cougr_core::test::{GameHarness, Scenario, PlayerSlot};
+use cougr_core::test::{GameHarness, PlayerSlot, Scenario};
 use soroban_sdk::Env;
 
 #[test]

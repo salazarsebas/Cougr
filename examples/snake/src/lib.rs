@@ -26,9 +26,9 @@
 extern crate alloc;
 
 mod components;
-mod systems;
 #[cfg(test)]
 mod sandbox_tests;
+mod systems;
 
 use alloc::rc::Rc;
 use components::{ComponentTrait, Direction, DirectionComponent, Position, SnakeHead};

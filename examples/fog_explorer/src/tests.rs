@@ -35,15 +35,5 @@ fn explore_accepts_pipeline_proof() {
 
     let map_root = BytesN::from_array(harness.env(), &public[0].bytes.to_array());
     let next = BytesN::from_array(harness.env(), &public[2].bytes.to_array());
-    assert!(client.explore(
-        &player,
-        &map_root,
-        &prior,
-        &next,
-        &0,
-        &0,
-        &1,
-        &2,
-        &proof,
-    ));
+    assert!(client.explore(&player, &map_root, &prior, &next, &0, &0, &1, &2, &proof,));
 }

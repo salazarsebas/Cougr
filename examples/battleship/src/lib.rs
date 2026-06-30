@@ -346,6 +346,6 @@ impl BattleshipContract {
 }
 
 #[cfg(test)]
-mod test;
-#[cfg(test)]
 mod sandbox_tests;
+#[cfg(test)]
+mod test;

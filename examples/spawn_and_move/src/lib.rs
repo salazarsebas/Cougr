@@ -55,9 +55,9 @@ impl_component!(Moves, "moves", Sparse, { remaining: u32, last_direction: u32 })
 // ─── Direction constants ──────────────────────────────────────────────────────
 
 pub const NORTH: u32 = 0; // +y
-pub const EAST: u32 = 1;  // +x
+pub const EAST: u32 = 1; // +x
 pub const SOUTH: u32 = 2; // −y
-pub const WEST: u32 = 3;  // −x
+pub const WEST: u32 = 3; // −x
 
 // ─── Contract ────────────────────────────────────────────────────────────────
 
