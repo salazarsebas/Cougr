@@ -1,4 +1,4 @@
-# 🎮 Tap Battle — Mobile-First Competitive Tapping Game
+# Tap Battle — Mobile-First Competitive Tapping Game
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
 [![Tests](https://img.shields.io/badge/tests-17%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
@@ -6,9 +6,13 @@
 
 A competitive tapping game implemented as a **Soroban smart contract** using `cougr-core`'s ECS framework with **passkey authentication** (secp256r1/WebAuthn) on the Stellar blockchain.
 
+ feat/session-manager-fresh
 > **Related example:** For the minimal session-only flow without passkeys or game mechanics, see [`session_arena`](../session_arena/README.md).
 
 ## 🔐 Why Passkeys?
+
+## Why Passkeys?
+
 
 Traditional blockchain games require seed phrases and per-transaction wallet prompts. **Tap Battle eliminates both**:
 
@@ -23,7 +27,7 @@ Passkeys use the **secp256r1** curve (the same as WebAuthn/FIDO2), enabling biom
 
 ---
 
-## 🚀 Mobile-First Authentication Flow
+## Mobile-First Authentication Flow
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -57,7 +61,7 @@ Passkeys use the **secp256r1** curve (the same as WebAuthn/FIDO2), enabling biom
 
 ---
 
-## 🔧 Cougr-Core Integration
+## Cougr-Core Integration
 
 This example showcases two key cougr-core features:
 
@@ -119,7 +123,7 @@ Session state lives in `SessionManager` / `SessionStorage` — not as a custom E
 
 ---
 
-## 📖 Contract API
+## Contract API
 
 ### Authentication
 
@@ -157,7 +161,7 @@ Session state lives in `SessionManager` / `SessionStorage` — not as a custom E
 
 ---
 
-## 🎮 Game Mechanics
+## Game Mechanics
 
 ### Combo System
 
@@ -183,7 +187,7 @@ Taps within **5 ledger sequences** of each other maintain a combo streak:
 
 ---
 
-## 🏗️ Quick Start
+## ️ Quick Start
 
 ### Prerequisites
 
@@ -233,7 +237,7 @@ cargo test
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 examples/tap_battle/
@@ -249,6 +253,6 @@ examples/tap_battle/
 
 ---
 
-## 📄 License
+## License
 
 MIT OR Apache-2.0

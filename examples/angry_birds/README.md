@@ -146,7 +146,7 @@ stellar network testnet
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/angry_birds.wasm \
   --source <your-account> \
-  --network testnet
+  --network <NETWORK>
 
 # Note the contract ID for subsequent interactions
 ```
@@ -158,7 +158,7 @@ stellar contract deploy \
 stellar contract invoke \
   --id <contract-id> \
   --source <player-account> \
-  --network testnet \
+  --network <NETWORK> \
   -- init_level \
   --player <player-address> \
   --level_id 1
@@ -167,7 +167,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <player-account> \
-  --network testnet \
+  --network <NETWORK> \
   -- shoot \
   --player <player-address> \
   --angle 45000 \
@@ -177,7 +177,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <any-account> \
-  --network testnet \
+  --network <NETWORK> \
   -- get_state
 ```
 

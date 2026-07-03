@@ -1,15 +1,15 @@
 [package]
-name = "tower_defense"
+name = "trading_card_game"
 version = "0.0.1"
 edition = "2021"
 authors = ["Cougr Contributors"]
-description = "Tower defense on-chain game example using cougr-core ECS framework"
+description = "Two-player trading card game with atomic batch turns and session keys"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 soroban-sdk = "25.1.0"
 
 [dev-dependencies]
@@ -24,5 +24,5 @@ panic = "abort"
 
 [profile.release-with-logs]
 inherits = "release"
-debug-assertions = true 
+debug-assertions = true
 [workspace]

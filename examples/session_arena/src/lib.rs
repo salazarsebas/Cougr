@@ -8,8 +8,8 @@
 use cougr_core::accounts::{
     GameAction, ReplayProtection, SessionBuilder, SessionStorage, SignedIntent,
 };
-use cougr_core::session::{ActiveSession, SessionManager};
 use cougr_core::impl_component;
+use cougr_core::session::{ActiveSession, SessionManager};
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol};
 
 #[contracttype]
@@ -27,7 +27,12 @@ pub struct SessionArena;
 #[contractimpl]
 impl SessionArena {
     /// One-time owner approval that creates a scoped session key.
-    pub fn approve_session(env: Env, owner: Address, max_taps: u32, expires_in: u64) -> ActiveSession {
+    pub fn approve_session(
+        env: Env,
+        owner: Address,
+        max_taps: u32,
+        expires_in: u64,
+    ) -> ActiveSession {
         owner.require_auth();
         let scope = SessionBuilder::new(&env)
             .allow_action(symbol_short!("tap"))
@@ -104,7 +109,8 @@ impl SessionArena {
             ReplayProtection::next_account_nonce(&env, &owner),
             env.ledger().timestamp().saturating_add(60),
         );
-        SessionManager::fallback_execute(&env, &session_intent, &direct_intent).expect("fallback tap");
+        SessionManager::fallback_execute(&env, &session_intent, &direct_intent)
+            .expect("fallback tap");
 
         let key = (Symbol::new(&env, "score"), owner.clone());
         let mut score: Score = env

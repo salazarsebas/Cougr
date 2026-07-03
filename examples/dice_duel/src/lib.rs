@@ -4,7 +4,9 @@
 
 use cougr_core::circuits::fair_dice;
 use cougr_core::zk::Groth16Proof;
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol,
+};
 
 #[contracttype]
 #[derive(Clone, Debug)]

@@ -188,47 +188,47 @@ After building the WASM (`stellar contract build`), deploy and play on Testnet:
 # Generate two player identities and fund them via Friendbot
 stellar keys generate reversi_black
 stellar keys generate reversi_white
-stellar keys fund reversi_black --network testnet
-stellar keys fund reversi_white --network testnet
+stellar keys fund reversi_black --network <NETWORK>
+stellar keys fund reversi_white --network <NETWORK>
 
 # Deploy the contract
 CONTRACT_ID=$(stellar contract deploy \
   --wasm target/wasm32v1-none/release/reversi.wasm \
-  --network testnet \
+  --network <NETWORK> \
   --source reversi_black)
 
 # Initialise (reversi_black plays Black, reversi_white plays White)
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source reversi_black \
   -- init_game \
   --player_one reversi_black \
   --player_two reversi_white
 
 # Black places at row=3, col=2 (flips (3,3) horizontally)
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source reversi_black \
   -- submit_move \
   --player reversi_black \
   --row 3 --col 2
 
 # Check the board after the move
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source reversi_black \
   -- get_board
 # → {"cells":[0,0,...,1,1,1,0,...,1,2,0,...],"width":8,"height":8}
-#   (3,2)=1  (3,3)=1  (3,4)=1  — three Black pieces in a row
+# (3,2)=1 (3,3)=1 (3,4)=1 — three Black pieces in a row
 
 # Check whose turn it is
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source reversi_black \
   -- get_state
 # → {"current_player":2,"pass_count":0,"status":0}
-#   current_player=2 → White's turn, game active
+# current_player=2 → White's turn, game active
 
 # Check the score
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_black \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source reversi_black \
   -- get_score
 # → {"black_count":4,"white_count":1,"winner":0}
-#   winner=0 → game ongoing
+# winner=0 → game ongoing
 
 # White responds at row=2, col=3
-stellar contract invoke --id $CONTRACT_ID --network testnet --source reversi_white \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source reversi_white \
   -- submit_move \
   --player reversi_white \
   --row 2 --col 3

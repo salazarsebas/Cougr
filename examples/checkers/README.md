@@ -181,13 +181,13 @@ target/wasm32v1-none/release/checkers.wasm
 
 ```bash
 # Generate or reuse an identity
-stellar keys generate --global alice --network testnet
+stellar keys generate --global alice --network <NETWORK>
 
 # Deploy
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/checkers.wasm \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   --alias checkers_contract
 ```
 
@@ -198,7 +198,7 @@ stellar contract deploy \
 stellar contract invoke \
   --id checkers_contract \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game \
   --player_one <PLAYER_ONE_ADDRESS> \
   --player_two <PLAYER_TWO_ADDRESS>
@@ -207,7 +207,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id checkers_contract \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- submit_move \
   --player <PLAYER_ADDRESS> \
   --from_row 2 --from_col 1 \
@@ -216,7 +216,7 @@ stellar contract invoke \
 # Read the current board
 stellar contract invoke \
   --id checkers_contract \
-  --network testnet \
+  --network <NETWORK> \
   -- get_board
 ```
 

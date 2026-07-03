@@ -1,0 +1,28 @@
+name: Session Arena Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/session_arena/**'
+      - '!examples/session_arena/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/session_arena.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/session_arena/**'
+      - '!examples/session_arena/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/session_arena.yml'
+
+concurrency:
+  group: session-arena-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Session Arena Example CI
+      working_directory: examples/session_arena

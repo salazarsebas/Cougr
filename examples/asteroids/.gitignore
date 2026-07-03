@@ -6,3 +6,5 @@ target
 .stellar
 
 /test_snapshots/
+target/
+*.wasm
