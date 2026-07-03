@@ -2,12 +2,6 @@
 
 A fully functional Tic Tac Toe game implemented as a Soroban smart contract on the Stellar blockchain, demonstrating the **Cougr-Core** ECS (Entity Component System) framework for on-chain gaming.
 
-|                 |                                                                                                                                     |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Contract ID** | `CCCJRYJE32PICS6IN3MVNOZFUYRDXTI6RXRZWTFMVJSLKROLSXV75Z2P`                                                                          |
-| **Network**     | Stellar Testnet                                                                                                                     |
-| **Explorer**    | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCCJRYJE32PICS6IN3MVNOZFUYRDXTI6RXRZWTFMVJSLKROLSXV75Z2P) |
-
 ## Why Cougr-Core?
 
 Cougr-Core provides an ECS architecture that simplifies on-chain game development. Here's how it compares to vanilla Soroban:
@@ -171,7 +165,7 @@ ECSWorldState
 
 ```bash
 # Generate funded account
-stellar keys generate deployer --network testnet --fund
+stellar keys generate deployer --network <NETWORK> --fund
 
 # Build contract
 stellar contract build
@@ -180,7 +174,7 @@ stellar contract build
 stellar contract deploy \
   --wasm target/tic_tac_toe.wasm \
   --source deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### Interact with Deployed Contract
@@ -188,24 +182,24 @@ stellar contract deploy \
 ```bash
 # Initialize a game
 stellar contract invoke \
-  --id CCCJRYJE32PICS6IN3MVNOZFUYRDXTI6RXRZWTFMVJSLKROLSXV75Z2P \
-  --network testnet \
+  --id <CONTRACT_ID> \
+  --network <NETWORK> \
   -- init_game \
   --player_x <PLAYER_X_ADDRESS> \
   --player_o <PLAYER_O_ADDRESS>
 
 # Make a move
 stellar contract invoke \
-  --id CCCJRYJE32PICS6IN3MVNOZFUYRDXTI6RXRZWTFMVJSLKROLSXV75Z2P \
-  --network testnet \
+  --id <CONTRACT_ID> \
+  --network <NETWORK> \
   -- make_move \
   --player <PLAYER_ADDRESS> \
   --position 4
 
 # Get game state
 stellar contract invoke \
-  --id CCCJRYJE32PICS6IN3MVNOZFUYRDXTI6RXRZWTFMVJSLKROLSXV75Z2P \
-  --network testnet \
+  --id <CONTRACT_ID> \
+  --network <NETWORK> \
   -- get_state
 ```
 

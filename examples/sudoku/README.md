@@ -156,33 +156,33 @@ After building the WASM (`stellar contract build`), deploy and play on Testnet:
 ```bash
 # Generate a player identity and fund via Friendbot
 stellar keys generate sudoku_player
-stellar keys fund sudoku_player --network testnet
+stellar keys fund sudoku_player --network <NETWORK>
 
 # Deploy the contract
 CONTRACT_ID=$(stellar contract deploy \
   --wasm target/wasm32v1-none/release/sudoku.wasm \
-  --network testnet \
+  --network <NETWORK> \
   --source sudoku_player)
 
 # Initialise the puzzle (pass a flat 81-element JSON array; 0=empty, 1–9=fixed)
-stellar contract invoke --id $CONTRACT_ID --network testnet --source sudoku_player \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source sudoku_player \
   -- init_game \
   --puzzle '[5,3,0,0,7,0,0,0,0,6,0,0,1,9,5,0,0,0,0,9,8,0,0,0,0,6,0,8,0,0,0,6,0,0,0,3,4,0,0,8,0,3,0,0,1,7,0,0,0,2,0,0,0,6,0,6,0,0,0,0,2,8,0,0,0,0,4,1,9,0,0,5,0,0,0,0,8,0,0,7,9]'
 
 # Read the initial state
-stellar contract invoke --id $CONTRACT_ID --network testnet --source sudoku_player \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source sudoku_player \
   -- get_state
 
 # Read a cell
-stellar contract invoke --id $CONTRACT_ID --network testnet --source sudoku_player \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source sudoku_player \
   -- get_cell --row 0 --col 2
 
 # Submit a value
-stellar contract invoke --id $CONTRACT_ID --network testnet --source sudoku_player \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source sudoku_player \
   -- submit_value --row 0 --col 2 --value 4
 
 # Check if solved
-stellar contract invoke --id $CONTRACT_ID --network testnet --source sudoku_player \
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> --source sudoku_player \
   -- is_solved
 ```
 

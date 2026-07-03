@@ -192,25 +192,140 @@ cargo test
 
 ## Security Considerations
 
-### ✅ Secure
+### Secure
 - **Commitment binding**: Hash function is collision-resistant
 - **Choice hiding**: Preimage resistance prevents guessing
 - **Replay protection**: Each round requires new commitments
 - **Timeout protection**: Prevents griefing by non-revealing players
 
-### ⚠️ Important
+### ️ Important
 - **Salt randomness**: Use cryptographically secure random salts (32 bytes)
 - **Salt uniqueness**: Never reuse salts across rounds
+
+- **Timeout value**: 100 ledgers (~8 minutes on Stellar) - adjust for your needs
+
+### Best Practices
+```rust
+// ✅ Good: Random salt per round
+let salt = generate_random_bytes(32);
+
+// ❌ Bad: Predictable salt
+let salt = BytesN::from_array(&env, &[0u8; 32]);
+
+// ❌ Bad: Reused salt
+let salt = player_address.to_bytes();
+```
+
+## ECS Architecture
+
+### Components
+
+| Component | Fields | Purpose |
+|-----------|--------|---------|
+| `PlayerCommitment` | `hash: BytesN<32>`<br>`revealed: bool` | Stores commitment hash |
+| `MatchState` | `phase: Phase`<br>`winner: Option<Address>`<br>`round: u32` | Game phase tracking |
+| `ScoreBoard` | `wins_a: u32`<br>`wins_b: u32`<br>`draws: u32`<br>`best_of: u32` | Match scoring |
+
+All components implement `cougr_core::component::ComponentTrait` for type-safe serialization.
+
+### Systems
+
+| System | Responsibility |
+|--------|---------------|
+| **CommitSystem** | Accepts hashes, transitions to reveal when both committed |
+| **RevealSystem** | Verifies `sha256(choice || salt) == hash`, rejects mismatches |
+| **ResolveSystem** | Compares choices, updates scoreboard |
+| **MatchSystem** | Checks best-of-N threshold, declares winner or starts next round |
+
 
 ## Deployment
 
 ```bash
+
 stellar keys generate rps-deployer --network testnet --fund
+
+# Generate funded account
+stellar keys generate rps-deployer --network <NETWORK> --fund
+
+# Build contract
+cargo build --release --target wasm32v1-none
+
+# Deploy
+
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/rock_paper_scissors.wasm \
   --source rps-deployer \
-  --network testnet
+  --network <NETWORK>
 ```
+
+
+
+### Play a Game
+```bash
+CONTRACT_ID=<your_contract_id>
+
+# Initialize match
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network <NETWORK> \
+  -- new_match \
+  --player_a <PLAYER_A_ADDRESS> \
+  --player_b <PLAYER_B_ADDRESS> \
+  --best_of 3
+
+# Player A commits (compute hash off-chain first)
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network <NETWORK> \
+  --source player-a \
+  -- commit \
+  --player <PLAYER_A_ADDRESS> \
+  --hash <HASH_BYTES>
+
+# Player B commits
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network <NETWORK> \
+  --source player-b \
+  -- commit \
+  --player <PLAYER_B_ADDRESS> \
+  --hash <HASH_BYTES>
+
+# Player A reveals
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network <NETWORK> \
+  --source player-a \
+  -- reveal \
+  --player <PLAYER_A_ADDRESS> \
+  --choice 0 \
+  --salt <SALT_BYTES>
+
+# Player B reveals
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network <NETWORK> \
+  --source player-b \
+  -- reveal \
+  --player <PLAYER_B_ADDRESS> \
+  --choice 1 \
+  --salt <SALT_BYTES>
+
+# Check results
+stellar contract invoke \
+  --id $CONTRACT_ID \
+  --network <NETWORK> \
+  -- get_score
+```
+
+## Learning Path
+
+This example is the **entry point** for understanding Cougr's cryptographic primitives:
+
+1. **Start here**: Commit-reveal with SHA256 (this example)
+2. **Next**: Upgrade to Poseidon2 hashing (ZK-friendly)
+3. **Advanced**: Full ZK proofs with circuits (see `examples/chess/`)
+
 
 ## Resources
 

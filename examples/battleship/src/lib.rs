@@ -86,6 +86,7 @@ const GRID_SIZE: u32 = 10;
 const TOTAL_SHIP_CELLS: u32 = 17; // 5+4+3+3+2
 
 #[contract]
+#[derive(Clone)]
 pub struct BattleshipContract;
 
 #[contractimpl]
@@ -332,5 +333,7 @@ impl BattleshipContract {
     }
 }
 
+#[cfg(test)]
+mod sandbox_tests;
 #[cfg(test)]
 mod test;

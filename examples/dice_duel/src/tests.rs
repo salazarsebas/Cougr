@@ -60,3 +60,17 @@ fn scenario_two_player_rolls() {
             }
         });
 }
+
+#[test]
+fn submit_roll_rejects_out_of_range_result() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let harness = GameHarness::new(env, DiceDuel);
+    let client = DiceDuelClient::new(harness.env(), harness.contract_id());
+    let player = Address::generate(harness.env());
+    let seed = test_fixtures::pipeline_public_bytes32(harness.env(), CircuitId::FairDice);
+    let proof = test_fixtures::pipeline_proof(harness.env(), CircuitId::FairDice);
+
+    client.init_duel(&6, &seed);
+    assert!(!client.submit_roll(&player, &7, &5, &proof));
+}

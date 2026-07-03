@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }
@@ -28,6 +28,6 @@ lto = true
 
 [profile.release-with-logs]
 inherits = "release"
-debug-assertions = true 
+debug-assertions = true
 
 [workspace]
