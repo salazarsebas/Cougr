@@ -144,7 +144,7 @@ This example demonstrates how cougr-core simplifies on-chain game development by
      --network testnet
    ```
 
-3.  the contract ID for future invocations (e.g., `CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE`)
+3.  the contract ID for future invocations (e.g., `<CONTRACT_ID>`)
 
 ### this the deployed testnet link 
 https://stellar.expert/explorer/testnet/account/GAQAXKUQYNBHZYZ2OYISPXDZDP2HV57534VMGARGGIICH2BGNKDTKXOX

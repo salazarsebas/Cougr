@@ -44,7 +44,6 @@ echo "[2/5] Ensuring .gitignore files..."
 GITIGNORE_CONTENT='target/
 **/*.rs.bk
 *.wasm
-Cargo.lock
 
 .idea/
 .vscode/
@@ -80,7 +79,7 @@ for example_dir in "$EXAMPLES_DIR"/*/; do
                     echo "# Added by hygiene enforcement (#225)"
                     grep -q "^target/" "$gitignore_file" 2>/dev/null || echo "target/"
                     grep -q "^\\*\\.wasm" "$gitignore_file" 2>/dev/null || echo "*.wasm"
-                    grep -q "^Cargo.lock" "$gitignore_file" 2>/dev/null || echo "Cargo.lock"
+
                 } >> "$gitignore_file"
             else
                 echo "  OK: examples/$example_name/.gitignore"

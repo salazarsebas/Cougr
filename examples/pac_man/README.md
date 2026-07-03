@@ -341,7 +341,7 @@ stellar contract deploy \
   --network testnet
 ```
 
-Save the returned contract ID (e.g., `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`).
+Save the returned contract ID (e.g., `<CONTRACT_ID>`).
 
 ### 4. Initialize the Game
 
@@ -496,9 +496,9 @@ Collect all pellets (regular and power) to win.
 
 The contract has been successfully deployed to Stellar Testnet:
 
-**Contract ID**: `CDWERKYRRWD5N6Q7RKCVWT7BNNS5ADRRTM2VCG45AYRE52ABP5NUBJ3C`
+**Contract ID**: `<CONTRACT_ID>`
 
-**Explorer Link**: https://stellar.expert/explorer/testnet/contract/CDWERKYRRWD5N6Q7RKCVWT7BNNS5ADRRTM2VCG45AYRE52ABP5NUBJ3C
+**Explorer Link**: https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>
 
 ### Verified Invocations
 

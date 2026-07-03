@@ -57,28 +57,28 @@ stellar contract deploy \
 
 **Deployed Contract:**
 - **Network**: Stellar Testnet
-- **Contract ID**: `CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF`
-- **Explorer**: `https://stellar.expert/explorer/testnet/contract/CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF`
+- **Contract ID**: `<CONTRACT_ID>`
+- **Explorer**: `https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>`
 
 ### Invoke Functions
 ```bash
 # Initialize a new game
 stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
+  --id <CONTRACT_ID> \
   --source <YOUR_SECRET_KEY> \
   --network testnet \
   -- init_game
 
 # Move piece left
 stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
+  --id <CONTRACT_ID> \
   --source <YOUR_SECRET_KEY> \
   --network testnet \
   -- move_left
 
 # Update game tick (gravity + line clearing)
 stellar contract invoke \
-  --id CBWENGWFZHPNJPIHQAHXE5K34BGV2G5MOQIQ24PE44M6P42YULMQZYSF \
+  --id <CONTRACT_ID> \
   --source <YOUR_SECRET_KEY> \
   --network testnet \
   -- update_tick

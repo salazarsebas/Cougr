@@ -261,7 +261,7 @@ stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- ge
 
 | Network | Contract ID | Explorer |
 |---------|-------------|----------|
-| Testnet | `CCMDAHIKL3K5YHBMFYMMP65F6NRTQXICQSJJ2AF7JG7RVRVWGZY2S5LJ` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCMDAHIKL3K5YHBMFYMMP65F6NRTQXICQSJJ2AF7JG7RVRVWGZY2S5LJ) |
+| Testnet | `<CONTRACT_ID>` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) |
 
 ---
 

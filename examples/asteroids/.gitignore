@@ -6,3 +6,6 @@ target
 .stellar
 
 /test_snapshots/
+# Added by hygiene enforcement (#225)
+target/
+*.wasm

@@ -1,19 +1,11 @@
-# Rust
 target/
 **/*.rs.bk
-*.pdb
-
-# Soroban
-.soroban/
 *.wasm
 
-# IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
-*~
 
-# OS
 .DS_Store
 Thumbs.db

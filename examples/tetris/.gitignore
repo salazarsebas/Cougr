@@ -1,4 +1,6 @@
 /target
 test_snapshots/
 *.wasm
-Cargo.lock
+
+# Added by hygiene enforcement (#225)
+target/

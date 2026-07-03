@@ -142,11 +142,11 @@ damage = max(1, attacker_atk - defender_def)
 
 ## Deployed Contract (Testnet)
 
-> **Contract ID:** `CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52`
+> **Contract ID:** `<CONTRACT_ID>`
 
 | Network | Status | Explorer |
 |---------|--------|----------|
-| Stellar Testnet | ✅ Live | [View on Stellar Lab](https://stellar-explorer.acachete.xyz/contract/CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52) |
+| Stellar Testnet | ✅ Live | [View on Stellar Lab](https://stellar-explorer.acachete.xyz/contract/<CONTRACT_ID>) |
 
 ---
 
@@ -172,7 +172,7 @@ stellar contract deploy \
 
 ```bash
 # Use the deployed contract
-CONTRACT_ID="CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52"
+CONTRACT_ID="<CONTRACT_ID>"
 
 # Initialize player
 stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- init_player

@@ -44,9 +44,6 @@ target/
 **/*.rs.bk
 *.wasm
 
-# Cargo lock (examples are not published crates)
-Cargo.lock
-
 # IDE
 .idea/
 .vscode/

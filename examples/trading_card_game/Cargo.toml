@@ -3,7 +3,7 @@ name = "tower_defense"
 version = "0.0.1"
 edition = "2021"
 authors = ["Cougr Contributors"]
-description = "Tower defense on-chain game example using cougr-core ECS framework"
+description = "Two-player trading card game with atomic batch turns and session keys"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

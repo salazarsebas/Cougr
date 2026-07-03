@@ -1,2 +1,5 @@
 /target
-Cargo.lock
+
+# Added by hygiene enforcement (#225)
+target/
+*.wasm

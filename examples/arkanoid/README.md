@@ -134,7 +134,7 @@ stellar contract deploy \
   --network testnet
 ```
 
-Save the contract ID returned (e.g., `CXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`).
+Save the contract ID returned (e.g., `<CONTRACT_ID>XXX`).
 
 ### 3. Invoke Contract Functions
 

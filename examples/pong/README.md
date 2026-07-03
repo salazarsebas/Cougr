@@ -197,9 +197,9 @@ stellar contract invoke \
 
 **✅ Successfully Deployed to Stellar Testnet**
 
-**Contract ID**: `CADGGDYDBRVRPPG27IZYZJTFUZ47IJFW3QQ5O67QDMZ7UV3VWCZHPYI3`
+**Contract ID**: `<CONTRACT_ID>`
 
-**Explorer Link**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CADGGDYDBRVRPPG27IZYZJTFUZ47IJFW3QQ5O67QDMZ7UV3VWCZHPYI3)
+**Explorer Link**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>)
 
 **Test Account**: `GA5VOXGSGDQBIY7W2UJ2GD23V3566NA7OF4YIL4QCFAVM3PGN7QQQHZA`
 
@@ -207,7 +207,7 @@ stellar contract invoke \
 
 1. **Initialize Game**:
    ```bash
-   stellar contract invoke --id CADGGDYDBRVRPPG27IZYZJTFUZ47IJFW3QQ5O67QDMZ7UV3VWCZHPYI3 --source pong-test --network testnet -- init_game
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- init_game
    ```
    **Result**: ✅ Success
    ```json
@@ -226,7 +226,7 @@ stellar contract invoke \
 
 2. **Move Paddle** (Player 1 up):
    ```bash
-   stellar contract invoke --id CADGGDYDBRVRPPG27IZYZJTFUZ47IJFW3QQ5O67QDMZ7UV3VWCZHPYI3 --source pong-test --network testnet -- move_paddle --player 1 --direction -1
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- move_paddle --player 1 --direction -1
    ```
    **Result**: ✅ Success - Paddle moved from y=30 to y=28
    ```json
@@ -239,7 +239,7 @@ stellar contract invoke \
 
 3. **Update Tick** (Physics simulation):
    ```bash
-   stellar contract invoke --id CADGGDYDBRVRPPG27IZYZJTFUZ47IJFW3QQ5O67QDMZ7UV3VWCZHPYI3 --source pong-test --network testnet -- update_tick
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- update_tick
    ```
    **Result**: ✅ Success - Ball moved from (50,30) to (51,31)
    ```json

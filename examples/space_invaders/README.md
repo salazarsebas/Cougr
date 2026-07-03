@@ -10,9 +10,9 @@ A fully functional Space Invaders game implemented as a **Soroban smart contract
 
 | Network | Contract ID | Status |
 |---------|-------------|--------|
-| **Testnet** | [`CD6EUPL7Z255BTDPOCMQVWQ7CNM4ORP7QEFPPHO6JC63HRGLW6PYQAG7`](https://stellar.expert/explorer/testnet/contract/CD6EUPL7Z255BTDPOCMQVWQ7CNM4ORP7QEFPPHO6JC63HRGLW6PYQAG7) | 🟢 Active |
+| **Testnet** | [`<CONTRACT_ID>`](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) | Active |
 
-> 🔗 **Explorer**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CD6EUPL7Z255BTDPOCMQVWQ7CNM4ORP7QEFPPHO6JC63HRGLW6PYQAG7)
+> **Explorer**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>)
 
 ---
 
