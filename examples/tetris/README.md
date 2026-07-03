@@ -164,7 +164,7 @@ examples/tetris/
 ```toml
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 ```
 
 ## Resources
