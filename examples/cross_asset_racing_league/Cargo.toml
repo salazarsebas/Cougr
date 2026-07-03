@@ -2,14 +2,14 @@
 name = "cross_asset_racing_league"
 version = "0.1.0"
 edition = "2021"
-description = "Cross-asset racing league example with payment-driven gameplay and stellar-zk anti-cheat"
+description = "Cross-asset racing league with payment-driven gameplay and stellar-zk anti-cheat"
 license = "MIT OR Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 soroban-sdk = "25.1.0"
 
 [dev-dependencies]

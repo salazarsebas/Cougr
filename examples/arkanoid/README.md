@@ -113,10 +113,10 @@ Get test XLM from Friendbot:
 
 ```bash
 # Generate a new keypair
-stellar keys generate alice --network testnet
+stellar keys generate alice --network <NETWORK>
 
 # Fund the account
-stellar keys fund alice --network testnet
+stellar keys fund alice --network <NETWORK>
 ```
 
 Or use the web faucet: https://faucet-stellar.acachete.xyz
@@ -131,10 +131,10 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/arkanoid.wasm \
   --source alice \
-  --network testnet
+  --network <NETWORK>
 ```
 
-Save the contract ID returned (e.g., `CXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`).
+Save the contract ID returned (e.g., `<CONTRACT_ID>XXX`).
 
 ### 3. Invoke Contract Functions
 
@@ -144,7 +144,7 @@ Save the contract ID returned (e.g., `CXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game
 ```
 
@@ -170,14 +170,14 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- move_paddle --direction 1
 
 # Move left (direction = -1)
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- move_paddle --direction -1
 ```
 
@@ -187,7 +187,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- update_tick
 ```
 
@@ -203,7 +203,7 @@ This advances the game by one frame:
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- get_game_state
 ```
 
@@ -213,7 +213,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source alice \
-  --network testnet \
+  --network <NETWORK> \
   -- check_game_over
 ```
 

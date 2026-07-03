@@ -15,7 +15,7 @@ default = []
 zk = ["cougr-core/hazmat-crypto", "soroban-sdk/hazmat-crypto"]
 
 [dependencies]
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 soroban-sdk = "=25.3.0"
 
 [dev-dependencies]
@@ -31,3 +31,5 @@ panic = "abort"
 [profile.release-with-logs]
 inherits = "release"
 debug-assertions = true
+
+[workspace]

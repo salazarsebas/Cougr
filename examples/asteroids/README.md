@@ -94,13 +94,13 @@ stellar network add testnet \
   --rpc-url https://soroban-testnet.stellar.org \
   --network-passphrase "Test SDF Network ; September 2015"
 
-stellar keys generate testnet --network testnet
-stellar keys fund testnet --network testnet
+stellar keys generate testnet --network <NETWORK>
+stellar keys fund testnet --network <NETWORK>
 
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/asteroids.wasm \
   --source testnet \
-  --network testnet
+  --network <NETWORK>
 ```
 
 Invoke contract methods:
@@ -110,7 +110,7 @@ Invoke contract methods:
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source testnet \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   init_game
 
@@ -118,21 +118,21 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source testnet \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   rotate_ship --delta_steps 1
 
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source testnet \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   thrust_ship
 
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source testnet \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   shoot
 
@@ -140,7 +140,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source testnet \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   update_tick
 
@@ -148,7 +148,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source testnet \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   get_game_state
 ```

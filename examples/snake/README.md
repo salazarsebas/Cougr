@@ -164,10 +164,13 @@ stellar contract build
 cargo test
 ```
 
+**Recommended Testing Approach:**
+For comprehensive testing, use the `GameHarness` and `Scenario` APIs provided by `cougr-core`'s `testutils` feature (see [sandbox_tests.rs](src/sandbox_tests.rs)). This allows writing replayable multi-turn scenarios to verify movement trajectories, direction change validation, and tick updates.
+
 **Expected Output:**
 ```
-running 30 tests
-test result: ok. 30 passed; 0 failed; 0 ignored
+running 31 tests
+test result: ok. 31 passed; 0 failed; 0 ignored
 ```
 
 ### 4. Lint
@@ -224,7 +227,7 @@ cargo clippy -- -D warnings
 
 ```bash
 # 1. Generate keypair
-stellar keys generate --global alice --network testnet
+stellar keys generate --global alice --network <NETWORK>
 stellar keys address alice
 
 # 2. Fund account (visit URL with your address)
@@ -234,7 +237,7 @@ stellar keys address alice
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/snake.wasm \
   --source alice \
-  --network testnet
+  --network <NETWORK>
 
 # Save the returned Contract ID!
 ```
@@ -245,23 +248,22 @@ stellar contract deploy \
 CONTRACT_ID="<your-contract-id>"
 
 # Initialize
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- init_game
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- init_game
 
 # Change direction (0=Up, 1=Down, 2=Left, 3=Right)
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- change_direction --direction 0
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- change_direction --direction 0
 
 # Advance game
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- update_tick
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- update_tick
 
 # Check score
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- get_score
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- get_score
 ```
 
 ### Deployed Contract
 
 | Network | Contract ID | Explorer |
 |---------|-------------|----------|
-| Testnet | `CCMDAHIKL3K5YHBMFYMMP65F6NRTQXICQSJJ2AF7JG7RVRVWGZY2S5LJ` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCMDAHIKL3K5YHBMFYMMP65F6NRTQXICQSJJ2AF7JG7RVRVWGZY2S5LJ) |
 
 ---
 

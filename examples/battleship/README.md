@@ -151,6 +151,9 @@ cargo build --release --target wasm32v1-none
 cargo test
 ```
 
+**Recommended Testing Approach:**
+For verification of complex setup commitment sequences and attack/reveal turn-based interactions, utilize `GameHarness` and `Scenario` (see [sandbox_tests.rs](src/sandbox_tests.rs)). This ensures cryptographic commitments and Merkle proofs verify correctly across turns.
+
 **Test Coverage (10 tests):**
 - ✅ Game initialization
 - ✅ Board commitment
@@ -191,18 +194,18 @@ assert!(verifier.verify(&env, &proof, &stored_merkle_root)?);
 
 ## Security Considerations
 
-### ✅ Secure
+### Secure
 - **Commitment binding**: SHA256 prevents changing board
 - **Selective reveal**: Merkle proofs reveal only attacked cells
 - **Proof verification**: Invalid proofs rejected
 - **Turn enforcement**: Players alternate attacks
 
-### ⚠️ Important
+### ️ Important
 - **Salt randomness**: Use 32 cryptographically random bytes
 - **Merkle tree depth**: 7 levels for 100 cells (padded to 128)
 - **Proof ordering**: Siblings must be in correct order
 
-### 🔒 Best Practices
+### Best Practices
 ```rust
 // ✅ Good: Random salt
 let salt = generate_random_bytes(32);
@@ -254,11 +257,11 @@ For a 10x10 board:
 
 ```bash
 # Deploy to testnet
-stellar keys generate battleship-deployer --network testnet --fund
+stellar keys generate battleship-deployer --network <NETWORK> --fund
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/battleship.wasm \
   --source battleship-deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ## Resources

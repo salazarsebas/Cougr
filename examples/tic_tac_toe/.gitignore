@@ -16,3 +16,4 @@ test_snapshots/
 # OS
 .DS_Store
 Thumbs.db
+*.wasm

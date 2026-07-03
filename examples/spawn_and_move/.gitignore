@@ -1,0 +1,17 @@
+# Build artifacts
+target/
+*.wasm
+
+# Soroban
+.soroban/
+test_snapshots/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
