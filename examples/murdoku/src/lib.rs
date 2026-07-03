@@ -15,13 +15,14 @@ mod test;
 
 use crate::auth::{authorize_session, revoke_session};
 use components::{Clue, PuzzleMetadata};
+#[cfg(not(feature = "zk"))]
 use cougr_core::component::ComponentTrait;
 use cougr_core::ops::Ownable;
 #[cfg(not(feature = "zk"))]
 use cougr_core::{plugin::GameApp, SimpleWorld};
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, symbol_short, Address,
-    Env, String, Symbol, Vec,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, Address, Env, String,
+    Symbol, Vec,
 };
 #[cfg(feature = "zk")]
 use soroban_sdk::{Bytes, BytesN};

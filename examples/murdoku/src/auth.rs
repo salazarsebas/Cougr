@@ -4,12 +4,13 @@
 //! `require_player_auth` helper used by game entrypoints. Sessions are
 //! stored in instance storage under the key `(Symbol("SESSION"), puzzle_id, player)`.
 
-use soroban_sdk::{symbol_short, Address, Bytes, BytesN, Env, Symbol};
+#[cfg(not(feature = "zk"))]
+use soroban_sdk::Bytes;
+use soroban_sdk::{Address, BytesN, Env, Symbol};
 
-use cougr_core::auth::{
-    authorize_with_fallback, ContractAccount, GameAction, SessionBuilder,
-    SessionKey as CougrSessionKey,
-};
+#[cfg(not(feature = "zk"))]
+use cougr_core::auth::{authorize_with_fallback, ContractAccount, GameAction};
+use cougr_core::auth::{SessionBuilder, SessionKey as CougrSessionKey};
 
 /// Maximum ledger offset for session expiry (~24 hours at 5s/ledger)
 const MAX_LEDGER_OFFSET: u32 = 17_280;
@@ -60,6 +61,7 @@ pub fn authorize_session(
 /// Internal helper used by game entrypoints.
 ///
 /// Attempts session key authorization first; falls back to `player.require_auth()`.
+#[cfg(not(feature = "zk"))]
 pub fn require_player_auth(env: &Env, player: &Address, puzzle_id: u32, action: Symbol) {
     // Try to load a session scoped to (player, puzzle_id)
     let storage_key = (Symbol::new(env, "SESSION"), puzzle_id, player.clone());
