@@ -10,7 +10,7 @@ pub mod systems;
 #[cfg(feature = "zk")]
 pub mod zk;
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "zk")))]
 mod test;
 
 use crate::auth::{authorize_session, revoke_session};
@@ -353,6 +353,65 @@ impl MurdokuContract {
             total_solvers,
         }
     }
+
+    pub fn place_suspect(
+        env: Env,
+        player: Address,
+        puzzle_id: u32,
+        x: u32,
+        y: u32,
+        suspect_idx: u32,
+    ) -> MoveResult {
+        crate::auth::require_player_auth(
+            &env,
+            &player,
+            puzzle_id,
+            Symbol::new(&env, "place_suspect"),
+        );
+        let mut world = load_player_world(&env, puzzle_id, &player);
+        let puzzle = Self::get_puzzle(env.clone(), puzzle_id);
+        if x >= puzzle.grid_size || y >= puzzle.grid_size {
+            return MoveResult::InvalidCoordinates;
+        }
+
+        let entities =
+            world.get_entities_with_component(&components::Board::component_type(), &env);
+        let entity_id = entities.get(0).expect("No world state");
+
+        let status: components::GameStatus = world.get_typed(&env, entity_id).unwrap();
+        if status.solved {
+            return MoveResult::GameAlreadySolved;
+        }
+
+        let mut board: components::Board = world.get_typed(&env, entity_id).unwrap();
+        let mut moves: components::MoveCount = world.get_typed(&env, entity_id).unwrap();
+        let cell_idx = y * puzzle.grid_size + x;
+        if board.grid.get(cell_idx).unwrap_or(1) != 0 {
+            return MoveResult::CellOccupied;
+        }
+
+        board.grid.set(cell_idx, suspect_idx);
+        moves.count = moves.count.saturating_add(1);
+        world.set_typed(&env, entity_id, &board);
+        world.set_typed(&env, entity_id, &moves);
+        store_player_world(&env, puzzle_id, &player, world);
+        MoveResult::Ok
+    }
+
+    pub fn remove_suspect(env: Env, player: Address, puzzle_id: u32, x: u32, y: u32) -> MoveResult {
+        crate::auth::require_player_auth(
+            &env,
+            &player,
+            puzzle_id,
+            Symbol::new(&env, "remove_suspect"),
+        );
+        let _world = load_player_world(&env, puzzle_id, &player);
+        let puzzle = Self::get_puzzle(env.clone(), puzzle_id);
+        if x >= puzzle.grid_size || y >= puzzle.grid_size {
+            return MoveResult::InvalidCoordinates;
+        }
+        MoveResult::Ok
+    }
 }
 
 #[contractimpl]
@@ -584,65 +643,6 @@ impl MurdokuContract {
 
     pub fn revoke_session(env: Env, player: Address, puzzle_id: u32) {
         revoke_session(env, player, puzzle_id)
-    }
-
-    pub fn place_suspect(
-        env: Env,
-        player: Address,
-        puzzle_id: u32,
-        x: u32,
-        y: u32,
-        suspect_idx: u32,
-    ) -> MoveResult {
-        crate::auth::require_player_auth(
-            &env,
-            &player,
-            puzzle_id,
-            Symbol::new(&env, "place_suspect"),
-        );
-        let mut world = load_player_world(&env, puzzle_id, &player);
-        let puzzle = Self::get_puzzle(env.clone(), puzzle_id);
-        if x >= puzzle.grid_size || y >= puzzle.grid_size {
-            return MoveResult::InvalidCoordinates;
-        }
-
-        let entities =
-            world.get_entities_with_component(&components::Board::component_type(), &env);
-        let entity_id = entities.get(0).expect("No world state");
-
-        let status: components::GameStatus = world.get_typed(&env, entity_id).unwrap();
-        if status.solved {
-            return MoveResult::GameAlreadySolved;
-        }
-
-        let mut board: components::Board = world.get_typed(&env, entity_id).unwrap();
-        let mut moves: components::MoveCount = world.get_typed(&env, entity_id).unwrap();
-        let cell_idx = y * puzzle.grid_size + x;
-        if board.grid.get(cell_idx).unwrap_or(1) != 0 {
-            return MoveResult::CellOccupied;
-        }
-
-        board.grid.set(cell_idx, suspect_idx);
-        moves.count = moves.count.saturating_add(1);
-        world.set_typed(&env, entity_id, &board);
-        world.set_typed(&env, entity_id, &moves);
-        store_player_world(&env, puzzle_id, &player, world);
-        MoveResult::Ok
-    }
-
-    pub fn remove_suspect(env: Env, player: Address, puzzle_id: u32, x: u32, y: u32) -> MoveResult {
-        crate::auth::require_player_auth(
-            &env,
-            &player,
-            puzzle_id,
-            Symbol::new(&env, "remove_suspect"),
-        );
-        let _world = load_player_world(&env, puzzle_id, &player);
-        let puzzle = Self::get_puzzle(env.clone(), puzzle_id);
-        if x >= puzzle.grid_size || y >= puzzle.grid_size {
-            return MoveResult::InvalidCoordinates;
-        }
-        MoveResult::Ok
     }
 }
 
