@@ -229,18 +229,18 @@ let hash = poseidon2_hash(&env, &params, &choice_u256, &salt_u256);
 
 ## Security Considerations
 
-### ✅ Secure
+### Secure
 - **Commitment binding**: Hash function is collision-resistant
 - **Choice hiding**: Preimage resistance prevents guessing
 - **Replay protection**: Each round requires new commitments
 - **Timeout protection**: Prevents griefing by non-revealing players
 
-### ⚠️ Important
+### ️ Important
 - **Salt randomness**: Use cryptographically secure random salts (32 bytes)
 - **Salt uniqueness**: Never reuse salts across rounds
 - **Timeout value**: 100 ledgers (~8 minutes on Stellar) - adjust for your needs
 
-### 🔒 Best Practices
+### Best Practices
 ```rust
 // ✅ Good: Random salt per round
 let salt = generate_random_bytes(32);
@@ -278,7 +278,7 @@ All components implement `cougr_core::component::ComponentTrait` for type-safe s
 ### Deploy to Testnet
 ```bash
 # Generate funded account
-stellar keys generate rps-deployer --network testnet --fund
+stellar keys generate rps-deployer --network <NETWORK> --fund
 
 # Build contract
 cargo build --release --target wasm32v1-none
@@ -287,7 +287,7 @@ cargo build --release --target wasm32v1-none
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/rock_paper_scissors.wasm \
   --source rps-deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### Play a Game
@@ -297,7 +297,7 @@ CONTRACT_ID=<your_contract_id>
 # Initialize match
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   -- new_match \
   --player_a <PLAYER_A_ADDRESS> \
   --player_b <PLAYER_B_ADDRESS> \
@@ -306,7 +306,7 @@ stellar contract invoke \
 # Player A commits (compute hash off-chain first)
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   --source player-a \
   -- commit \
   --player <PLAYER_A_ADDRESS> \
@@ -315,7 +315,7 @@ stellar contract invoke \
 # Player B commits
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   --source player-b \
   -- commit \
   --player <PLAYER_B_ADDRESS> \
@@ -324,7 +324,7 @@ stellar contract invoke \
 # Player A reveals
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   --source player-a \
   -- reveal \
   --player <PLAYER_A_ADDRESS> \
@@ -334,7 +334,7 @@ stellar contract invoke \
 # Player B reveals
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   --source player-b \
   -- reveal \
   --player <PLAYER_B_ADDRESS> \
@@ -344,7 +344,7 @@ stellar contract invoke \
 # Check results
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   -- get_score
 ```
 

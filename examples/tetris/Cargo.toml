@@ -1,4 +1,5 @@
 [package]
+description = "Tetris puzzle game with piece rotation and board clearing on Stellar Soroban"
 name = "tetris"
 version = "0.1.0"
 edition = "2021"

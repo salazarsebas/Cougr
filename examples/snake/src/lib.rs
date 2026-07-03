@@ -26,6 +26,8 @@
 extern crate alloc;
 
 mod components;
+#[cfg(test)]
+mod sandbox_tests;
 mod systems;
 
 use alloc::rc::Rc;
@@ -50,6 +52,7 @@ pub struct GameState {
 
 /// Snake game contract
 #[contract]
+#[derive(Clone)]
 pub struct SnakeContract;
 
 #[contractimpl]

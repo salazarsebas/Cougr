@@ -3,7 +3,7 @@ name = "angry_birds"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Angry Birds turn-based physics puzzle using Cougr-Core ECS framework on Stellar Soroban"
+description = "Angry Birds turn-based physics puzzle using Cougr-Core ECS on Stellar Soroban"
 license = "MIT OR Apache-2.0"
 
 [lib]

@@ -1,4 +1,5 @@
 [package]
+description = "Grid action game with tile updates and timed hazards on Stellar Soroban"
 name = "bomberman"
 version = "0.0.1"
 edition = "2021"

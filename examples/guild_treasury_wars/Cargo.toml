@@ -2,7 +2,7 @@
 name = "guild_treasury_wars"
 version = "0.1.0"
 edition = "2021"
-description = "Guild Treasury Wars — DAO-governed factions with stellar-zk commitments using cougr-core"
+description = "Guild Treasury Wars with DAO-governed factions and stellar-zk commitments"
 license = "MIT OR Apache-2.0"
 
 [lib]

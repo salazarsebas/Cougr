@@ -142,11 +142,9 @@ damage = max(1, attacker_atk - defender_def)
 
 ## Deployed Contract (Testnet)
 
-> **Contract ID:** `CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52`
-
 | Network | Status | Explorer |
 |---------|--------|----------|
-| Stellar Testnet | ✅ Live | [View on Stellar Lab](https://stellar-explorer.acachete.xyz/contract/CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52) |
+| Stellar Testnet | Live | [View on Stellar Lab](https://stellar-explorer.acachete.xyz/contract/<CONTRACT_ID>) |
 
 ---
 
@@ -156,7 +154,7 @@ damage = max(1, attacker_atk - defender_def)
 
 ```bash
 # Generate keypair
-stellar keys generate --global alice --network testnet
+stellar keys generate --global alice --network <NETWORK>
 
 # Fund account
 # Visit: https://friendbot.stellar.org/?addr=<YOUR_ADDRESS>
@@ -165,26 +163,25 @@ stellar keys generate --global alice --network testnet
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/pokemon_mini.wasm \
   --source alice \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### Playing
 
 ```bash
 # Use the deployed contract
-CONTRACT_ID="CCFMAYEZL6762FEWVU5SMXP7SRAGOEOSXKBKORXORMBVLDNQ33666I52"
 
 # Initialize player
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- init_player
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- init_player
 
 # Get player state (returns: [x, y, moves, in_battle, hp])
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- get_player_state
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- get_player_state
 
 # Move right (direction: 0=Up, 1=Down, 2=Left, 3=Right)
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- move_player --direction 3
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- move_player --direction 3
 
 # Attack in battle (action: 0=Attack, 1=Defend, 2=Run)
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- battle_action --action 0
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- battle_action --action 0
 ```
 
 ---
@@ -212,7 +209,6 @@ examples/pokemon_mini/
 | Soroban Docs | [developers.stellar.org](https://developers.stellar.org/docs/build/smart-contracts) |
 | Stellar CLI | [CLI Documentation](https://developers.stellar.org/docs/tools/cli) |
 | Cougr Repository | [github.com/salazarsebas/Cougr](https://github.com/salazarsebas/Cougr) |
-
 
 ---
 
