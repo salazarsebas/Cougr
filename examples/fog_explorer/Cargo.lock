@@ -643,6 +643,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
+name = "fog_explorer"
+version = "0.1.0"
+dependencies = [
+ "cougr-core",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "futures-core"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1622,14 +1630,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "tic_tac_toe"
-version = "0.1.0"
-dependencies = [
- "cougr-core",
- "soroban-sdk",
 ]
 
 [[package]]

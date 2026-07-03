@@ -34,6 +34,11 @@
   `impl_rich_component!` for `Board` and `Players`, and `impl_soroban_game!` for
   load/save. Public API is unchanged; all existing tests pass
 - README rewritten with clean 30-line quick start and full feature documentation
+- canonical example set expanded from three (`snake`, `battleship`, `guild_arena`) to ten:
+  `spawn_and_move` (Starter), `tic_tac_toe` (Rich components), `session_arena` (Session UX),
+  `hidden_hand`, `fog_explorer`, `dice_duel`, `blind_auction` (ZK circuits),
+  `snake` (Arcade/GameApp), `battleship` (Hidden information), `guild_arena` (Auth & recovery)
+- `session_arena` example added as canonical reference for `session::SessionManager`
 
 ### Stability Notes
 

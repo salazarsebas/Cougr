@@ -2,7 +2,11 @@
 
 A two-player Battleship game demonstrating **hidden information** using commit-reveal pattern and Merkle proofs on Stellar Soroban. Players commit their board layouts cryptographically, then prove hit/miss results without revealing unattacked positions.
 
-This example is Cougr's canonical hidden-information reference. It intentionally leans on the stable privacy surface in `cougr_core::privacy::stable` instead of re-defining Merkle verification inside the example.
+This example is Cougr's **canonical** hidden-information reference. It intentionally leans on the stable privacy surface in `cougr_core::privacy::stable` instead of re-defining Merkle verification inside the example.
+
+## Status
+
+**Canonical** — maintained reference implementation for commit-reveal + selective disclosure on Soroban. Uses `cougr-core = "1.1.0"`, `privacy::stable` Merkle primitives, and `impl_component!` macros for standardized serialization.
 
 ## The Hidden Information Problem
 
@@ -134,6 +138,55 @@ assert!(verifier.verify(&env, &proof, &merkle_root)?);
 
 The leaf payload still binds `index || value`, but the inclusion proof format and verification rules come from Cougr's stable privacy API.
 
+## When to Use Commit-Reveal vs ZK Circuits
+
+| Pattern | Best For | Cost | Complexity |
+|---------|----------|------|------------|
+| **Commit-Reveal + Merkle** | Hidden boards, card hands, fog-of-war | O(log n) proof verification | Low — uses standard SHA256 |
+| **ZK Circuits (Groth16/Poseidon)** | Private game logic evaluation, hidden card deals | Single on-chain verification | High — requires circuit compilation |
+
+Use **commit-reveal** when you need to hide state but reveal it incrementally with verifiable proofs. Use **ZK circuits** when the game logic itself must remain private (e.g., proving a move is valid without revealing the move).
+
+For a reference ZK implementation, see [hidden_hand](../hidden_hand/), which demonstrates circuit-based hidden card dealing with Groth16 proofs.
+
+## Storage Model
+
+### Committed State
+
+Stored on-chain during setup:
+- `commitment_a/b` — SHA256 hash of each player's board with random salt
+- `merkle_root_a/b` — root of the Merkle tree built from cell hashes
+- `has_commitment_a/b` — flags tracking which players have committed
+
+Both commitments must be submitted before the game transitions to `Phase::Attack`.
+
+### Revealed State
+
+Updated during the attack phase:
+- `attack_grid_a/b` — maps cell indices to `CellResult` (hit/miss)
+- `ship_status` — tracks remaining ship cells per player (starts at 17)
+- `turn_state` — tracks current player, phase, and pending reveals
+
+### Proven State
+
+The `reveal_cell` function verifies that disclosed cell values match the original commitment:
+1. Constructs the expected leaf hash from `(index, value)` using the same SHA256 scheme as the commit phase
+2. Validates the `OnChainMerkleProof` against the stored `merkle_root` using `Sha256MerkleProofVerifier`
+3. Only if the proof verifies is the hit/miss recorded on-chain
+
+## Component Serialization
+
+`BoardCommitment` uses the `impl_component!` macro for standardized serialization:
+
+```rust
+impl_component!(BoardCommitment, "board", Table, {
+    commitment: bytes32,
+    merkle_root: bytes32
+});
+```
+
+This replaces manual byte-level serialization with a type-safe macro that handles big-endian encoding/decoding automatically.
+
 ## Building & Testing
 
 ### Prerequisites
@@ -151,10 +204,14 @@ cargo build --release --target wasm32v1-none
 cargo test
 ```
 
+
+**Test Coverage (12 tests):**
+
 **Recommended Testing Approach:**
 For verification of complex setup commitment sequences and attack/reveal turn-based interactions, utilize `GameHarness` and `Scenario` (see [sandbox_tests.rs](src/sandbox_tests.rs)). This ensures cryptographic commitments and Merkle proofs verify correctly across turns.
 
 **Test Coverage (10 tests):**
+
 - ✅ Game initialization
 - ✅ Board commitment
 - ✅ Attack and reveal (miss)
@@ -163,8 +220,10 @@ For verification of complex setup commitment sequences and attack/reveal turn-ba
 - ✅ Cannot attack same cell twice
 - ✅ Turn enforcement
 - ✅ Win condition
-- ✅ Component trait serialization
+- ✅ Component trait serialization (via `impl_component!`)
 - ✅ Turn switching
+- ✅ Reveal without pending attack
+- ✅ Attack before commit phase
 
 ## Example Usage
 
@@ -269,6 +328,7 @@ stellar contract deploy \
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [Merkle Trees](https://en.wikipedia.org/wiki/Merkle_tree)
 - [Commitment Schemes](https://en.wikipedia.org/wiki/Commitment_scheme)
+- [hidden_hand — ZK circuit example](../hidden_hand/)
 - [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
 
 ## License

@@ -70,7 +70,7 @@ The game uses a fixed 10x10 maze:
 ##########
 
 Legend:
- # = Wall
+  # = Wall
   . = Pellet (10 points)
   P = Power Pellet (50 points)
 ```
@@ -318,13 +318,13 @@ pub fn update_tick(env: Env) -> GameState {
 ### 1. Generate a Stellar Identity
 
 ```bash
-stellar keys generate --global pacman-deployer --network <NETWORK>
+stellar keys generate --global pacman-deployer --network testnet
 ```
 
 ### 2. Fund the Account
 
 ```bash
-stellar keys fund pacman-deployer --network <NETWORK>
+stellar keys fund pacman-deployer --network testnet
 ```
 
 Or use Friendbot:
@@ -338,7 +338,7 @@ curl "https://friendbot.stellar.org?addr=$(stellar keys address pacman-deployer)
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/pac_man.wasm \
   --source pacman-deployer \
-  --network <NETWORK>
+  --network testnet
 ```
 
 Save the returned contract ID (e.g., `<CONTRACT_ID>`).
@@ -349,7 +349,7 @@ Save the returned contract ID (e.g., `<CONTRACT_ID>`).
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source pacman-deployer \
-  --network <NETWORK> \
+  --network testnet \
   -- \
   init_game
 ```
@@ -361,7 +361,7 @@ Change direction:
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source pacman-deployer \
-  --network <NETWORK> \
+  --network testnet \
   -- \
   change_direction \
   --direction 2  # 0=Up, 1=Down, 2=Left, 3=Right
@@ -372,7 +372,7 @@ Update game state:
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source pacman-deployer \
-  --network <NETWORK> \
+  --network testnet \
   -- \
   update_tick
 ```
@@ -383,7 +383,7 @@ Get score:
 ```bash
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network <NETWORK> \
+  --network testnet \
   -- \
   get_score
 ```
@@ -392,7 +392,7 @@ Get full state:
 ```bash
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network <NETWORK> \
+  --network testnet \
   -- \
   get_game_state
 ```
@@ -401,7 +401,7 @@ Check if game is over:
 ```bash
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network <NETWORK> \
+  --network testnet \
   -- \
   check_game_over
 ```
@@ -460,7 +460,7 @@ cargo install stellar-cli --locked
    stellar contract invoke \
      --id <CONTRACT_ID> \
      --source pacman-deployer \
-     --network <NETWORK> \
+     --network testnet \
      --sim \
      -- \
      init_game
@@ -495,6 +495,10 @@ Collect all pellets (regular and power) to win.
 ## Testnet Deployment
 
 The contract has been successfully deployed to Stellar Testnet:
+
+**Contract ID**: `<CONTRACT_ID>`
+
+**Explorer Link**: https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>
 
 ### Verified Invocations
 

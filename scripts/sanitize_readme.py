@@ -1,88 +1,144 @@
 #!/usr/bin/env python3
-"""Sanitize example README.md files for issue #225."""
+"""
+sanitize_readme.py — Remove marketing sections and deployment artifacts from example READMEs.
 
-from __future__ import annotations
+Issue: #225
+Usage: python3 scripts/sanitize_readme.py examples/<example>/README.md
+"""
 
-import argparse
 import re
 import sys
+import argparse
 from pathlib import Path
 
-CONTRACT_ID_RE = re.compile(r"C[A-Z2-7]{55}")
-TX_HASH_RE = re.compile(r"\b[a-f0-9]{64}\b")
-PROMO_EMOJI_RE = re.compile(
-    r"[\U0001F300-\U0001FAFF\U00002600-\U000027BF]"
-    r"|✅|✓|🔗|🟢|🔴|🟡|⚡|💎|⭐|🔥|🚀|🎮|🎯|✨|💪|📦|🏆|🔧"
-)
+# Sections to remove entirely (marketing/promotional content that impedes clarity)
+REMOVE_SECTIONS = [
+    r"## Resources\s*\n.*?(\n## |\n# |\Z)",  # Generic "Resources" with external links
+    r"## Community\s*\n.*?(\n## |\n# |\Z)",
+    r"## Follow us\s*\n.*?(\n## |\n# |\Z)",
+    r"## Social\s*\n.*?(\n## |\n# |\Z)",
+    r"## Join our community\s*\n.*?(\n## |\n# |\Z)",
+    r"## Links\s*\n.*?(\n## |\n# |\Z)",
+    r"## External links\s*\n.*?(\n## |\n# |\Z)",
+    r"### Discord\s*\n.*?(\n### |\n## |\n# |\Z)",
+    r"### Twitter\s*\n.*?(\n### |\n## |\n# |\Z)",
+    r"### Telegram\s*\n.*?(\n### |\n## |\n# |\Z)",
+    r"### GitHub\s*\n.*?(\n### |\n## |\n# |\Z)",
+    r"### Medium\s*\n.*?(\n### |\n## |\n# |\Z)",
+    r"### Blog\s*\n.*?(\n### |\n## |\n# |\Z)",
+]
 
+# Deployment output blocks to remove (within code blocks)
 DEPLOYMENT_PATTERNS = [
-    re.compile(r"^\|\s*\*?\*?Contract ID\*?\*?\s*\|.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\|\s*\*?\*?Transaction Hash\*?\*?\s*\|.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\|\s*\*?\*?Explorer\*?\*?\s*\|.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\|\s*\*?\*?Network\*?\*?\s*\|\s*Stellar (Testnet|Mainnet|Futurenet).*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\|\s*Testnet\s*\|.*C[A-Z2-7]{55}.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\*\*✅ Successfully Deployed.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^>\s*🔗.*$", re.MULTILINE),
-    re.compile(r"^>\s*\*\*Contract ID:\*\*.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^CONTRACT_ID=\"C[A-Z2-7]{55}\".*$", re.MULTILINE),
-    re.compile(r"^\*\*Contract ID\*\*:\s*`C[A-Z2-7]{55}`.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\*\*Explorer Link\*\*:.*C[A-Z2-7]{55}.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^### this the deployed testnet link.*$", re.MULTILINE | re.IGNORECASE),
-    re.compile(r"^\*\*Deployed Contract:\*\*.*$", re.MULTILINE | re.IGNORECASE),
+    r"```\n# Deployed to testnet\nContract ID: [A-Z2-7]{56}\nTransaction Hash: [a-f0-9]{64}\n```",
+    r"Contract ID: `C[A-Z2-7]{55}`",
+    r"Transaction Hash: `[a-f0-9]{64}`",
+    r"\| Contract ID\s*\| `C[A-Z2-7]{55}`\s*\|",
+    r"\| Transaction Hash\s*\| `[a-f0-9]{64}`\s*\|",
+    r"\| Network\s*\| Stellar (Testnet|Mainnet|Futurenet)\s*\|",
+    r"\| Explorer\s*\|.*?\|",
+]
+
+# Hardcoded deployment command examples with real IDs
+DEPLOYMENT_COMMAND_PATTERNS = [
+    r"stellar contract invoke\s+\\\n\s+--id C[A-Z2-7]{55}\s+\\\n.*?```",
+    r"stellar contract deploy\s+.*?--id C[A-Z2-7]{55}.*?```",
 ]
 
 
-def sanitize_readme(filepath: Path) -> bool:
-    original = filepath.read_text(encoding="utf-8")
-    content = original
+def remove_marketing_sections(content: str) -> str:
+    """Remove marketing/promotional sections that impede technical clarity."""
+    for pattern in REMOVE_SECTIONS:
+        content = re.sub(pattern, r"\1", content, flags=re.DOTALL | re.IGNORECASE)
+    return content
 
+
+def sanitize_deployment_artifacts(content: str) -> str:
+    """Remove hardcoded deployment identifiers and results."""
     for pattern in DEPLOYMENT_PATTERNS:
-        content = pattern.sub("", content)
+        content = re.sub(pattern, "", content, flags=re.DOTALL | re.IGNORECASE)
+    
+    for pattern in DEPLOYMENT_COMMAND_PATTERNS:
+        content = re.sub(pattern, "```", content, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Replace remaining hardcoded contract IDs in prose
+    content = re.sub(r"C[A-Z2-7]{55}", "<CONTRACT_ID>", content)
+    
+    # Replace transaction hashes
+    content = re.sub(r"[a-f0-9]{64}", "<TRANSACTION_HASH>", content)
+    
+    return content
 
-    content = CONTRACT_ID_RE.sub("<CONTRACT_ID>", content)
 
-    lines = []
-    for line in content.splitlines(keepends=True):
-        if re.search(r"(transaction|hash|deploy|tx)", line, re.IGNORECASE):
-            line = TX_HASH_RE.sub("<TRANSACTION_HASH>", line)
-        lines.append(line)
-    content = "".join(lines)
-
-    content = re.sub(r"--id\s+C[A-Z2-7]{55}", "--id <CONTRACT_ID>", content)
+def normalize_documentation_tone(content: str) -> str:
+    """Normalize README tone to technical documentation standards."""
+    # Remove excessive exclamation marks
+    content = re.sub(r"!\s*!", "!", content)
+    
+    # Remove ALL CAPS marketing phrases
+    marketing_phrases = [
+        r"REVOLUTIONARY",
+        r"GAME-CHANGING",
+        r"CUTTING-EDGE",
+        r"NEXT-GENERATION",
+        r"STATE-OF-THE-ART",
+        r"INDUSTRY-LEADING",
+        r"WORLD-CLASS",
+        r"BEST-IN-CLASS",
+        r"UNPARALLELED",
+        r"UNRIVALED",
+        r"GROUND-BREAKING",
+    ]
+    for phrase in marketing_phrases:
+        content = re.sub(phrase, "", content, flags=re.IGNORECASE)
+    
+    # Remove "Why [Product]?" sections that are pure marketing
     content = re.sub(
-        r"--network\s+(testnet|mainnet|futurenet)\b",
-        "--network <NETWORK>",
+        r"## Why [A-Za-z]+\?\s*\n.*?(\n## |\n# |\Z)",
+        r"\1",
         content,
-        flags=re.IGNORECASE,
+        flags=re.DOTALL,
     )
+    
+    # Remove comparison tables that only market the framework
+    # (keep tables that compare technical approaches)
+    
+    return content
 
-    cleaned_lines = []
-    for line in content.splitlines(keepends=True):
-        if line.lstrip().startswith("#") or re.match(r"^>\s", line) or re.match(r"^\|\s*[^|]+\|\s*[🟢✅🔗]", line):
-            line = PROMO_EMOJI_RE.sub("", line)
-            line = re.sub(r"\s{2,}", " ", line)
-        cleaned_lines.append(line)
-    content = "".join(cleaned_lines)
+
+def sanitize_readme(filepath: Path) -> None:
+    """Main sanitization function."""
+    content = filepath.read_text(encoding="utf-8")
+    original = content
+    
+    content = remove_marketing_sections(content)
+    content = sanitize_deployment_artifacts(content)
+    content = normalize_documentation_tone(content)
+    
+    # Clean up multiple consecutive blank lines
     content = re.sub(r"\n{3,}", "\n\n", content)
-
+    
     if content != original:
+        backup = filepath.with_suffix(".md.bak")
+        backup.write_text(original, encoding="utf-8")
         filepath.write_text(content, encoding="utf-8")
-        return True
-    return False
+        print(f"  Sanitized: {filepath}")
+    else:
+        print(f"  No changes: {filepath}")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("files", nargs="+")
+def main():
+    parser = argparse.ArgumentParser(description="Sanitize example README.md files")
+    parser.add_argument("files", nargs="+", help="README.md files to sanitize")
     args = parser.parse_args()
+    
     for filepath_str in args.files:
         filepath = Path(filepath_str)
         if not filepath.exists():
-            print(f"  Not found: {filepath}", file=sys.stderr)
+            print(f"  Not found: {filepath}")
             continue
-        print(f"  {'Sanitized' if sanitize_readme(filepath) else 'No changes'}: {filepath}")
-    return 0
+        sanitize_readme(filepath)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

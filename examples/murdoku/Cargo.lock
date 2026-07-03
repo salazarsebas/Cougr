@@ -919,6 +919,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 
 [[package]]
+name = "murdoku"
+version = "0.1.0"
+dependencies = [
+ "cougr-core",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "num-bigint"
 version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1418,9 +1426,9 @@ dependencies = [
 
 [[package]]
 name = "soroban-sdk"
-version = "25.3.1"
+version = "25.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4502f2e018f238a4c5d3212d7d20ea6abcdc6e58babd63b642b693739db30fd1"
+checksum = "5fb27e93f8d3fc3a815d24c60ec11e893c408a36693ec9c823322f954fa096ae"
 dependencies = [
  "arbitrary",
  "bytes-lit",
@@ -1622,14 +1630,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "tic_tac_toe"
-version = "0.1.0"
-dependencies = [
- "cougr-core",
- "soroban-sdk",
 ]
 
 [[package]]

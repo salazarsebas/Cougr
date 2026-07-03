@@ -1,6 +1,10 @@
 # Rock Paper Scissors with Commit-Reveal
 
-A two-player Rock Paper Scissors game demonstrating the **commit-reveal pattern** using cryptographic hashing on Stellar Soroban. This is the simplest example of zero-knowledge cryptography in the Cougr framework.
+A two-player Rock Paper Scissors game demonstrating the **commit-reveal pattern** using cryptographic hashing on Stellar Soroban. This is the simplest example of hidden information in the Cougr framework.
+
+## Status
+
+**Transitional** — uses `cougr-core = "1.1.0"` with partial migration to `impl_component!` macros. See [battleship](../battleship/) for the canonical hidden-information reference.
 
 ## What is Commit-Reveal?
 
@@ -32,6 +36,12 @@ REVEAL PHASE (prove choices)
 - ✅ **Binding**: Can't change choice after committing (hash locks it in)
 - ✅ **Hiding**: Opponent can't see choice until reveal
 - ✅ **Order-independent**: Neither player gains advantage by going first/second
+
+## When to Use Commit-Reveal vs ZK Circuits
+
+Use **commit-reveal** (this pattern) when you need to hide simple choices that are later revealed and verified by recomputing a hash. It's simple, efficient, and doesn't require external proving systems.
+
+Use **ZK circuits** when the game logic itself must remain private — for example, proving that a move is valid without revealing what the move is. See [hidden_hand](../hidden_hand/) for a canonical ZK circuit-based example using Groth16 proofs.
 
 ## Game Flow
 
@@ -69,7 +79,7 @@ When both players reveal → automatically resolves round
 ### 4. Resolution
 ```
 Rock > Scissors
-Scissors > Paper  
+Scissors > Paper
 Paper > Rock
 Same choice = Draw
 ```
@@ -87,46 +97,29 @@ After 100 ledgers, the honest player who revealed wins by forfeit.
 
 ## Contract API
 
+### Public Functions
+
 | Function | Parameters | Description |
 |----------|-----------|-------------|
-| `new_match` | `player_a: Address`<br>`player_b: Address`<br>`best_of: u32` | Initialize new match |
-| `commit` | `player: Address`<br>`hash: BytesN<32>` | Submit commitment hash |
-| `reveal` | `player: Address`<br>`choice: u32`<br>`salt: BytesN<32>` | Reveal choice (0=Rock, 1=Paper, 2=Scissors) |
-| `claim_timeout` | `player: Address` | Claim win if opponent doesn't reveal |
-| `get_state` | - | Get current match state |
-| `get_score` | - | Get scoreboard |
+| `new_match` | `player_a: Address`, `player_b: Address`, `best_of: u32` | Initialize a new match |
+| `commit` | `player: Address`, `hash: BytesN<32>` | Submit commitment hash |
+| `reveal` | `player: Address`, `choice: u32`, `salt: BytesN<32>` | Reveal choice (0=Rock, 1=Paper, 2=Scissors) |
+| `claim_timeout` | `player: Address` | Claim win if opponent doesn't reveal after 100 ledgers |
+| `get_state` | — | Get current `MatchState` |
+| `get_score` | — | Get `ScoreBoard` |
 
-## Data Structures
+### Data Types
 
-### Choice
 ```rust
-enum Choice {
-    Rock = 0,
-    Paper = 1,
-    Scissors = 2,
-}
-```
+enum Choice { Rock = 0, Paper = 1, Scissors = 2 }
+enum Phase { Committing, Revealing, Resolved }
 
-### Phase
-```rust
-enum Phase {
-    Committing,  // Waiting for both commitments
-    Revealing,   // Waiting for both reveals
-    Resolved,    // Match complete
-}
-```
-
-### MatchState
-```rust
 struct MatchState {
     phase: Phase,
     winner: Option<Address>,
     round: u32,
 }
-```
 
-### ScoreBoard
-```rust
 struct ScoreBoard {
     wins_a: u32,
     wins_b: u32,
@@ -135,22 +128,50 @@ struct ScoreBoard {
 }
 ```
 
+## Storage Model
+
+### Committed State
+
+Stored on-chain during the commit phase:
+- `hash_a/b` — SHA256 hash of each player's choice + random salt
+- `has_commit_a/b` — flags tracking which players have committed
+- `commit_ledger` — ledger sequence when both players committed (for timeout calculation)
+
+Both commitments must be submitted before the game transitions to `Phase::Revealing`.
+
+### Revealed State
+
+Updated during the reveal phase:
+- `revealed_a/b` — flags tracking which players have revealed
+- `choice_a/b` — actual numeric choices (0, 1, or 2)
+- `scoreboard` — accumulated wins/draws across rounds
+
+### Proven State
+
+The `reveal` function verifies that disclosed choices match the original commitment by recomputing `SHA256(choice || salt)` and comparing it to the stored hash.
+
+## Component Serialization
+
+`PlayerCommitment` uses the `impl_component!` macro for standardized serialization:
+
+```rust
+impl_component!(PlayerCommitment, "commit", Table, {
+    hash: bytes32,
+    revealed: bool
+});
+```
+
+`MatchState` implements `ComponentTrait` manually since its `Phase` enum and `Option<Address>` fields don't map cleanly to the macro's fixed-size type system.
+
 ## Building & Testing
 
 ### Prerequisites
 - Rust 1.70.0+
 - Stellar CLI 25.0.0+ (optional)
 
-```bash
-cargo install stellar-cli
-```
-
 ### Build
 ```bash
-# Development build
 cargo build
-
-# Optimized WASM
 cargo build --release --target wasm32v1-none
 ```
 
@@ -159,7 +180,7 @@ cargo build --release --target wasm32v1-none
 cargo test
 ```
 
-**Test Coverage (15 tests):**
+**Test Coverage:**
 - ✅ Match initialization
 - ✅ Commit phase transitions
 - ✅ All 9 choice combinations (RR, RP, RS, PR, PP, PS, SR, SP, SS)
@@ -167,65 +188,7 @@ cargo test
 - ✅ Best-of-3 match flow
 - ✅ Double commit prevention
 - ✅ Premature reveal prevention
-- ✅ Component trait serialization
-
-## Example Usage
-
-### Off-Chain (Player)
-```rust
-use soroban_sdk::{Bytes, BytesN, Env};
-
-// Generate random salt
-let salt = BytesN::from_array(&env, &[42u8; 32]);
-
-// Choose Rock (0)
-let choice = 0u32;
-
-// Compute commitment hash
-let mut data = Bytes::new(&env);
-data.append(&Bytes::from_array(&env, &choice.to_be_bytes()));
-for i in 0..32 {
-    data.push_back(salt.get(i).unwrap());
-}
-let hash = env.crypto().sha256(&data);
-
-// Submit commitment
-client.commit(&player, &hash.into());
-
-// Later, reveal
-client.reveal(&player, &choice, &salt);
-```
-
-### On-Chain (Contract)
-```rust
-// Verify hash matches
-let computed = sha256(choice || salt);
-if computed != stored_hash {
-    panic!("Hash mismatch");
-}
-
-// Resolve round
-if choice_a.beats(choice_b) {
-    wins_a += 1;
-}
-```
-
-## Why SHA256 Instead of Poseidon2?
-
-This example uses SHA256 for simplicity and immediate usability. Poseidon2 is a ZK-friendly hash function that's more efficient in zero-knowledge circuits (~300 constraints vs SHA256's ~28,000), but requires the `hazmat-crypto` feature flag.
-
-**For production ZK applications**, use Poseidon2:
-```rust
-use cougr_core::privacy::experimental::poseidon2_hash;
-
-let hash = poseidon2_hash(&env, &params, &choice_u256, &salt_u256);
-```
-
-**For this educational example**, SHA256 is:
-- ✅ Built into Soroban SDK
-- ✅ No feature flags needed
-- ✅ Demonstrates commit-reveal pattern clearly
-- ✅ Cryptographically secure for this use case
+- ✅ Component trait serialization (via `impl_component!`)
 
 ## Security Considerations
 
@@ -238,6 +201,7 @@ let hash = poseidon2_hash(&env, &params, &choice_u256, &salt_u256);
 ### ️ Important
 - **Salt randomness**: Use cryptographically secure random salts (32 bytes)
 - **Salt uniqueness**: Never reuse salts across rounds
+
 - **Timeout value**: 100 ledgers (~8 minutes on Stellar) - adjust for your needs
 
 ### Best Practices
@@ -273,10 +237,13 @@ All components implement `cougr_core::component::ComponentTrait` for type-safe s
 | **ResolveSystem** | Compares choices, updates scoreboard |
 | **MatchSystem** | Checks best-of-N threshold, declares winner or starts next round |
 
+
 ## Deployment
 
-### Deploy to Testnet
 ```bash
+
+stellar keys generate rps-deployer --network testnet --fund
+
 # Generate funded account
 stellar keys generate rps-deployer --network <NETWORK> --fund
 
@@ -284,11 +251,14 @@ stellar keys generate rps-deployer --network <NETWORK> --fund
 cargo build --release --target wasm32v1-none
 
 # Deploy
+
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/rock_paper_scissors.wasm \
   --source rps-deployer \
   --network <NETWORK>
 ```
+
+
 
 ### Play a Game
 ```bash
@@ -356,12 +326,14 @@ This example is the **entry point** for understanding Cougr's cryptographic prim
 2. **Next**: Upgrade to Poseidon2 hashing (ZK-friendly)
 3. **Advanced**: Full ZK proofs with circuits (see `examples/chess/`)
 
+
 ## Resources
 
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [Commit-Reveal Schemes](https://en.wikipedia.org/wiki/Commitment_scheme)
+- [battleship — canonical commit-reveal example](../battleship/)
+- [hidden_hand — ZK circuit example](../hidden_hand/)
 - [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
-- [Poseidon Hash Function](https://www.poseidon-hash.info/)
 
 ## License
 

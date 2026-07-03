@@ -186,6 +186,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
+name = "battleship"
+version = "0.1.0"
+dependencies = [
+ "cougr-core",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1622,14 +1630,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "tic_tac_toe"
-version = "0.1.0"
-dependencies = [
- "cougr-core",
- "soroban-sdk",
 ]
 
 [[package]]

@@ -146,6 +146,81 @@ impl ComponentTrait for Metadata {
     }
 }
 
+/// Active player board state (flat grid of suspect indices, 0 = empty).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Board {
+    pub grid: Vec<u32>,
+}
+
+impl ComponentTrait for Board {
+    fn component_type() -> Symbol {
+        symbol_short!("board")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        self.grid.clone().to_xdr(env)
+    }
+
+    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
+        let grid = soroban_sdk::Vec::<u32>::from_xdr(env, data).ok()?;
+        Some(Self { grid })
+    }
+
+    fn default_storage() -> ComponentStorage {
+        ComponentStorage::Table
+    }
+}
+
+/// Tracks whether the player has solved the puzzle.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GameStatus {
+    pub solved: bool,
+}
+
+impl ComponentTrait for GameStatus {
+    fn component_type() -> Symbol {
+        symbol_short!("status")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        self.solved.to_xdr(env)
+    }
+
+    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
+        let solved = bool::from_xdr(env, data).ok()?;
+        Some(Self { solved })
+    }
+
+    fn default_storage() -> ComponentStorage {
+        ComponentStorage::Table
+    }
+}
+
+/// Counts moves made in the current session.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MoveCount {
+    pub count: u32,
+}
+
+impl ComponentTrait for MoveCount {
+    fn component_type() -> Symbol {
+        symbol_short!("moves")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        self.count.to_xdr(env)
+    }
+
+    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
+        let count = u32::from_xdr(env, data).ok()?;
+        Some(Self { count })
+    }
+
+    fn default_storage() -> ComponentStorage {
+        ComponentStorage::Table
+    }
+}
+
 /// Solution commitment component storing the Poseidon2 hash (ZK mode).
 #[cfg(feature = "zk")]
 #[derive(Clone, Debug, PartialEq)]

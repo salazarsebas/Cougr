@@ -1605,6 +1605,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tap_battle"
+version = "0.1.0"
+dependencies = [
+ "cougr-core",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1622,14 +1630,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.118",
-]
-
-[[package]]
-name = "tic_tac_toe"
-version = "0.1.0"
-dependencies = [
- "cougr-core",
- "soroban-sdk",
 ]
 
 [[package]]
