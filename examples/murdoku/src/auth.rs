@@ -4,9 +4,12 @@
 //! `require_player_auth` helper used by game entrypoints. Sessions are
 //! stored in instance storage under the key `(Symbol("SESSION"), puzzle_id, player)`.
 
-use soroban_sdk::{symbol_short, Address, BytesN, Env, Symbol, Bytes};
+use soroban_sdk::{symbol_short, Address, Bytes, BytesN, Env, Symbol};
 
-use cougr_core::auth::{SessionBuilder, SessionKey as CougrSessionKey, GameAction, authorize_with_fallback, ContractAccount};
+use cougr_core::auth::{
+    authorize_with_fallback, ContractAccount, GameAction, SessionBuilder,
+    SessionKey as CougrSessionKey,
+};
 
 /// Maximum ledger offset for session expiry (~24 hours at 5s/ledger)
 const MAX_LEDGER_OFFSET: u32 = 17_280;
@@ -33,8 +36,8 @@ pub fn authorize_session(
 
     // Build a scoped session allowing only place_suspect and remove_suspect
     let _scope = SessionBuilder::new(&env)
-        .allow_action(symbol_short!("place_suspect"))
-        .allow_action(symbol_short!("remove_suspect"))
+        .allow_action(Symbol::new(&env, "place_suspect"))
+        .allow_action(Symbol::new(&env, "remove_suspect"))
         .max_operations(200)
         .expires_at(expires_at)
         .build_scope();
