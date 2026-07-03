@@ -160,7 +160,7 @@ pub struct GameState {
    stellar contract deploy \
      --wasm target/wasm32v1-none/release/pong.wasm \
      --source <your-secret-key> \
-     --network <NETWORK>
+     --network testnet
    ```
 
 3. **Save the contract ID** returned from the deployment.
@@ -171,29 +171,35 @@ pub struct GameState {
 # Initialize a new game
 stellar contract invoke \
   --id <contract-id> \
-  --network <NETWORK> \
+  --network testnet \
   -- init_game
 
 # Move Player 1's paddle up
 stellar contract invoke \
   --id <contract-id> \
-  --network <NETWORK> \
+  --network testnet \
   -- move_paddle --player 1 --direction -1
 
 # Update game tick
 stellar contract invoke \
   --id <contract-id> \
-  --network <NETWORK> \
+  --network testnet \
   -- update_tick
 
 # Get current game state
 stellar contract invoke \
   --id <contract-id> \
-  --network <NETWORK> \
+  --network testnet \
   -- get_game_state
 ```
 
 ### Deployment Results
+
+**✅ Successfully Deployed to Stellar Testnet**
+
+**Contract ID**: `<CONTRACT_ID>`
+
+**Explorer Link**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>)
 
 **Test Account**: `GA5VOXGSGDQBIY7W2UJ2GD23V3566NA7OF4YIL4QCFAVM3PGN7QQQHZA`
 
@@ -201,7 +207,7 @@ stellar contract invoke \
 
 1. **Initialize Game**:
    ```bash
-   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network <NETWORK> -- init_game
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- init_game
    ```
    **Result**: ✅ Success
    ```json
@@ -220,7 +226,7 @@ stellar contract invoke \
 
 2. **Move Paddle** (Player 1 up):
    ```bash
-   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network <NETWORK> -- move_paddle --player 1 --direction -1
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- move_paddle --player 1 --direction -1
    ```
    **Result**: ✅ Success - Paddle moved from y=30 to y=28
    ```json
@@ -233,7 +239,7 @@ stellar contract invoke \
 
 3. **Update Tick** (Physics simulation):
    ```bash
-   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network <NETWORK> -- update_tick
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- update_tick
    ```
    **Result**: ✅ Success - Ball moved from (50,30) to (51,31)
    ```json
@@ -247,8 +253,8 @@ stellar contract invoke \
 **Deployment Date**: January 23, 2026
 
 **Transaction Hashes**:
-- Deploy: `<TRANSACTION_HASH>`
-- [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/<TRANSACTION_HASH>)
+- Deploy: `acd8c82bb0d7167fdd7b438af49dc78e47a90ed9fa682574d20e621aa01769a3`
+- [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/acd8c82bb0d7167fdd7b438af49dc78e47a90ed9fa682574d20e621aa01769a3)
 
 ## Architecture
 
@@ -361,7 +367,7 @@ rustc --version  # Should be 1.89.0 or newer
 
 **Network errors**: Use `--simulate` flag first to test without deploying:
 ```bash
-stellar contract invoke --id <contract-id> --network <NETWORK> --simulate -- init_game
+stellar contract invoke --id <contract-id> --network testnet --simulate -- init_game
 ```
 
 **Insufficient funds**: Get more test XLM from the [faucet](https://faucet-stellar.acachete.xyz)

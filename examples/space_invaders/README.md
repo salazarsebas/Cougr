@@ -1,4 +1,4 @@
-# Space Invaders - On-Chain Game Example
+# 🎮 Space Invaders - On-Chain Game Example
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
 [![Tests](https://img.shields.io/badge/tests-13%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
@@ -6,15 +6,17 @@
 
 A fully functional Space Invaders game implemented as a **Soroban smart contract** using the `cougr-core` ECS (Entity-Component-System) framework on the Stellar blockchain.
 
-## Live Deployment
+## 🚀 Live Deployment
 
 | Network | Contract ID | Status |
 |---------|-------------|--------|
-| **Testnet** | [`<CONTRACT_ID>`](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) | 🟢 Active |
+| **Testnet** | [`<CONTRACT_ID>`](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) | Active |
+
+> **Explorer**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>)
 
 ---
 
-## Overview
+## 📋 Overview
 
 This example demonstrates how to build on-chain game logic on the Stellar blockchain using **cougr-core's ECS architecture**. The game focuses exclusively on smart contract logic (no graphical interface) and includes:
 
@@ -29,7 +31,7 @@ This example demonstrates how to build on-chain game logic on the Stellar blockc
 
 ---
 
-## Why Cougr-Core?
+## 🔧 Why Cougr-Core?
 
 **Cougr-Core** provides an ECS (Entity-Component-System) architecture specifically designed for Soroban smart contracts. Here's how it benefits this project:
 
@@ -77,7 +79,7 @@ impl Bullet {
 
 ---
 
-## ️ Quick Start
+## 🏗️ Quick Start
 
 ### Prerequisites
 
@@ -121,7 +123,7 @@ cargo test
 
 ---
 
-## Contract API
+## 📖 Contract API
 
 ### Core Functions
 
@@ -145,7 +147,7 @@ cargo test
 
 ---
 
-## Game Mechanics
+## 🎮 Game Mechanics
 
 ### Invaders
 
@@ -181,13 +183,13 @@ cargo test
 
 ---
 
-## Deploy to Testnet
+## 🌐 Deploy to Testnet
 
 ### 1. Setup Identity
 
 ```bash
 # Generate a new identity
-stellar keys generate --global deployer --network <NETWORK>
+stellar keys generate --global deployer --network testnet
 
 # Fund the account
 stellar keys address deployer | xargs -I {} curl "https://friendbot.stellar.org?addr={}"
@@ -203,7 +205,7 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/space_invaders.wasm \
   --source deployer \
-  --network <NETWORK>
+  --network testnet
 ```
 
 ### 3. Initialize & Play
@@ -213,18 +215,18 @@ stellar contract deploy \
 CONTRACT_ID="your_contract_id_here"
 
 # Initialize game
-stellar contract invoke --id $CONTRACT_ID --source deployer --network <NETWORK> -- init_game
+stellar contract invoke --id $CONTRACT_ID --source deployer --network testnet -- init_game
 
 # Play!
-stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- move_ship --direction 1
-stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- shoot
-stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- update_tick
-stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- get_score
+stellar contract invoke --id $CONTRACT_ID --network testnet -- move_ship --direction 1
+stellar contract invoke --id $CONTRACT_ID --network testnet -- shoot
+stellar contract invoke --id $CONTRACT_ID --network testnet -- update_tick
+stellar contract invoke --id $CONTRACT_ID --network testnet -- get_score
 ```
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 examples/space_invaders/
@@ -238,6 +240,6 @@ examples/space_invaders/
 
 ---
 
-## License
+## 📄 License
 
 MIT OR Apache-2.0

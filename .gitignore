@@ -2,7 +2,6 @@
 target/
 
 # Cargo
-Cargo.lock
 **/*.rs.bk
 *.pdb
 
