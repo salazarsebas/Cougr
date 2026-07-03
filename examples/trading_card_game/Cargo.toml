@@ -1,5 +1,5 @@
 [package]
-name = "tower_defense"
+name = "trading_card_game"
 version = "0.0.1"
 edition = "2021"
 authors = ["Cougr Contributors"]

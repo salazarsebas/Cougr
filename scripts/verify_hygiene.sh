@@ -11,6 +11,10 @@ fail() {
 
 echo "=== verify_hygiene.sh (#225) ==="
 
+if grep -q '^Cargo\.lock$' .gitignore 2>/dev/null; then
+  fail "root .gitignore must not ignore Cargo.lock (examples are applications)"
+fi
+
 if [ -n "$(git ls-files 'examples/**/target/**')" ]; then
   fail "tracked target/ artifacts found"
 fi

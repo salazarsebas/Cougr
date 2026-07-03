@@ -3,6 +3,7 @@ name = "asteroids"
 version = "0.0.0"
 edition = "2021"
 publish = false
+description = "Arcade asteroid shooter with entity-heavy movement and collisions"
 
 [lib]
 crate-type = ["lib", "cdylib"]

@@ -2,7 +2,6 @@
 target/
 
 # Cargo
-Cargo.lock
 **/*.rs.bk
 *.pdb
 
@@ -38,18 +37,3 @@ Thumbs.db
 .claude/settings.json
 
 doocs/
-
-# Rust build artifacts
-target/
-**/*.rs.bk
-*.wasm
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
