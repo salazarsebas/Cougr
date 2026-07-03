@@ -135,7 +135,7 @@ The tests cover:
 Generate a new keypair:
 
 ```bash
-stellar keys generate test-account --network testnet
+stellar keys generate test-account --network <NETWORK>
 ```
 
 Get the account address:
@@ -156,7 +156,7 @@ curl "https://friendbot.stellar.org?addr=$(stellar keys address test-account)"
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/flappy_bird.wasm \
   --source test-account \
-  --network testnet
+  --network <NETWORK>
 ```
 
 Save the returned CONTRACT_ID for later use.
@@ -169,7 +169,7 @@ Save the returned CONTRACT_ID for later use.
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source test-account \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game
 ```
 
@@ -179,7 +179,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source test-account \
-  --network testnet \
+  --network <NETWORK> \
   -- flap
 ```
 
@@ -189,7 +189,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source test-account \
-  --network testnet \
+  --network <NETWORK> \
   -- update_tick
 ```
 
@@ -199,7 +199,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source test-account \
-  --network testnet \
+  --network <NETWORK> \
   -- get_score
 ```
 
@@ -209,7 +209,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source test-account \
-  --network testnet \
+  --network <NETWORK> \
   -- check_game_over
 ```
 
@@ -219,7 +219,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source test-account \
-  --network testnet \
+  --network <NETWORK> \
   -- get_bird_pos
 ```
 

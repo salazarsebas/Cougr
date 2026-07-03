@@ -37,3 +37,20 @@ fn reveal_bid_accepts_pipeline_proof() {
     let reveal = client.bid_reveal(&bidder);
     assert_eq!(reveal.revealed_bid, 50);
 }
+
+#[test]
+fn reveal_bid_rejects_over_max_bid() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let harness = GameHarness::new(env, BlindAuction);
+    let client = BlindAuctionClient::new(harness.env(), harness.contract_id());
+    let bidder = Address::generate(harness.env());
+    let public = test_fixtures::pipeline_public_inputs(harness.env(), CircuitId::SealedBid);
+    let proof = test_fixtures::pipeline_proof(harness.env(), CircuitId::SealedBid);
+
+    let auction_id = BytesN::from_array(harness.env(), &public[0].bytes.to_array());
+    let commit = BytesN::from_array(harness.env(), &public[1].bytes.to_array());
+    client.init_auction(&1000, &auction_id);
+
+    assert!(!client.reveal_bid(&bidder, &commit, &1001, &proof));
+}

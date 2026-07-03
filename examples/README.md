@@ -129,7 +129,21 @@ For examples that intentionally preserve older patterns, keep them explicitly do
 
 ## Path Dependency Note
 
+
 Some canonical examples use `path = "../../"` dependencies because they exercise APIs (`circuits`, `session`, `SorobanGame`) not yet published to crates.io. These path dependencies are permitted during monorepo development but must be replaced with published crate versions before any release tag is cut. See [EXAMPLE_STANDARD.md §1.1](./EXAMPLE_STANDARD.md#11-path-dependencies-in-monorepo-development) for the full policy.
+
+- `spawn_and_move`: **start here** — canonical onboarding example showing the full modern Cougr pattern (`SorobanGame`, `impl_component_observed!`, typed ECS)
+- `tic_tac_toe`: turn-based game showing rich components (`impl_rich_component!`, `impl_soroban_game!`) for `Address` and `Vec` fields
+- `session_arena`: session lifecycle, authorization scopes, and fallback direct-auth flows (`SessionManager`)
+- `snake`: canonical arcade loop and `GameApp` tick model
+- `battleship`: canonical hidden-information / commit-reveal flow using `privacy::stable` Merkle primitives
+- `guild_arena`: canonical account recovery and multi-device authorization flow
+- **ZK Circuit Reference Examples**:
+  - `hidden_hand`: private card deals via `circuits::hidden_cards`
+  - `fog_explorer`: private line-of-sight map verification via `circuits::fog_of_war`
+  - `dice_duel`: verifiable on-chain dice rolling via `circuits::fair_dice`
+  - `blind_auction`: sealed-bid auction reveals via `circuits::sealed_bid`
+
 
 ## Conventions
 

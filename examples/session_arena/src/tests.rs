@@ -1,6 +1,9 @@
 use super::*;
 use cougr_core::test::{GameHarness, MockSession};
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, Env};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger as _},
+    Address, Env,
+};
 
 #[test]
 fn approve_and_tap_without_reauth() {

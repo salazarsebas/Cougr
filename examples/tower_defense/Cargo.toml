@@ -9,7 +9,7 @@ description = "Tower defense on-chain game example using cougr-core ECS framewor
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 soroban-sdk = "25.1.0"
 
 [dev-dependencies]

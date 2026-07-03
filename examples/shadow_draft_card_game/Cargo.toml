@@ -2,7 +2,7 @@
 name = "shadow-draft-card-game"
 version = "0.1.0"
 edition = "2021"
-description = "Shadow Draft Card Game — hidden-hand draft gameplay with stellar-zk proof-backed card validation and DAO-governed format rules on Stellar Soroban"
+description = "Shadow Draft card game with hidden-hand draft gameplay and stellar-zk card validation"
 license = "MIT OR Apache-2.0"
 
 [lib]
@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }

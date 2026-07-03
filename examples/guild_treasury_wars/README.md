@@ -1,4 +1,4 @@
-# ⚔️ Guild Treasury Wars — DAO-Governed Factions with stellar-zk Commitments
+# ️ Guild Treasury Wars — DAO-Governed Factions with stellar-zk Commitments
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
 [![Tests](https://img.shields.io/badge/tests-14%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
@@ -6,7 +6,7 @@
 
 A guild-based strategy game implemented as a **Soroban smart contract** using `cougr-core`'s ECS framework. Guilds manage shared treasuries, vote on strategic actions through DAO mechanics, and compete through hidden strategic commitments powered by **stellar-zk**.
 
-## 🔑 Why stellar-zk?
+## Why stellar-zk?
 
 In strategy games, revealing your plans to the enemy is a losing move. **stellar-zk** enables **sealed war plans** — players commit to strategies without revealing them, then prove their commitments on-chain when it's time to resolve battles.
 
@@ -19,7 +19,7 @@ In strategy games, revealing your plans to the enemy is a losing move. **stellar
 
 ---
 
-## 🎮 Gameplay Flow
+## Gameplay Flow
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -56,7 +56,7 @@ In strategy games, revealing your plans to the enemy is a losing move. **stellar
 
 ---
 
-## 🔐 stellar-zk Integration
+## stellar-zk Integration
 
 This example uses stellar-zk for **real hidden-strategy gameplay**, not just narrative flavor. The integration follows stellar-zk's on-chain verification patterns:
 
@@ -92,7 +92,7 @@ Each commitment hash acts as a **nullifier** (following stellar-zk's verifier co
 
 ---
 
-## 🔧 Cougr-Core Integration
+## Cougr-Core Integration
 
 ### ECS Components
 
@@ -114,7 +114,7 @@ let _guild_entity = world.spawn_entity();
 
 ---
 
-## 📖 Contract API
+## Contract API
 
 ### Guild Management
 
@@ -149,7 +149,7 @@ let _guild_entity = world.spawn_entity();
 
 ---
 
-## 🏗️ Quick Start
+## ️ Quick Start
 
 ### Prerequisites
 
@@ -206,7 +206,7 @@ stellar contract build
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 examples/guild_treasury_wars/
@@ -222,6 +222,6 @@ examples/guild_treasury_wars/
 
 ---
 
-## 📄 License
+## License
 
 MIT OR Apache-2.0

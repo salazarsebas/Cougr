@@ -268,7 +268,7 @@ These can be added by extending the circuit without changing the contract.
 
 ```bash
 # Generate funded account
-stellar keys generate chess-deployer --network testnet --fund
+stellar keys generate chess-deployer --network <NETWORK> --fund
 
 # Build contract
 stellar contract build
@@ -277,7 +277,7 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/chess.wasm \
   --source chess-deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### Set Verification Key
@@ -288,7 +288,7 @@ stellar contract deploy \
 
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- set_vk \
   --vk <SERIALIZED_VK>
 ```
@@ -299,7 +299,7 @@ stellar contract invoke \
 # Initialize game
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- new_game \
   --white <WHITE_ADDRESS> \
   --black <BLACK_ADDRESS>
@@ -307,7 +307,7 @@ stellar contract invoke \
 # Submit move (white's turn)
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   --source white-player \
   -- submit_move \
   --player <WHITE_ADDRESS> \
@@ -318,7 +318,7 @@ stellar contract invoke \
 # Get game state
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- get_state
 ```
 
