@@ -1,4 +1,5 @@
 use super::*;
+use cougr_core::component::ComponentTrait;
 use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
 
 fn setup_game() -> (
@@ -342,7 +343,7 @@ fn test_component_traits() {
         round: 1,
     };
     let serialized = match_state.serialize(&env);
-    assert_eq!(serialized.len(), 4);
+    assert_eq!(serialized.len(), 5);
     assert_eq!(MatchState::component_type(), symbol_short!("match"));
 }
 

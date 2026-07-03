@@ -1,6 +1,6 @@
 #![no_std]
 
-use cougr_core::component::ComponentTrait;
+use cougr_core::impl_component;
 use cougr_core::privacy::stable::{
     MerkleProofVerifier, OnChainMerkleProof, Sha256MerkleProofVerifier,
 };
@@ -24,6 +24,10 @@ pub enum Phase {
     Finished,
 }
 
+/// Commitment to a player's board layout.
+///
+/// Both fields are 32-byte hashes: `commitment` binds the board to a salt,
+/// and `merkle_root` enables selective cell-level proof verification.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct BoardCommitment {
@@ -31,26 +35,10 @@ pub struct BoardCommitment {
     pub merkle_root: BytesN<32>,
 }
 
-impl ComponentTrait for BoardCommitment {
-    fn component_type() -> Symbol {
-        symbol_short!("board")
-    }
-
-    fn serialize(&self, env: &Env) -> Bytes {
-        let mut bytes = Bytes::new(env);
-        for i in 0..32 {
-            bytes.push_back(self.commitment.get(i).unwrap());
-        }
-        for i in 0..32 {
-            bytes.push_back(self.merkle_root.get(i).unwrap());
-        }
-        bytes
-    }
-
-    fn deserialize(_env: &Env, _data: &Bytes) -> Option<Self> {
-        None
-    }
-}
+impl_component!(BoardCommitment, "board", Table, {
+    commitment: bytes32,
+    merkle_root: bytes32
+});
 
 #[contracttype]
 #[derive(Clone, Debug)]
@@ -259,7 +247,7 @@ impl BattleshipContract {
             panic!("Not a player");
         };
 
-        // Verify Merkle proof
+        // Verify Merkle proof using privacy::stable primitives
         let coord = Self::coord_to_index(x, y);
         if proof.leaf_index != coord {
             panic!("Invalid proof");

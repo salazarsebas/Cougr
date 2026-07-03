@@ -25,3 +25,6 @@ test_snapshots/
 # Stellar/Soroban artifacts
 .soroban/
 *.wasm.d
+
+# Added by hygiene enforcement (#225)
+target/

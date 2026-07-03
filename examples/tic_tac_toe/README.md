@@ -2,37 +2,23 @@
 
 A fully functional Tic Tac Toe game implemented as a Soroban smart contract on the Stellar blockchain, demonstrating the **Cougr-Core** ECS (Entity Component System) framework for on-chain gaming.
 
-## Why Cougr-Core?
-
-Cougr-Core provides an ECS architecture that simplifies on-chain game development. Here's how it compares to vanilla Soroban:
-
-| Aspect                 | Vanilla Soroban                       | With Cougr-Core                                           |
-| ---------------------- | ------------------------------------- | --------------------------------------------------------- |
-| **Data Serialization** | Manual byte packing/unpacking         | `ComponentTrait` with type-safe `serialize`/`deserialize` |
-| **Code Organization**  | Monolithic contract logic             | Modular components and systems                            |
-| **Type Safety**        | Runtime errors from format mismatches | Compile-time checking via traits                          |
-| **Reusability**        | Copy-paste between projects           | Shared component interfaces across games                  |
-| **Extensibility**      | Refactor existing code                | Add new systems without modification                      |
-
-### ComponentTrait Integration
+## Cougr-Core ECS Integration
 
 All game components implement `cougr_core::component::ComponentTrait`:
 
 ```rust
 impl ComponentTrait for BoardComponent {
-    fn component_type() -> Symbol {
+    fn component_type() -&gt; Symbol {
         symbol_short!("board")
     }
 
-    fn serialize(&self, env: &Env) -> Bytes { /* ... */ }
-    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> { /* ... */ }
+    fn serialize(&self, env: &Env) -&gt; Bytes { /* ... */ }
+    fn deserialize(env: &Env, data: &Bytes) -&gt; Option&lt;Self&gt; { /* ... */ }
 }
-```
 
-### ECS System Pattern
 
+## ECS System Pattern
 Game logic is organized into discrete systems:
-
 | System                 | Responsibility                                    |
 | ---------------------- | ------------------------------------------------- |
 | `validation_system`    | Enforces game rules (turn order, valid positions) |
@@ -40,8 +26,8 @@ Game logic is organized into discrete systems:
 | `win_detection_system` | Checks all 8 winning patterns                     |
 | `turn_system`          | Manages turn transitions                          |
 
-## Features
 
+# Features
 | Feature              | Description                                            |
 | -------------------- | ------------------------------------------------------ |
 | Two-player gameplay  | Uses Stellar addresses for player identification       |
@@ -51,33 +37,23 @@ Game logic is organized into discrete systems:
 | Move validation      | Rejects invalid positions, occupied cells, wrong turns |
 | Game reset           | Restart with same players                              |
 
-## Prerequisites
 
+# Prerequisites
 | Requirement | Version               |
 | ----------- | --------------------- |
 | Rust        | 1.70.0+               |
 | Stellar CLI | 25.0.0+ (recommended) |
-
-```bash
 cargo install stellar-cli
-```
 
 ## Building
-
-```bash
 # Build for testing
 cargo build
 
 # Build optimized WASM
 stellar contract build
-```
 
 ## Testing
-
-```bash
 cargo test
-```
-
 | Test Category  | Count  | Coverage                                        |
 | -------------- | ------ | ----------------------------------------------- |
 | Initialization | 2      | Game setup, state retrieval                     |
@@ -90,33 +66,29 @@ cargo test
 | State          | 3      | Persistence, move counting, winner retrieval    |
 | **Total**      | **33** | **All passing**                                 |
 
+
 ## Contract API
-
-### Functions
-
+# Functions
 | Function        | Parameters                             | Returns           | Description             |
 | --------------- | -------------------------------------- | ----------------- | ----------------------- |
 | `init_game`     | `player_x: Address, player_o: Address` | `GameState`       | Initialize new game     |
 | `make_move`     | `player: Address, position: u32`       | `MoveResult`      | Make a move (0-8)       |
-| `get_state`     | -                                      | `GameState`       | Get current state       |
+| `get_state`     | —                                      | `GameState`       | Get current state       |
 | `is_valid_move` | `position: u32`                        | `bool`            | Check if move is valid  |
-| `get_winner`    | -                                      | `Option<Address>` | Get winner's address    |
-| `reset_game`    | -                                      | `GameState`       | Reset with same players |
+| `get_winner`    | —                                      | `Option<Address>` | Get winner's address    |
+| `reset_game`    | —                                      | `GameState`       | Reset with same players |
 
-### Board Positions
 
-```text
+## Board Positions
  0 | 1 | 2
 -----------
  3 | 4 | 5
 -----------
  6 | 7 | 8
-```
 
-### Data Structures
-
-**GameState**
-| Field        | Type       | Description                            |
+ ## Data Structures
+ # GameState
+ | Field        | Type       | Description                            |
 | ------------ | ---------- | -------------------------------------- |
 | `cells`      | `Vec<u32>` | Board state (0=Empty, 1=X, 2=O)        |
 | `player_x`   | `Address`  | Player X's address                     |
@@ -125,15 +97,14 @@ cargo test
 | `move_count` | `u32`      | Total moves made                       |
 | `status`     | `u32`      | 0=InProgress, 1=XWins, 2=OWins, 3=Draw |
 
-**MoveResult**
+# MoveResult
 | Field        | Type        | Description            |
 | ------------ | ----------- | ---------------------- |
 | `success`    | `bool`      | Whether move succeeded |
 | `game_state` | `GameState` | Updated state          |
 | `message`    | `Symbol`    | Status code            |
 
-### Error Messages
-
+# Error Messages
 | Code       | Meaning                          |
 | ---------- | -------------------------------- |
 | `ok`       | Move successful                  |
@@ -143,9 +114,8 @@ cargo test
 | `notplay`  | Address is not a player          |
 | `gameover` | Game has already ended           |
 
-## Architecture
 
-```text
+## Architecture
 ECSWorldState
 ├── BoardComponent     (entity_id: 0)
 │   └── cells: Vec<u32> [9 cells]
@@ -157,13 +127,9 @@ ECSWorldState
 │   ├── move_count: u32
 │   └── status: u32
 └── next_entity_id: u32
-```
 
 ## Deployment
-
-### Deploy to Testnet
-
-```bash
+# Deploy to Testnet
 # Generate funded account
 stellar keys generate deployer --network <NETWORK> --fund
 
@@ -173,14 +139,11 @@ stellar contract build
 # Deploy
 stellar contract deploy \
   --wasm target/tic_tac_toe.wasm \
-  --source deployer \
+  --source <ACCOUNT> \
   --network <NETWORK>
-```
 
-### Interact with Deployed Contract
-
-```bash
-# Initialize a game
+  # Interact with Deployed Contract
+  # Initialize a game
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --network <NETWORK> \
@@ -201,10 +164,129 @@ stellar contract invoke \
   --id <CONTRACT_ID> \
   --network <NETWORK> \
   -- get_state
-```
+
+
 
 ## Resources
+  Cougr Repository
+Soroban Documentation
+Stellar CLI Reference
 
-- [Cougr Repository](https://github.com/salazarsebas/Cougr)
-- [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
-- [Stellar CLI Reference](https://developers.stellar.org/docs/tools/cli)
+
+---
+
+## 5. Verification Script: `scripts/verify_hygiene.sh`
+
+```bash
+#!/usr/bin/env bash
+#
+# verify_hygiene.sh — Verify all hygiene standards from #225 are met
+#
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+EXAMPLES_DIR="$REPO_ROOT/examples"
+EXIT_CODE=0
+
+echo "=== Hygiene Verification (#225) ==="
+echo ""
+
+# --- Check 1: No tracked target/ directories ---
+echo "Check 1: No tracked target/ directories"
+tracked_targets=$(git -C "$REPO_ROOT" ls-files 'examples/**/target/**' 2>/dev/null || true)
+if [ -z "$tracked_targets" ]; then
+    echo "  PASS: No target/ files tracked"
+else
+    echo "  FAIL: Tracked target/ files found:"
+    echo "$tracked_targets" | sed 's/^/    /'
+    EXIT_CODE=1
+fi
+echo ""
+
+# --- Check 2: No .wasm files tracked ---
+echo "Check 2: No tracked .wasm files"
+tracked_wasm=$(git -C "$REPO_ROOT" ls-files 'examples/**/*.wasm' 2>/dev/null || true)
+if [ -z "$tracked_wasm" ]; then
+    echo "  PASS: No .wasm files tracked"
+else
+    echo "  FAIL: Tracked .wasm files found:"
+    echo "$tracked_wasm" | sed 's/^/    /'
+    EXIT_CODE=1
+fi
+echo ""
+
+# --- Check 3: No hardcoded contract IDs in READMEs ---
+echo "Check 3: No hardcoded contract IDs in README.md files"
+contract_ids=$(grep -rE 'C[A-Z2-7]{55}' "$EXAMPLES_DIR"/*/README.md 2>/dev/null || true)
+if [ -z "$contract_ids" ]; then
+    echo "  PASS: No hardcoded contract IDs found"
+else
+    echo "  FAIL: Hardcoded contract IDs found:"
+    echo "$contract_ids" | sed 's/^/    /'
+    EXIT_CODE=1
+fi
+echo ""
+
+# --- Check 4: .gitignore exists in every example ---
+echo "Check 4: .gitignore in every example directory"
+missing_gitignore=0
+for example_dir in "$EXAMPLES_DIR"/*/; do
+    if [ ! -f "$example_dir/.gitignore" ]; then
+        echo "  FAIL: Missing .gitignore in $(basename "$example_dir")"
+        missing_gitignore=$((missing_gitignore + 1))
+        EXIT_CODE=1
+    fi
+done
+if [ $missing_gitignore -eq 0 ]; then
+    echo "  PASS: All examples have .gitignore"
+fi
+echo ""
+
+# --- Check 5: .gitignore excludes target/ ---
+echo "Check 5: .gitignore excludes target/"
+missing_target_ignore=0
+for gitignore in "$EXAMPLES_DIR"/*/.gitignore; do
+    if [ ! -f "$gitignore" ]; then
+        continue
+    fi
+    if ! grep -q "^target/" "$gitignore" && ! grep -q "^/target/" "$gitignore"; then
+        echo "  FAIL: $(dirname "$gitignore")/.gitignore does not exclude target/"
+        missing_target_ignore=$((missing_target_ignore + 1))
+        EXIT_CODE=1
+    fi
+done
+if [ $missing_target_ignore -eq 0 ]; then
+    echo "  PASS: All .gitignore files exclude target/"
+fi
+echo ""
+
+# --- Check 6: cargo metadata --no-deps succeeds ---
+echo "Check 6: cargo metadata --no-deps succeeds for all examples"
+metadata_failed=0
+for example_dir in "$EXAMPLES_DIR"/*/; do
+    if [ ! -d "$example_dir" ]; then
+        continue
+    fi
+    example_name=$(basename "$example_dir")
+    if (cd "$example_dir" && cargo metadata --no-deps --format-version 1 >/dev/null 2>&1); then
+        :
+    else
+        echo "  FAIL: cargo metadata failed for $example_name"
+        metadata_failed=$((metadata_failed + 1))
+        EXIT_CODE=1
+    fi
+done
+if [ $metadata_failed -eq 0 ]; then
+    echo "  PASS: cargo metadata succeeds for all examples"
+fi
+echo ""
+
+# --- Summary ---
+if [ $EXIT_CODE -eq 0 ]; then
+    echo "=== ALL CHECKS PASSED ==="
+else
+    echo "=== SOME CHECKS FAILED ==="
+fi
+
+exit $EXIT_CODE

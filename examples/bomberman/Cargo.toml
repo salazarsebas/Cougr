@@ -1,9 +1,9 @@
 [package]
-description = "Grid action game with tile updates and timed hazards on Stellar Soroban"
 name = "bomberman"
 version = "0.0.1"
 edition = "2021"
 publish = false
+description = "Grid action with tile updates and timed hazards"
 
 [lib]
 crate-type = ["rlib"]
