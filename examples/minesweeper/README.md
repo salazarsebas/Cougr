@@ -4,9 +4,6 @@ A fully functional Minesweeper game implemented as a Soroban smart contract on t
 
 |                 |                                                                                                                                       |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Contract ID** | `TBD` (Deploy to testnet)                                                                                                             |
-| **Network**     | Stellar Testnet                                                                                                                       |
-| **Explorer**    | [View on Stellar Expert](https://stellar.expert/explorer/testnet) (Deploy contract to view)                                           |
 
 ## Why Cougr-Core?
 
@@ -265,7 +262,7 @@ Status: Lost
 
 ```bash
 # Generate funded account
-stellar keys generate deployer --network testnet --fund
+stellar keys generate deployer --network <NETWORK> --fund
 
 # Build contract
 stellar contract build
@@ -274,7 +271,7 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/minesweeper.wasm \
   --source deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### Interact with Deployed Contract
@@ -283,13 +280,13 @@ stellar contract deploy \
 # Initialize a game
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game
 
 # Reveal cell at row 0, col 0
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- reveal_cell \
   --row 0 \
   --col 0
@@ -297,13 +294,13 @@ stellar contract invoke \
 # Get game state
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- get_state
 
 # Check if game is finished
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- is_finished
 ```
 

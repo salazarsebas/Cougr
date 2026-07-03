@@ -5,7 +5,9 @@
 use cougr_core::circuits::fog_of_war;
 use cougr_core::zk::experimental::{FogOfWarSnapshot, FogOfWarTransition};
 use cougr_core::zk::Groth16Proof;
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol,
+};
 
 #[contracttype]
 #[derive(Clone, Debug)]
@@ -40,13 +42,19 @@ impl FogExplorer {
         config
     }
 
-    pub fn register_explorer(env: Env, player: Address, explored_root: BytesN<32>) -> ExplorerState {
+    pub fn register_explorer(
+        env: Env,
+        player: Address,
+        explored_root: BytesN<32>,
+    ) -> ExplorerState {
         let state = ExplorerState {
             player: player.clone(),
             explored_root,
             reveals: 0,
         };
-        env.storage().instance().set(&explorer_key(&env, &player), &state);
+        env.storage()
+            .instance()
+            .set(&explorer_key(&env, &player), &state);
         state
     }
 
@@ -67,13 +75,8 @@ impl FogExplorer {
             .instance()
             .get(&map_key(&env))
             .expect("map not initialized");
-        let spec = fog_of_war(
-            &env,
-            config.width,
-            config.height,
-            config.visibility_radius,
-        )
-        .expect("circuit spec");
+        let spec = fog_of_war(&env, config.width, config.height, config.visibility_radius)
+            .expect("circuit spec");
 
         let snapshot = FogOfWarSnapshot {
             map_root,

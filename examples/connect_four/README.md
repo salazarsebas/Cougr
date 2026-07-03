@@ -4,9 +4,6 @@ A fully functional Connect Four game implemented as a Soroban smart contract on 
 
 |                 |                                                                                                                                       |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Contract ID** | `TBD` (Deploy to testnet)                                                                                                             |
-| **Network**     | Stellar Testnet                                                                                                                       |
-| **Explorer**    | [View on Stellar Expert](https://stellar.expert/explorer/testnet) (Deploy contract to view)                                           |
 
 ## Why Cougr-Core?
 
@@ -248,7 +245,7 @@ Player 1 wins with vertical line in column 3:
 
 ```bash
 # Generate funded account
-stellar keys generate deployer --network testnet --fund
+stellar keys generate deployer --network <NETWORK> --fund
 
 # Build contract
 stellar contract build
@@ -257,7 +254,7 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/connect_four.wasm \
   --source deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### Interact with Deployed Contract
@@ -266,7 +263,7 @@ stellar contract deploy \
 # Initialize a game
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game \
   --player_one <PLAYER_ONE_ADDRESS> \
   --player_two <PLAYER_TWO_ADDRESS>
@@ -274,7 +271,7 @@ stellar contract invoke \
 # Drop a piece in column 3
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- drop_piece \
   --player <PLAYER_ADDRESS> \
   --column 3
@@ -282,13 +279,13 @@ stellar contract invoke \
 # Get game state
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- get_state
 
 # Check if game is finished
 stellar contract invoke \
   --id <CONTRACT_ID> \
-  --network testnet \
+  --network <NETWORK> \
   -- is_finished
 ```
 

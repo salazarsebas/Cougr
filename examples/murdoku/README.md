@@ -184,18 +184,18 @@ To deploy and test the contract manually on Stellar Testnet, use the following c
 stellar keys generate murdoku_deployer
 
 # 2. Fund the identity using Friendbot
-stellar keys fund murdoku_deployer --network testnet
+stellar keys fund murdoku_deployer --network <NETWORK>
 
 # 3. Deploy the compiled WASM to Testnet
 CONTRACT_ID=$(stellar contract deploy \
   --wasm target/wasm32v1-none/release/murdoku.wasm \
-  --network testnet \
+  --network <NETWORK> \
   --source murdoku_deployer)
 
 # 4. Initialize the contract game registry
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   --source murdoku_deployer \
   -- init_game \
   --admin murdoku_deployer
@@ -204,7 +204,7 @@ stellar contract invoke \
 # (Solution grid contains flat representation of a 4x4 Latin square)
 stellar contract invoke \
   --id $CONTRACT_ID \
-  --network testnet \
+  --network <NETWORK> \
   --source murdoku_deployer \
   -- submit_puzzle \
   --creator murdoku_deployer \
@@ -222,9 +222,9 @@ stellar contract invoke \
 The Groth16 circuit proves the following statement without revealing the solution:
 
 > "I know a set of values `cells` such that:
->   (1) `cells` is a valid Latin square of size N,
->   (2) Poseidon2(cells || salt) == commitment,
->   (3) each cell value is in range 1..=N."
+> (1) `cells` is a valid Latin square of size N,
+> (2) Poseidon2(cells || salt) == commitment,
+> (3) each cell value is in range 1..=N."
 
 ### Public Inputs Format
 

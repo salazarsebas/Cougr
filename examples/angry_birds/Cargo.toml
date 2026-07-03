@@ -3,7 +3,7 @@ name = "angry_birds"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Angry Birds turn-based physics puzzle using Cougr-Core ECS framework on Stellar Soroban"
+description = "Angry Birds turn-based physics puzzle using Cougr-Core ECS on Stellar Soroban"
 license = "MIT OR Apache-2.0"
 
 [lib]
@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }
@@ -28,5 +28,5 @@ lto = true
 
 [profile.release-with-logs]
 inherits = "release"
-debug-assertions = true 
+debug-assertions = true
 [workspace]
