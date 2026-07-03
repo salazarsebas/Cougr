@@ -2,7 +2,7 @@
 
 use super::*;
 
-use soroban_sdk::Env; 
+use soroban_sdk::Env;
 
 #[test]
 fn test_init_game() {
