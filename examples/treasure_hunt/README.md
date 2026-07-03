@@ -49,7 +49,11 @@ Use **ZK circuits** when the game logic itself must remain private — proving v
 | Function | Parameters | Description |
 |----------|-----------|-------------|
 | `init_game` | `player: Address`, `map_root: BytesN<32>`, `width: u32`, `height: u32`, `total_treasures: u32` | Initialize game with committed map root |
-| `explore` | `player: Address`, `x: u32`, `y: u32`, `cell_value: u32`, `proof: Vec<BytesN<32>>` | Explore a cell with Merkle proof |
+| `explore` | `player: Address`, `x: u32`, `y: u32`, `cell_value: u32`, `proof: OnChainMerkleProof` | Explore a cell with Merkle proof |
+
+### Migration note (`explore` proof parameter)
+
+`explore` now accepts `cougr_core::privacy::stable::OnChainMerkleProof` instead of `Vec<BytesN<32>>`. Build proofs with `Sha256MerkleProofVerifier::to_on_chain_proof` (or `to_on_chain_proof` helper) before calling the contract.
 | `get_state` | — | Return complete `GameState` |
 | `is_explored` | `x: u32`, `y: u32` | Check if a cell has been revealed |
 

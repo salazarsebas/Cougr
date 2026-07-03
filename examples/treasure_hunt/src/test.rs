@@ -290,7 +290,7 @@ fn test_reveal_phase_with_valid_proof() {
 }
 
 #[test]
-#[should_panic]
+#[should_panic(expected = "Error(Contract, #6)")]
 fn test_invalid_reveal_value_rejected() {
     // Tests that providing an incorrect cell value during reveal is rejected
     let (env, client, player) = setup();

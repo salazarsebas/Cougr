@@ -1,4 +1,5 @@
 use super::*;
+use cougr_core::component::ComponentTrait;
 use cougr_core::privacy::stable::{to_on_chain_proof, MerkleTree, OnChainMerkleProof};
 use soroban_sdk::{testutils::Address as _, Address, Bytes, BytesN, Env, Vec};
 
