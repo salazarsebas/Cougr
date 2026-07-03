@@ -1,6 +1,7 @@
 use super::*;
+use cougr_core::component::ComponentTrait;
 use cougr_core::privacy::stable::{to_on_chain_proof, MerkleTree, OnChainMerkleProof};
-use soroban_sdk::{testutils::Address as _, Address, Bytes, BytesN, Env};
+use soroban_sdk::{testutils::Address as _, Address, Bytes, BytesN, Env, Vec};
 
 fn setup_game() -> (Env, BattleshipContractClient<'static>, Address, Address) {
     let env = Env::default();
@@ -293,7 +294,7 @@ fn test_win_condition() {
 }
 
 #[test]
-fn test_component_trait() {
+fn test_component_trait_via_macro() {
     let env = Env::default();
 
     let commitment = BoardCommitment {
@@ -304,6 +305,11 @@ fn test_component_trait() {
     let serialized = commitment.serialize(&env);
     assert_eq!(serialized.len(), 64);
     assert_eq!(BoardCommitment::component_type(), symbol_short!("board"));
+
+    // Test round-trip deserialize
+    let deserialized = BoardCommitment::deserialize(&env, &serialized).unwrap();
+    assert_eq!(deserialized.commitment, commitment.commitment);
+    assert_eq!(deserialized.merkle_root, commitment.merkle_root);
 }
 
 #[test]
@@ -346,4 +352,50 @@ fn test_turn_switching() {
 
     let state = client.get_state();
     assert_eq!(state.turn_state.current_player, player_a);
+}
+
+#[test]
+#[should_panic(expected = "No pending attack")]
+fn test_reveal_without_pending_attack() {
+    let (env, client, player_a, player_b) = setup_game();
+    env.mock_all_auths();
+
+    client.new_game(&player_a, &player_b);
+
+    let board_a = [0u32; 100];
+    let board_b = [0u32; 100];
+
+    let salt_a = BytesN::from_array(&env, &[1u8; 32]);
+    let salt_b = BytesN::from_array(&env, &[2u8; 32]);
+
+    let commitment_a = make_commitment(&env, &board_a, &salt_a);
+    let commitment_b = make_commitment(&env, &board_b, &salt_b);
+
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
+    let (root_b, _) = build_merkle_tree(&env, &board_b);
+
+    client.commit_board(&player_a, &commitment_a, &root_a);
+    client.commit_board(&player_b, &commitment_b, &root_b);
+
+    // Try to reveal without attacking first
+    let fake_proof = OnChainMerkleProof {
+        siblings: Vec::new(&env),
+        path_bits: 0,
+        leaf: BytesN::from_array(&env, &[0u8; 32]),
+        leaf_index: 0,
+        depth: 0,
+    };
+    client.reveal_cell(&player_b, &0, &0, &0, &fake_proof);
+}
+
+#[test]
+#[should_panic(expected = "Not in attack phase")]
+fn test_attack_before_commit() {
+    let (env, client, player_a, _player_b) = setup_game();
+    env.mock_all_auths();
+
+    client.new_game(&player_a, &Address::generate(&env));
+
+    // Try to attack before boards are committed
+    client.attack(&player_a, &0, &0);
 }

@@ -1,9 +1,11 @@
 #![no_std]
 
-use cougr_core::zk::{verify_inclusion, OnChainMerkleProof, SparseMerkleTree};
+use cougr_core::privacy::stable::{
+    MerkleProofVerifier, OnChainMerkleProof, Sha256MerkleProofVerifier, SparseMerkleTree,
+};
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, panic_with_error, Address, BytesN, Env,
-    Map, Vec,
+    contract, contracterror, contractimpl, contracttype, panic_with_error, Address, Bytes, BytesN,
+    Env, Map,
 };
 
 #[cfg(test)]
@@ -163,7 +165,7 @@ impl TreasureHuntContract {
         x: u32,
         y: u32,
         cell_value: u32,
-        proof: Vec<BytesN<32>>,
+        proof: OnChainMerkleProof,
     ) {
         ensure_initialized(&env);
         ensure_active(&env);
@@ -183,8 +185,14 @@ impl TreasureHuntContract {
             panic_with_error!(&env, TreasureHuntError::AlreadyExplored);
         }
 
-        let on_chain_proof = make_on_chain_proof(&env, &proof, x, y, cell_value_u8, map_root.width);
-        let is_valid = verify_inclusion(&env, &on_chain_proof, &map_root.root)
+        let expected_leaf = hash_leaf_for_proof(&env, x, y, cell_value_u8);
+        if proof.leaf_index != idx || proof.leaf != expected_leaf {
+            panic_with_error!(&env, TreasureHuntError::InvalidProof);
+        }
+
+        let verifier = Sha256MerkleProofVerifier;
+        let is_valid = verifier
+            .verify(&env, &proof, &map_root.root)
             .unwrap_or_else(|_| panic_with_error!(&env, TreasureHuntError::InvalidProof));
         if !is_valid {
             panic_with_error!(&env, TreasureHuntError::InvalidProof);
@@ -345,35 +353,9 @@ fn hash_leaf_for_proof(env: &Env, x: u32, y: u32, cell_value: u8) -> BytesN<32> 
     inbuf[1..].copy_from_slice(&raw);
     let hash = env
         .crypto()
-        .sha256(&soroban_sdk::Bytes::from_slice(env, &inbuf))
+        .sha256(&Bytes::from_slice(env, &inbuf))
         .to_array();
     BytesN::from_array(env, &hash)
-}
-
-fn make_on_chain_proof(
-    env: &Env,
-    siblings: &Vec<BytesN<32>>,
-    x: u32,
-    y: u32,
-    cell_value: u8,
-    width: u32,
-) -> OnChainMerkleProof {
-    let leaf_index = cell_index(x, y, width);
-    let depth = siblings.len();
-    let mut path_bits: u32 = 0;
-    for i in 0..depth {
-        let is_right = ((leaf_index >> i) & 1) == 1;
-        if is_right {
-            path_bits |= 1 << i;
-        }
-    }
-    OnChainMerkleProof {
-        siblings: siblings.clone(),
-        path_bits,
-        leaf: hash_leaf_for_proof(env, x, y, cell_value),
-        leaf_index,
-        depth,
-    }
 }
 
 fn apply_discovery(

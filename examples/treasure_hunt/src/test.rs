@@ -1,8 +1,8 @@
 use super::*;
-use cougr_core::zk::MerkleTree;
+use cougr_core::privacy::stable::{to_on_chain_proof, MerkleTree, OnChainMerkleProof};
 extern crate alloc;
 use alloc::vec::Vec as StdVec;
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
+use soroban_sdk::{testutils::Address as _, Address, Env};
 
 const MAP_W: u32 = 3;
 const MAP_H: u32 = 3;
@@ -54,14 +54,10 @@ fn idx(x: u32, y: u32) -> u32 {
     y * MAP_W + x
 }
 
-fn proof_vec(env: &Env, map: &OffchainMap, x: u32, y: u32) -> Vec<BytesN<32>> {
+fn proof_for(env: &Env, map: &OffchainMap, x: u32, y: u32) -> OnChainMerkleProof {
     let leaf_idx = idx(x, y);
     let proof = map.tree.proof(leaf_idx).unwrap();
-    let mut siblings: Vec<BytesN<32>> = Vec::new(env);
-    for sibling in proof.siblings {
-        siblings.push_back(BytesN::from_array(env, &sibling));
-    }
-    siblings
+    to_on_chain_proof(&proof, env)
 }
 
 fn value_at(map: &OffchainMap, x: u32, y: u32) -> u32 {
@@ -99,7 +95,7 @@ fn test_valid_exploration_with_correct_proof() {
     let x = 1u32;
     let y = 0u32;
     let value = value_at(&map, x, y);
-    let proof = proof_vec(&env, &map, x, y);
+    let proof = proof_for(&env, &map, x, y);
     client.explore(&player, &x, &y, &value, &proof);
 
     let state = client.get_state();
@@ -127,7 +123,7 @@ fn test_invalid_proof_rejected() {
     } else {
         CELL_TREASURE as u32
     };
-    let proof = proof_vec(&env, &map, x, y);
+    let proof = proof_for(&env, &map, x, y);
     client.explore(&player, &x, &y, &bad_value, &proof);
 }
 
@@ -154,7 +150,7 @@ fn test_trap_damage_and_loss_condition() {
             break;
         }
         let value = value_at(&map, x, y);
-        let proof = proof_vec(&env, &map, x, y);
+        let proof = proof_for(&env, &map, x, y);
         client.explore(&player, &x, &y, &value, &proof);
     }
 
@@ -175,7 +171,7 @@ fn test_reexplore_rejected() {
     let x = 1u32;
     let y = 0u32;
     let value = value_at(&map, x, y);
-    let proof = proof_vec(&env, &map, x, y);
+    let proof = proof_for(&env, &map, x, y);
 
     client.explore(&player, &x, &y, &value, &proof);
     client.explore(&player, &x, &y, &value, &proof);
@@ -192,7 +188,7 @@ fn test_win_condition_all_treasures_found() {
     let path = [(1u32, 0u32), (2u32, 0u32), (2u32, 1u32)];
     for (x, y) in path {
         let value = value_at(&map, x, y);
-        let proof = proof_vec(&env, &map, x, y);
+        let proof = proof_for(&env, &map, x, y);
         client.explore(&player, &x, &y, &value, &proof);
     }
 
@@ -214,7 +210,7 @@ fn test_fog_of_war_sparse_root_updates() {
     let x = 1u32;
     let y = 0u32;
     let value = value_at(&map, x, y);
-    let proof = proof_vec(&env, &map, x, y);
+    let proof = proof_for(&env, &map, x, y);
     client.explore(&player, &x, &y, &value, &proof);
 
     let after = client.get_state().fog_root;
@@ -233,7 +229,7 @@ fn test_non_adjacent_move_rejected() {
     let x = 2u32;
     let y = 2u32;
     let value = value_at(&map, x, y);
-    let proof = proof_vec(&env, &map, x, y);
+    let proof = proof_for(&env, &map, x, y);
     client.explore(&player, &x, &y, &value, &proof);
 }
 
@@ -248,7 +244,7 @@ fn test_full_playable_sequence_to_win() {
     let sequence = [(1u32, 0u32), (2u32, 0u32), (2u32, 1u32)];
     for (x, y) in sequence {
         let value = value_at(&map, x, y);
-        let proof = proof_vec(&env, &map, x, y);
+        let proof = proof_for(&env, &map, x, y);
         client.explore(&player, &x, &y, &value, &proof);
     }
 
@@ -256,4 +252,56 @@ fn test_full_playable_sequence_to_win() {
     assert_eq!(state.game_config.status, GameStatus::Won);
     assert_eq!(state.player_state.health, DEFAULT_MAX_HEALTH - 1);
     assert_eq!(state.player_state.score, DEFAULT_TREASURE_VALUE * 2);
+}
+
+#[test]
+fn test_commit_phase() {
+    // Tests that the game initializes in the committed state
+    let (env, client, player) = setup();
+    env.mock_all_auths();
+    let map = build_test_map(&env);
+    let root = map.tree.root_bytes(&env);
+
+    client.init_game(&player, &root, &MAP_W, &MAP_H, &2u32);
+
+    let state = client.get_state();
+    assert_eq!(state.map_root.root, root);
+    assert_eq!(state.game_config.status, GameStatus::Active);
+}
+
+#[test]
+fn test_reveal_phase_with_valid_proof() {
+    // Tests the reveal/exploration phase with correct Merkle proof
+    let (env, client, player) = setup();
+    env.mock_all_auths();
+    let map = build_test_map(&env);
+    let root = map.tree.root_bytes(&env);
+    client.init_game(&player, &root, &MAP_W, &MAP_H, &99u32);
+
+    let x = 1u32;
+    let y = 0u32;
+    let value = value_at(&map, x, y);
+    let proof = proof_for(&env, &map, x, y);
+    client.explore(&player, &x, &y, &value, &proof);
+
+    let state = client.get_state();
+    assert_eq!(state.player_state.x, x);
+    assert_eq!(state.player_state.y, y);
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #6)")]
+fn test_invalid_reveal_value_rejected() {
+    // Tests that providing an incorrect cell value during reveal is rejected
+    let (env, client, player) = setup();
+    env.mock_all_auths();
+    let map = build_test_map(&env);
+    let root = map.tree.root_bytes(&env);
+    client.init_game(&player, &root, &MAP_W, &MAP_H, &2u32);
+
+    let x = 1u32;
+    let y = 0u32;
+    let proof = proof_for(&env, &map, x, y);
+    // Claim wrong value
+    client.explore(&player, &x, &y, &99, &proof);
 }

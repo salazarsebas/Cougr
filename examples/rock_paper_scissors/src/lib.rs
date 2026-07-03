@@ -1,6 +1,6 @@
 #![no_std]
 
-use cougr_core::component::ComponentTrait;
+use cougr_core::impl_component;
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Symbol,
 };
@@ -33,6 +33,8 @@ impl Choice {
     }
 }
 
+/// Player commitment storing the choice hash and reveal status.
+/// Uses `impl_component!` for standardized serialization instead of manual byte encoding.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct PlayerCommitment {
@@ -40,24 +42,10 @@ pub struct PlayerCommitment {
     pub revealed: bool,
 }
 
-impl ComponentTrait for PlayerCommitment {
-    fn component_type() -> Symbol {
-        symbol_short!("commit")
-    }
-
-    fn serialize(&self, env: &Env) -> Bytes {
-        let mut bytes = Bytes::new(env);
-        for i in 0..32 {
-            bytes.push_back(self.hash.get(i).unwrap());
-        }
-        bytes.push_back(if self.revealed { 1 } else { 0 });
-        bytes
-    }
-
-    fn deserialize(_env: &Env, _data: &Bytes) -> Option<Self> {
-        None
-    }
-}
+impl_component!(PlayerCommitment, "commit", Table, {
+    hash: bytes32,
+    revealed: bool
+});
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -75,13 +63,19 @@ pub struct MatchState {
     pub round: u32,
 }
 
-impl ComponentTrait for MatchState {
+impl cougr_core::component::ComponentTrait for MatchState {
     fn component_type() -> Symbol {
         symbol_short!("match")
     }
 
     fn serialize(&self, env: &Env) -> Bytes {
         let mut bytes = Bytes::new(env);
+        let phase_byte = match self.phase {
+            Phase::Committing => 0u8,
+            Phase::Revealing => 1u8,
+            Phase::Resolved => 2u8,
+        };
+        bytes.append(&Bytes::from_array(env, &[phase_byte]));
         bytes.append(&Bytes::from_array(env, &self.round.to_be_bytes()));
         bytes
     }
