@@ -114,19 +114,18 @@ data and a lightweight state flag.
 
 ## Cougr APIs used
 
-None. `Cargo.toml` declares `cougr-core` as a dependency, but the contract source does
-not import or call into it — no `ComponentTrait`, `impl_component!`, `GameApp`,
-`SimpleWorld`/`SimpleQueryBuilder`, `auth`, or `privacy` APIs are used anywhere in
-`components.rs`, `systems.rs`, or `lib.rs`. Per the API usage guidance in
-`EXAMPLE_STANDARD.md` §8, none of those APIs apply here: there is exactly one fixed-shape
-game state per contract instance (no dynamic entity population to scan with
-`SimpleWorld`/`SimpleQueryBuilder`), one synchronous validation pipeline per call (no need
-for `GameApp`/`ScheduleStage` ordering across stages), no session-key or multi-device flow
-(no need for `auth`), and no hidden information or proof submission (no need for
-`privacy::stable` or `privacy::experimental`). This example is kept as a transitional
-reference precisely because it predates Cougr's component/ECS conventions — see `snake`
-for the current recommended approach to structuring an example around `GameApp` and Cougr
-components.
+- `cougr_core::component::ComponentTrait` — gives each component (`BoardComponent`,
+  `TurnComponent`, `GameStatusComponent`) a `component_type()` symbol and byte-level
+  `serialize`/`deserialize`, chosen here because the game has a single fixed set of
+  components per instance rather than a dynamic entity population that would benefit from
+  `SimpleWorld`/`SimpleQueryBuilder` scanning.
+
+Per the API usage guidance in `EXAMPLE_STANDARD.md` §8, `GameApp`/`ScheduleStage`,
+`SimpleWorld`, `auth`, and `privacy` APIs do not apply here: there is exactly one
+fixed-shape game state per contract instance, one synchronous validation pipeline per
+call, no session-key or multi-device flow, and no hidden information or proof submission.
+This example is kept as a transitional reference precisely because it predates Cougr's
+`GameApp` tick conventions — see `snake` for the current recommended approach.
 
 ## Build and test commands
 
@@ -137,10 +136,10 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp`, `ScheduleStage`, `SimpleWorld`, or any other `cougr-core` API —
-  game logic is invoked directly from contract entrypoints over plain `#[contracttype]`
-  structs, since a two-player, one-decision-per-call board game does not require a tick
-  scheduler or entity queries.
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked
+  directly from contract entrypoints rather than through a tick-based scheduler, since a
+  two-player, one-decision-per-call board game does not require staged scheduling or
+  entity queries.
 - No timeout/forfeit mechanism for an unresponsive player.
 - No draw detection (e.g., repetition or no-progress rules); a game can only end by piece
   exhaustion or a player having no legal move.

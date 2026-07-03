@@ -1,4 +1,9 @@
-use soroban_sdk::{contracterror, contracttype, Address, Vec};
+#![allow(dead_code)]
+
+use cougr_core::component::ComponentTrait;
+use soroban_sdk::{contracterror, contracttype, symbol_short, Address, Bytes, Env, Symbol, Vec};
+
+pub(crate) const BOARD_SIZE: u32 = 64;
 
 // Error type
 #[contracterror]
@@ -81,6 +86,100 @@ pub struct GameState {
 pub struct BoardState {
     pub cells: Vec<i32>,
 }
+// ── ComponentTrait implementations ───────────────────────────────────────────
+
+impl ComponentTrait for BoardComponent {
+    fn component_type() -> Symbol {
+        symbol_short!("boardcomp")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        let mut bytes = Bytes::new(env);
+        for i in 0..BOARD_SIZE {
+            let cell = self.cells.get(i).unwrap_or(0);
+            bytes.append(&Bytes::from_array(env, &cell.to_be_bytes()));
+        }
+        bytes
+    }
+
+    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> {
+        if data.len() != BOARD_SIZE * 4 {
+            return None;
+        }
+        let mut cells = Vec::new(env);
+        for i in 0..BOARD_SIZE {
+            let offset = i * 4;
+            let cell = i32::from_be_bytes([
+                data.get(offset)?,
+                data.get(offset + 1)?,
+                data.get(offset + 2)?,
+                data.get(offset + 3)?,
+            ]);
+            cells.push_back(cell);
+        }
+        Some(Self { cells })
+    }
+}
+
+impl ComponentTrait for TurnComponent {
+    fn component_type() -> Symbol {
+        symbol_short!("turncomp")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        let mut bytes = Bytes::new(env);
+        bytes.append(&Bytes::from_array(env, &self.current_player.to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &self.move_number.to_be_bytes()));
+        bytes
+    }
+
+    fn deserialize(_env: &Env, data: &Bytes) -> Option<Self> {
+        if data.len() != 8 {
+            return None;
+        }
+        let current_player =
+            u32::from_be_bytes([data.get(0)?, data.get(1)?, data.get(2)?, data.get(3)?]);
+        let move_number =
+            u32::from_be_bytes([data.get(4)?, data.get(5)?, data.get(6)?, data.get(7)?]);
+        Some(Self {
+            current_player,
+            move_number,
+        })
+    }
+}
+
+impl ComponentTrait for GameStatusComponent {
+    fn component_type() -> Symbol {
+        symbol_short!("gamestatu")
+    }
+
+    fn serialize(&self, env: &Env) -> Bytes {
+        let status_tag = match self.status {
+            GameStatus::Active => 0u32,
+            GameStatus::Finished => 1u32,
+        };
+        let mut bytes = Bytes::new(env);
+        bytes.append(&Bytes::from_array(env, &status_tag.to_be_bytes()));
+        bytes.append(&Bytes::from_array(env, &self.winner.to_be_bytes()));
+        bytes
+    }
+
+    fn deserialize(_env: &Env, data: &Bytes) -> Option<Self> {
+        if data.len() != 8 {
+            return None;
+        }
+        let status_tag =
+            u32::from_be_bytes([data.get(0)?, data.get(1)?, data.get(2)?, data.get(3)?]);
+        let winner = u32::from_be_bytes([data.get(4)?, data.get(5)?, data.get(6)?, data.get(7)?]);
+        let status = match status_tag {
+            0 => GameStatus::Active,
+            1 => GameStatus::Finished,
+            _ => return None,
+        };
+        Some(Self { status, winner })
+    }
+}
+
 // Internal: chain-capture tracking stored in persistent state
 
 #[contracttype]
