@@ -1,7 +1,6 @@
 #![cfg(test)]
 
-use crate::{SpawnAndMove, SpawnAndMoveClient, NORTH};
-use cougr_core::game::SorobanGame;
+use crate::{SpawnAndMove, SpawnAndMoveClient, EAST, NORTH, SOUTH};
 use cougr_core::test::{GameHarness, Scenario, SnapshotAssert, WorldFixture};
 use soroban_sdk::Env;
 
@@ -57,6 +56,38 @@ fn sandbox_multi_turn_movement_sequence() {
             if turn.0 == 1 {
                 let pos = c.position(&id).unwrap();
                 assert_eq!((pos.x, pos.y), (0, 2));
+            }
+        });
+}
+
+#[test]
+fn sandbox_three_step_movement_scenario() {
+    let env = Env::default();
+    let harness = GameHarness::new(env, SpawnAndMove);
+    let client = SpawnAndMoveClient::new(harness.env(), harness.contract_id());
+    let id = client.spawn();
+
+    Scenario::new("three step movement")
+        .turns(3)
+        .run(&harness, |_player, turn, h| {
+            let c = SpawnAndMoveClient::new(h.env(), h.contract_id());
+            match turn.0 {
+                0 => {
+                    c.move_entity(&id, &NORTH);
+                    let pos = c.position(&id).unwrap();
+                    assert_eq!((pos.x, pos.y), (0, 1));
+                }
+                1 => {
+                    c.move_entity(&id, &EAST);
+                    let pos = c.position(&id).unwrap();
+                    assert_eq!((pos.x, pos.y), (1, 1));
+                }
+                2 => {
+                    c.move_entity(&id, &SOUTH);
+                    let pos = c.position(&id).unwrap();
+                    assert_eq!((pos.x, pos.y), (1, 0));
+                }
+                _ => {}
             }
         });
 }

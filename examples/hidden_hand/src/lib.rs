@@ -6,7 +6,9 @@
 
 use cougr_core::circuits::hidden_cards;
 use cougr_core::zk::Groth16Proof;
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol,
+};
 
 #[contracttype]
 #[derive(Clone, Debug)]
@@ -46,10 +48,15 @@ impl HiddenHand {
             .get(&table_key(&env))
             .expect("table not initialized");
         let spec = hidden_cards(&env, config.deck_size, config.hand_size).expect("circuit spec");
-        spec.verify_hidden_hand(&env, &proof, &deck_root, &hand_commitment, player_id(&player))
-            .unwrap_or(false)
+        spec.verify_hidden_hand(
+            &env,
+            &proof,
+            &deck_root,
+            &hand_commitment,
+            player_id(&player),
+        )
+        .unwrap_or(false)
     }
-
 }
 
 fn table_key(_env: &Env) -> Symbol {

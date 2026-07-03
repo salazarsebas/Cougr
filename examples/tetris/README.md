@@ -2,14 +2,14 @@
 
 An on-chain Tetris game implementation using the Cougr-Core ECS framework on Stellar's Soroban platform.
 
-## 📋 Overview
+## Overview
 
 This example demonstrates how to build a fully functional game as a smart contract using:
 - **Soroban** - Stellar's smart contract platform
 - **Cougr-Core** - ECS framework for on-chain games
 - **Rust** - Smart contract programming language
 
-## 🎮 Game Features
+## Game Features
 
 | Feature | Description |
 |---------|-------------|
@@ -20,7 +20,7 @@ This example demonstrates how to build a fully functional game as a smart contra
 | **Scoring** | Points based on lines cleared |
 | **Leveling** | Difficulty increases every 10 lines |
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -44,7 +44,7 @@ cargo test
 stellar contract build
 ```
 
-## 📦 Deployment
+## Deployment
 
 ### Testnet Deployment
 ```bash
@@ -52,10 +52,9 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/tetris.wasm \
   --source <YOUR_SECRET_KEY> \
-  --network testnet
+  --network <NETWORK>
 ```
 
-**Deployed Contract:**
 - **Network**: Stellar Testnet
 - **Contract ID**: `<CONTRACT_ID>`
 - **Explorer**: `https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>`
@@ -66,25 +65,25 @@ stellar contract deploy \
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source <YOUR_SECRET_KEY> \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game
 
 # Move piece left
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source <YOUR_SECRET_KEY> \
-  --network testnet \
+  --network <NETWORK> \
   -- move_left
 
 # Update game tick (gravity + line clearing)
 stellar contract invoke \
   --id <CONTRACT_ID> \
   --source <YOUR_SECRET_KEY> \
-  --network testnet \
+  --network <NETWORK> \
   -- update_tick
 ```
 
-## 🎯 Benefits of Using Cougr-Core
+## Benefits of Using Cougr-Core
 
 ### Traditional Soroban vs. Cougr-Core
 
@@ -125,7 +124,7 @@ stellar contract invoke \
    - Easier to understand and debug
    - Modular architecture
 
-## 🧪 Testing
+## Testing
 ```bash
 # Run all tests
 cargo test
@@ -149,7 +148,7 @@ cargo test test_rotate
 | `test_update_tick` | Tests game tick and line clearing |
 | `test_game_over` | Tests end game detection |
 
-## 📁 Project Structure
+## Project Structure
 ```
 examples/tetris/
 ├── Cargo.toml          # Dependencies & build config
@@ -159,26 +158,26 @@ examples/tetris/
     └── lib.rs          # Smart contract implementation
 ```
 
-## 🔧 Configuration
+## Configuration
 
 **Cargo.toml**
 ```toml
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = "1.0.0"
+cougr-core = "1.1.0"
 ```
 
-## 📚 Resources
+## Resources
 
 - [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
 - [Stellar Documentation](https://developers.stellar.org/)
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [Rust Book](https://doc.rust-lang.org/book/)
 
-## 🤝 Contributing
+## Contributing
 
 This example is part of the Cougr framework. Contributions are welcome!
 
-## 📄 License
+## License
 
 Licensed under MIT OR Apache-2.0

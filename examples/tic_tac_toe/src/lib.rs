@@ -86,6 +86,7 @@ pub struct MoveResult {
 const GAME_ENTITY: u32 = 1;
 
 #[contract]
+#[derive(Clone)]
 pub struct TicTacToeContract;
 
 impl_soroban_game!(TicTacToeContract, "ttt_world");
@@ -295,5 +296,7 @@ impl TicTacToeContract {
     }
 }
 
+#[cfg(test)]
+mod sandbox_tests;
 #[cfg(test)]
 mod test;

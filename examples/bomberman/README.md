@@ -141,12 +141,11 @@ This example demonstrates how cougr-core simplifies on-chain game development by
    stellar contract deploy \
      --wasm target/wasm32v1-none/release/bomberman.wasm \
      --source <your-secret-key> \
-     --network testnet
+     --network <NETWORK>
    ```
 
 3.  the contract ID for future invocations (e.g., `<CONTRACT_ID>`)
 
-### this the deployed testnet link 
 https://stellar.expert/explorer/testnet/account/GAQAXKUQYNBHZYZ2OYISPXDZDP2HV57534VMGARGGIICH2BGNKDTKXOX
 
 ### Testing the Contract
@@ -158,7 +157,7 @@ Invoke functions to test gameplay:
 stellar contract invoke \
   --id <contract-id> \
   --source <your-secret-key> \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   init_game
 
@@ -166,7 +165,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <your-secret-key> \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   move_player \
   --player_id 1 \
@@ -176,7 +175,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <your-secret-key> \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   place_bomb \
   --player_id 1
@@ -185,7 +184,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <your-secret-key> \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   update_tick
 
@@ -193,7 +192,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <your-secret-key> \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   get_score \
   --player_id 1
@@ -202,7 +201,7 @@ stellar contract invoke \
 stellar contract invoke \
   --id <contract-id> \
   --source <your-secret-key> \
-  --network testnet \
+  --network <NETWORK> \
   -- \
   check_game_over
 ```

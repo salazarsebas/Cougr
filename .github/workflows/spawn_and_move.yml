@@ -1,0 +1,28 @@
+name: Spawn And Move Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/spawn_and_move/**'
+      - '!examples/spawn_and_move/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/spawn_and_move.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/spawn_and_move/**'
+      - '!examples/spawn_and_move/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/spawn_and_move.yml'
+
+concurrency:
+  group: spawn-and-move-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Spawn And Move Example CI
+      working_directory: examples/spawn_and_move
