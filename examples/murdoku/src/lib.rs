@@ -546,7 +546,6 @@ impl MurdokuContract {
         revoke_session(env, player, puzzle_id)
     }
 
-    pub fn place_suspect(env: Env, player: Address, puzzle_id: u32, x: u32, y: u32, _suspect_idx: u32) -> MoveResult {
     pub fn place_suspect(env: Env, player: Address, puzzle_id: u32, x: u32, y: u32, suspect_idx: u32) -> MoveResult {
         crate::auth::require_player_auth(&env, &player, puzzle_id, symbol_short!("place_suspect"));
         
