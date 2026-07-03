@@ -1,320 +1,111 @@
-# Connect Four On-Chain Game
+# Connect Four
 
-A fully functional Connect Four game implemented as a Soroban smart contract on the Stellar blockchain, demonstrating the **Cougr-Core** ECS (Entity Component System) framework for on-chain gaming.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
-|                 |                                                                                                                                       |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+An on-chain Connect Four game built with the [Cougr](../../README.md) ECS framework on
+Stellar Soroban.
 
-## Why Cougr-Core?
+## Purpose and pattern
 
-Cougr-Core provides an ECS architecture that simplifies on-chain game development. Here's how it compares to vanilla Soroban:
+This example demonstrates a turn-based, perfect-information board game driven by
+gravity-based piece placement: a move only specifies a column, and the contract resolves
+which row the piece lands in before checking for a win. It showcases Cougr's
+`ComponentTrait` pattern for typed, byte-serializable game state — components are plain
+Rust structs annotated with `#[contracttype]` that implement `ComponentTrait` directly,
+rather than being scanned through `SimpleWorld`/`SimpleQueryBuilder`. This is a
+lighter-weight integration suited to a single fixed-shape game state (one board, two
+players) with no dynamic entity population.
 
-| Aspect                 | Vanilla Soroban                       | With Cougr-Core                                           |
-| ---------------------- | ------------------------------------- | --------------------------------------------------------- |
-| **Data Serialization** | Manual byte packing/unpacking         | `ComponentTrait` with type-safe `serialize`/`deserialize` |
-| **Code Organization**  | Monolithic contract logic             | Modular components and systems                            |
-| **Type Safety**        | Runtime errors from format mismatches | Compile-time checking via traits                          |
-| **Reusability**        | Copy-paste between projects           | Shared component interfaces across games                  |
-| **Extensibility**      | Refactor existing code                | Add new systems without modification                      |
+## Public contract API
 
-### ComponentTrait Integration
+| Function | Parameters | Returns | Description |
+|---|---|---|---|
+| `init_game` | `player_one: Address`, `player_two: Address` | `GameState` | Initializes an empty 7×6 board; `player_one` moves first. |
+| `drop_piece` | `player: Address`, `column: u32` | `DropResult` | Validates the move, drops a piece into the lowest empty row of `column` (0–6), checks for a win/draw, and advances the turn. |
+| `get_state` | — | `GameState` | Current board, turn, move count, and status. |
+| `get_board` | — | `Vec<u32>` | Raw 42-cell board array (row-major, 0=empty/1=player one/2=player two). |
+| `is_valid_column` | `column: u32` | `bool` | Whether `column` is in bounds, not full, and the game is still in progress. |
+| `is_finished` | — | `bool` | Whether the game has ended (win or draw). |
+| `get_winner` | — | `Option<Address>` | The winning player's address, or `None` if the game is a draw or still in progress. |
+| `reset_game` | — | `GameState` | Re-initializes the board with the same two players. |
 
-All game components implement `cougr_core::component::ComponentTrait`:
+## Architecture overview
 
-```rust
-impl ComponentTrait for BoardComponent {
-    fn component_type() -> Symbol {
-        symbol_short!("board")
-    }
+There is no `GameApp` tick loop — `drop_piece` runs all systems synchronously in a fixed
+pipeline on each invocation:
 
-    fn serialize(&self, env: &Env) -> Bytes { /* ... */ }
-    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> { /* ... */ }
-}
+```
+drop_piece
+  └─ validation_system     → rejects out-of-turn, out-of-bounds, full-column, or post-game moves
+  └─ gravity_system        → finds the lowest empty row in the target column
+  └─ execution_system      → places the piece and increments the move counter
+  └─ win_detection_system  → scans the board for horizontal/vertical/diagonal 4-in-a-row
+  └─ draw_system           → marks the game a draw if the board fills with no winner
+  └─ turn_system           → advances to the other player if the game is still active
 ```
 
-### ECS System Pattern
+Each system is a pure function over `components.rs` types (`BoardComponent`,
+`PlayerComponent`, `GameStateComponent`, bundled into `ECSWorldState`); `lib.rs` owns that
+aggregate and is the only module that touches contract storage.
 
-Game logic is organized into discrete systems:
+## Storage model
 
-| System               | Responsibility                                          |
-| -------------------- | ------------------------------------------------------- |
-| `validation_system`  | Enforces game rules (turn order, column bounds, full)   |
-| `gravity_system`    | Finds lowest empty row for piece placement              |
-| `execution_system`   | Places piece on the board                               |
-| `win_detection_system` | Checks horizontal, vertical, and diagonal wins        |
-| `draw_system`        | Detects full board with no winner                       |
-| `turn_system`        | Manages turn transitions                                |
+The entire game lives under one instance-storage key (`WORLD_KEY`,
+`symbol_short!("WORLD")`) as a single `ECSWorldState` struct bundling the board, both
+player addresses, and the game-state component (turn, move count, status, last move).
+Instance storage is used — not persistent or temporary — because there is exactly one game
+per contract instance and the state must survive for the lifetime of that instance with no
+per-entry TTL management.
 
-## Features
+## Main gameplay flow
 
-| Feature                | Description                                                    |
-| ---------------------- | -------------------------------------------------------------- |
-| Two-player gameplay    | Uses Stellar addresses for player identification               |
-| Turn-based mechanics   | Player One goes first, enforced turn order                     |
-| Gravity-based placement| Pieces automatically fall to lowest available row              |
-| Win detection          | Horizontal, vertical, and both diagonal patterns               |
-| Draw detection         | Recognizes full board with no winner                           |
-| Move validation        | Rejects invalid columns, full columns, wrong turns             |
-| Game reset             | Restart with same players                                      |
-| Last move tracking     | Tracks which column was last played                            |
+1. Deployer calls `init_game(player_one, player_two)`; the board is seeded empty,
+   `player_one` to move, status in-progress.
+2. `player_one` calls `drop_piece(player, column)`. The contract checks turn order, column
+   bounds, and that the column isn't full.
+3. On a legal move: `gravity_system` finds the lowest empty row in that column,
+   `execution_system` places the piece there and increments the move count,
+   `win_detection_system` scans the whole board for a 4-in-a-row, and `draw_system` marks
+   the game a draw if all 42 cells are filled with no winner.
+4. If the game is still in progress, `turn_system` switches to the other player; the
+   updated `ECSWorldState` is written back to instance storage.
+5. Players alternate `drop_piece` calls until `is_finished` returns `true`. Either player
+   reads `get_winner` to see who won (or `None` for a draw).
+6. `reset_game` can be called at any point to start a fresh game with the same two players.
 
-## Prerequisites
+## Cougr APIs used
 
-| Requirement | Version               |
-| ----------- | --------------------- |
-| Rust        | 1.70.0+               |
-| Stellar CLI | 25.0.0+ (recommended) |
+- `cougr_core::component::ComponentTrait` — gives each component (`BoardComponent`,
+  `GameStateComponent`) a `component_type()` symbol and explicit byte-level
+  `serialize`/`deserialize`. This was chosen because the game has one fixed-shape
+  `ECSWorldState` per contract instance (a single board, two fixed player slots, one game-
+  state record) rather than a dynamic population of entities that would benefit from
+  `SimpleWorld`/`SimpleQueryBuilder` scanning — per the guidance in
+  [`EXAMPLE_STANDARD.md` §8](../EXAMPLE_STANDARD.md#8-cougr-api-usage-guidance), `SimpleWorld`
+  and `SimpleQueryBuilder` are for examples that store and query entities by component type,
+  which doesn't apply here. `PlayerComponent` is also `#[contracttype]` but does not
+  implement `ComponentTrait`, since it is embedded directly in `ECSWorldState` rather than
+  serialized standalone.
+- No `GameApp`, `ScheduleStage`, `auth`, `privacy::stable`/`experimental`, or `ops`
+  standards are used — `drop_piece` has exactly one decision point per call, so there is no
+  multi-stage tick to schedule, no hidden information to commit-reveal, and no
+  pausability/ownership requirement for a two-player, always-on game.
 
-```bash
-cargo install stellar-cli
-```
-
-## Building
-
-```bash
-# Build for testing
-cargo build
-
-# Build optimized WASM
-stellar contract build
-```
-
-## Testing
+## Build and test commands
 
 ```bash
 cargo test
-```
-
-| Test Category         | Count | Coverage                                              |
-| --------------------- | ----- | ----------------------------------------------------- |
-| Initialization        | 2     | Game setup, board retrieval                           |
-| Legal token drop      | 3     | First move, gravity stacking, alternating turns       |
-| Full column rejection | 2     | Column filled completely, validation after fill       |
-| Wrong turn rejection  | 2     | Out-of-turn play, invalid player                      |
-| Horizontal win        | 3     | Bottom row, middle row, any row                       |
-| Vertical win          | 2     | Player 1 vertical, Player 2 vertical                  |
-| Diagonal win          | 2     | Positive slope, negative slope                        |
-| Draw detection        | 2     | Full board scenarios                                  |
-| Edge cases            | 7     | Out of bounds, game over, reset, winner tracking, etc |
-| **Total**             | **25**| **All passing**                                        |
-
-## Contract API
-
-### Functions
-
-| Function       | Parameters                             | Returns       | Description                          |
-| -------------- | -------------------------------------- | ------------- | ------------------------------------ |
-| `init_game`    | `player_one: Address, player_two: Address` | `GameState` | Initialize new game                  |
-| `drop_piece`   | `player: Address, column: u32`         | `DropResult`  | Drop piece in column (0-6)           |
-| `get_state`    | -                                      | `GameState`   | Get current game state               |
-| `get_board`    | -                                      | `Vec<u32>`    | Get flattened board array            |
-| `is_valid_column` | `column: u32`                       | `bool`        | Check if column is valid and not full|
-| `is_finished`  | -                                      | `bool`        | Check if game is over                |
-| `get_winner`   | -                                      | `Option<Address>` | Get winner's address if game over |
-| `reset_game`   | -                                      | `GameState`   | Reset with same players              |
-
-### Board Layout
-
-```
-Columns: 0  1  2  3  4  5  6
-        ┌───────────────────┐
-Row 0   │ .  .  .  .  .  .  . │
-Row 1   │ .  .  .  .  .  .  . │
-Row 2   │ .  .  .  .  .  .  . │
-Row 3   │ .  .  .  .  .  .  . │
-Row 4   │ .  .  .  .  .  .  . │
-Row 5   │ .  .  .  .  .  .  . │
-        └───────────────────┘
-```
-
-- **Rows**: 6 (indexed 0-5, top to bottom)
-- **Columns**: 7 (indexed 0-6, left to right)
-- **Cell values**: 0 = Empty, 1 = Player One, 2 = Player Two
-
-### Data Structures
-
-**GameState**
-| Field                | Type         | Description                                          |
-| -------------------- | ------------ | ---------------------------------------------------- |
-| `board`              | `Vec<u32>`   | Flattened 7×6 board (row-major order)                |
-| `rows`               | `u32`        | Number of rows (6)                                   |
-| `cols`               | `u32`        | Number of columns (7)                                |
-| `player_one`         | `Address`    | Player One's address                                 |
-| `player_two`         | `Address`    | Player Two's address                                 |
-| `is_player_one_turn` | `bool`       | True if Player One's turn                            |
-| `move_count`         | `u32`        | Total moves made                                     |
-| `status`             | `u32`        | 0=InProgress, 1=P1Wins, 2=P2Wins, 3=Draw             |
-| `last_move_col`      | `Option<u32>`| Column index of last move                            |
-
-**DropResult**
-| Field         | Type        | Description                           |
-| ------------- | ----------- | ------------------------------------- |
-| `success`     | `bool`      | Whether move succeeded                |
-| `game_state`  | `GameState` | Updated game state                    |
-| `message`     | `Symbol`    | Status code                           |
-| `row_placed`  | `Option<u32>`| Row where piece landed (if success)  |
-
-### Error Messages
-
-| Code       | Meaning                                      |
-| ---------- | -------------------------------------------- |
-| `ok`       | Move successful                              |
-| `invalid`  | Column out of bounds (not 0-6)               |
-| `full`     | Column is already full                       |
-| `notturn`  | Not the player's turn                        |
-| `notplay`  | Address is not a registered player           |
-| `gameover` | Game has already ended                       |
-
-## Architecture
-
-```text
-ECSWorldState
-├── BoardComponent         (entity_id: 0)
-│   └── cells: Vec<u32> [42 cells - 7 columns × 6 rows]
-├── PlayerComponent        (entity_id: 1)
-│   ├── player_one: Address
-│   └── player_two: Address
-├── GameStateComponent     (entity_id: 2)
-│   ├── is_player_one_turn: bool
-│   ├── move_count: u32
-│   ├── status: u32
-│   ├── last_move_col: Option<u32>
-│   └── entity_id: u32
-└── next_entity_id: u32
-```
-
-### Win Detection Algorithm
-
-The win detection system checks all four directions from every occupied cell:
-
-1. **Horizontal**: Check 4 consecutive cells in the same row
-2. **Vertical**: Check 4 consecutive cells in the same column
-3. **Diagonal (positive slope)**: Check diagonal from bottom-left to top-right
-4. **Diagonal (negative slope)**: Check diagonal from top-left to bottom-right
-
-```rust
-// Example: Horizontal check
-fn check_horizontal(board: &BoardComponent, env: &Env, row: u32, col: u32, cell: u32) -> bool {
-    if col + 3 >= COLS { return false; }
-    for i in 0..4 {
-        if board.get_cell(env, row, col + i) != cell {
-            return false;
-        }
-    }
-    true
-}
-```
-
-## Gameplay Example
-
-```text
-Initial State (empty board):
-┌───────────────────┐
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-└───────────────────┘
-
-After moves: P1→col3, P2→col4, P1→col3, P2→col4, P1→col3, P2→col4
-┌───────────────────┐
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  2  1  .  . │
-│ .  .  .  1  2  .  . │
-└───────────────────┘
-
-Player 1 wins with vertical line in column 3:
-┌───────────────────┐
-│ .  .  .  .  .  .  . │
-│ .  .  .  .  .  .  . │
-│ .  .  .  1  .  .  . │
-│ .  .  .  1  .  .  . │
-│ .  .  .  2  1  .  . │
-│ .  .  .  1  2  .  . │
-└───────────────────┘
-```
-
-## Deployment
-
-### Deploy to Testnet
-
-```bash
-# Generate funded account
-stellar keys generate deployer --network <NETWORK> --fund
-
-# Build contract
 stellar contract build
-
-# Deploy
-stellar contract deploy \
-  --wasm target/wasm32v1-none/release/connect_four.wasm \
-  --source deployer \
-  --network <NETWORK>
 ```
 
-### Interact with Deployed Contract
+## Known limitations
 
-```bash
-# Initialize a game
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- init_game \
-  --player_one <PLAYER_ONE_ADDRESS> \
-  --player_two <PLAYER_TWO_ADDRESS>
-
-# Drop a piece in column 3
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- drop_piece \
-  --player <PLAYER_ADDRESS> \
-  --column 3
-
-# Get game state
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- get_state
-
-# Check if game is finished
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- is_finished
-```
-
-## Game Rules
-
-1. **Objective**: Be the first to connect 4 pieces of your color in a row
-2. **Turn Order**: Player One always goes first
-3. **Placement**: 
-   - Choose a column (0-6)
-   - Piece automatically falls to the lowest empty row in that column
-   - Cannot place in a full column
-4. **Winning**: Connect 4 pieces horizontally, vertically, or diagonally
-5. **Draw**: If all 42 spaces are filled with no winner
-6. **Invalid Moves**: 
-   - Playing out of turn
-   - Choosing an out-of-bounds column
-   - Choosing a full column
-   - Playing after game is over
-
-## Strategy Tips
-
-- **Center Control**: Columns 3 and 4 offer the most winning opportunities
-- **Blocking**: Watch for opponent's 3-in-a-row patterns
-- **Setup Moves**: Create multiple threats simultaneously
-- **Gravity Awareness**: Remember pieces stack from bottom to top
-
-## Resources
-
-- [Cougr Repository](https://github.com/salazarsebas/Cougr)
-- [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
-- [Stellar CLI Reference](https://developers.stellar.org/docs/tools/cli)
-- [Connect Four Wikipedia](https://en.wikipedia.org/wiki/Connect_Four)
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked
+  directly from contract entrypoints rather than through a tick-based scheduler, since a
+  turn-based game with one decision point per call does not need staged scheduling.
+- No timeout/forfeit mechanism for an unresponsive player.
+- `win_detection_system` re-scans the entire board on every move rather than checking only
+  the cell that was just placed; this is simple and correct but not the most efficient
+  approach for a larger board.
+- No spectator or replay API beyond the read-only getters.

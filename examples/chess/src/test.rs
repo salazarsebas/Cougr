@@ -1,6 +1,8 @@
 use super::*;
+use crate::components::{Color, Piece, PieceKind};
+use cougr_core::component::ComponentTrait;
 use cougr_core::zk::{G1Point, G2Point};
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Vec};
+use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env, Map, Vec};
 
 fn setup_game() -> (Env, ChessContractClient<'static>, Address, Address) {
     let env = Env::default();
@@ -359,6 +361,6 @@ fn test_proof_record_update() {
     client.new_game(&white, &black);
 
     let initial_state = client.get_state();
-    assert_eq!(initial_state.proof_record.verified, false);
+    assert!(!initial_state.proof_record.verified);
     assert_eq!(initial_state.proof_record.last_proof.len(), 0);
 }

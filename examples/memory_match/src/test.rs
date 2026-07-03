@@ -1,4 +1,5 @@
 use super::*;
+use crate::components::RevealResult;
 use soroban_sdk::{testutils::Address as _, Env};
 
 fn setup_game() -> (Env, MemoryMatchContractClient<'static>, Address) {

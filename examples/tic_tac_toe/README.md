@@ -1,292 +1,127 @@
-# Tic Tac Toe On-Chain Game
+# Tic Tac Toe
 
-A fully functional Tic Tac Toe game implemented as a Soroban smart contract on the Stellar blockchain, demonstrating the **Cougr-Core** ECS (Entity Component System) framework for on-chain gaming.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
-## Cougr-Core ECS Integration
+An on-chain Tic Tac Toe game built with the [Cougr](../../README.md) ECS framework on
+Stellar Soroban. Note: although this example already uses cougr-core's newest macro-based
+component pattern (`impl_rich_component!` / `impl_component!` / `impl_soroban_game!`), it is
+not on the canonical examples list, so it is marked transitional per the project standard —
+see "Cougr APIs used" below for why these specific macros were chosen over the manual
+`ComponentTrait` implementations used in other transitional examples like `reversi`.
 
-All game components implement `cougr_core::component::ComponentTrait`:
+## Purpose and pattern
 
-```rust
-impl ComponentTrait for BoardComponent {
-    fn component_type() -&gt; Symbol {
-        symbol_short!("board")
-    }
+This example demonstrates a two-player, perfect-information board game with a single shared
+entity for all game state. It showcases Cougr's `SimpleWorld` entity/component storage driven
+through the macro-generated `RichComponentTrait`/`ComponentTrait` implementations
+(`impl_rich_component!`, `impl_component!`) and the `SorobanGame` trait
+(`impl_soroban_game!`), which together remove the need to hand-write `serialize`/`deserialize`
+or repeat the storage key in every contract function.
 
-    fn serialize(&self, env: &Env) -&gt; Bytes { /* ... */ }
-    fn deserialize(env: &Env, data: &Bytes) -&gt; Option&lt;Self&gt; { /* ... */ }
-}
+## Public contract API
 
+| Function | Parameters | Returns | Description |
+|---|---|---|---|
+| `init_game` | `player_x: Address`, `player_o: Address` | `GameState` | Spawns the single game entity, seeds an empty 9-cell board, and sets X to move first. Overwrites any previous game. |
+| `make_move` | `player: Address`, `position: u32` | `MoveResult` | Validates and applies a move at `position` (0–8). Returns `success: false` with a status `message` symbol instead of panicking on illegal input. |
+| `get_state` | — | `GameState` | Current board, both player addresses, whose turn it is, move count, and status. |
+| `is_valid_move` | `position: u32` | `bool` | Whether `position` is a legal move right now (in range, empty cell, game still in progress). |
+| `get_winner` | — | `Option<Address>` | The winning player's address, or `None` if the game is in progress or drawn. |
+| `reset_game` | — | `GameState` | Re-initializes the board with the same two players, discarding moves. |
 
-## ECS System Pattern
-Game logic is organized into discrete systems:
-| System                 | Responsibility                                    |
-| ---------------------- | ------------------------------------------------- |
-| `validation_system`    | Enforces game rules (turn order, valid positions) |
-| `execution_system`     | Applies moves to the board                        |
-| `win_detection_system` | Checks all 8 winning patterns                     |
-| `turn_system`          | Manages turn transitions                          |
+### Status codes
 
+`GameState.status`: `0` = in progress, `1` = X wins, `2` = O wins, `3` = draw.
 
-# Features
-| Feature              | Description                                            |
-| -------------------- | ------------------------------------------------------ |
-| Two-player gameplay  | Uses Stellar addresses for player identification       |
-| Turn-based mechanics | X always goes first, enforced turn order               |
-| Win detection        | All 8 patterns (3 rows, 3 columns, 2 diagonals)        |
-| Draw detection       | Recognizes full board with no winner                   |
-| Move validation      | Rejects invalid positions, occupied cells, wrong turns |
-| Game reset           | Restart with same players                              |
+`MoveResult.message`: `ok`, `invalid` (out of range), `occupied`, `notturn`, `notplay`,
+`gameover`.
 
+## Architecture overview
 
-# Prerequisites
-| Requirement | Version               |
-| ----------- | --------------------- |
-| Rust        | 1.70.0+               |
-| Stellar CLI | 25.0.0+ (recommended) |
-cargo install stellar-cli
+```
+src/
+├── lib.rs          # #[contract] struct, SorobanGame wiring, #[contractimpl] entrypoints
+├── components.rs    # Board, Players, TurnState component structs + macro invocations
+└── systems.rs       # detect_winner: pure win/draw detection over board cells
+```
 
-## Building
-# Build for testing
-cargo build
+`make_move` runs a fixed validation/execution sequence synchronously on each call — there is
+no `GameApp` tick loop:
 
-# Build optimized WASM
-stellar contract build
+```
+make_move
+  └─ load Players, TurnState, Board from the single game entity
+  └─ validate: game not over, position in range, caller is a player, caller's turn, cell empty
+  └─ apply the mark, call systems::detect_winner over the updated board
+  └─ persist updated Board and TurnState, save the world
+```
 
-## Testing
-cargo test
-| Test Category  | Count  | Coverage                                        |
-| -------------- | ------ | ----------------------------------------------- |
-| Initialization | 2      | Game setup, state retrieval                     |
-| Valid moves    | 3      | X moves, O moves, position validation           |
-| Invalid moves  | 5      | Wrong turn, occupied, out of bounds, non-player |
-| Win conditions | 8      | All rows, columns, diagonals                    |
-| Draw           | 2      | Full board, post-draw state                     |
-| Game over      | 2      | No moves after win/draw                         |
-| Reset          | 2      | Mid-game reset, post-win reset                  |
-| State          | 3      | Persistence, move counting, winner retrieval    |
-| **Total**      | **33** | **All passing**                                 |
+`components.rs` owns the three `SimpleWorld` components and the shared `GAME_ENTITY`
+constant; `systems.rs` holds the one pure function (`detect_winner`) that contains no
+storage access; `lib.rs` owns the `#[contract]` struct, the `SorobanGame` wiring, and is the
+only module that loads/saves the `SimpleWorld`.
 
+## Storage model
 
-## Contract API
-# Functions
-| Function        | Parameters                             | Returns           | Description             |
-| --------------- | -------------------------------------- | ----------------- | ----------------------- |
-| `init_game`     | `player_x: Address, player_o: Address` | `GameState`       | Initialize new game     |
-| `make_move`     | `player: Address, position: u32`       | `MoveResult`      | Make a move (0-8)       |
-| `get_state`     | —                                      | `GameState`       | Get current state       |
-| `is_valid_move` | `position: u32`                        | `bool`            | Check if move is valid  |
-| `get_winner`    | —                                      | `Option<Address>` | Get winner's address    |
-| `reset_game`    | —                                      | `GameState`       | Reset with same players |
+All state lives in **instance storage**, managed transparently by `impl_soroban_game!`
+through `SorobanGame::load_world`/`save_world` under a single key (`"ttt_world"`). Within
+that one `SimpleWorld`, all three components (`Board`, `Players`, `TurnState`) are attached
+to a single fixed entity id (`GAME_ENTITY = 1`), since there is exactly one game per contract
+instance and no dynamic entity population to query. Instance storage is appropriate here
+because the game state must live for the lifetime of the contract instance with no per-entry
+TTL management.
 
+## Main gameplay flow
 
-## Board Positions
- 0 | 1 | 2
------------
- 3 | 4 | 5
------------
- 6 | 7 | 8
+1. Deployer calls `init_game(player_x, player_o)`; a new entity is spawned, the board is
+   seeded with 9 empty cells, and `TurnState` is set to X's turn, move count 0, status
+   in-progress.
+2. X calls `make_move(player_x, position)`. The contract checks the game isn't over, the
+   position is in range, the caller is a registered player, and it's their turn.
+3. On a legal move, the cell is marked, `systems::detect_winner` re-checks all 8 winning
+   lines plus the draw condition, and turn state is updated (status, move count, whose turn
+   is next).
+4. Players alternate `make_move` calls until `detect_winner` reports a win (status `1` or
+   `2`) or a draw (status `3`), after which further moves return `gameover`.
+5. Either player can call `get_state` or `get_winner` to read the outcome, or `reset_game` to
+   start over with the same two players.
 
- ## Data Structures
- # GameState
- | Field        | Type       | Description                            |
-| ------------ | ---------- | -------------------------------------- |
-| `cells`      | `Vec<u32>` | Board state (0=Empty, 1=X, 2=O)        |
-| `player_x`   | `Address`  | Player X's address                     |
-| `player_o`   | `Address`  | Player O's address                     |
-| `is_x_turn`  | `bool`     | True if X's turn                       |
-| `move_count` | `u32`      | Total moves made                       |
-| `status`     | `u32`      | 0=InProgress, 1=XWins, 2=OWins, 3=Draw |
+## Cougr APIs used
 
-# MoveResult
-| Field        | Type        | Description            |
-| ------------ | ----------- | ---------------------- |
-| `success`    | `bool`      | Whether move succeeded |
-| `game_state` | `GameState` | Updated state          |
-| `message`    | `Symbol`    | Status code            |
+- `cougr_core::{impl_rich_component!}` — used for `Board` (holds a `Vec<u32>`) and `Players`
+  (holds two `Address` values). Both fields require Soroban's XDR codec rather than fixed-size
+  byte packing, so `impl_rich_component!` was chosen to get `RichComponentTrait` for free from
+  the `#[contracttype]` derive, avoiding a hand-written `serialize`/`deserialize` pair for
+  `Vec<u32>` and `Address` like the one `reversi`'s `components.rs` still carries.
+- `cougr_core::{impl_component!}` — used for `TurnState`, which is three fixed-size plain
+  fields (`bool`, `u32`, `u32`). `impl_component!` generates a compact, fully typed
+  `ComponentTrait` implementation (byte-packed, not XDR) since there are no `Address`/`Vec`
+  fields needing the heavier rich-component codec.
+- `cougr_core::game::SorobanGame` / `impl_soroban_game!` — generates `load_world`/
+  `save_world` for the `#[contract]` struct so every entrypoint can read and persist the
+  `SimpleWorld` without repeating the instance-storage key (`"ttt_world"`) or its
+  get/set boilerplate.
+- `cougr_core::simple_world::SimpleWorld` — used as the single source of truth for the game's
+  three components, attached to one fixed entity rather than a dynamic population, since
+  tic-tac-toe has exactly one game per contract instance.
 
-# Error Messages
-| Code       | Meaning                          |
-| ---------- | -------------------------------- |
-| `ok`       | Move successful                  |
-| `invalid`  | Position out of bounds (not 0-8) |
-| `occupied` | Cell already has a mark          |
-| `notturn`  | Not the player's turn            |
-| `notplay`  | Address is not a player          |
-| `gameover` | Game has already ended           |
+This example does not use `GameApp`, `ScheduleStage`, `SimpleQueryBuilder`, `auth`, or
+`privacy` — see Known limitations.
 
-
-## Architecture
-ECSWorldState
-├── BoardComponent     (entity_id: 0)
-│   └── cells: Vec<u32> [9 cells]
-├── PlayerComponent    (entity_id: 1)
-│   ├── player_x: Address
-│   └── player_o: Address
-├── GameStateComponent (entity_id: 2)
-│   ├── is_x_turn: bool
-│   ├── move_count: u32
-│   └── status: u32
-└── next_entity_id: u32
-
-## Deployment
-# Deploy to Testnet
-# Generate funded account
-stellar keys generate deployer --network <NETWORK> --fund
-
-# Build contract
-stellar contract build
-
-# Deploy
-stellar contract deploy \
-  --wasm target/tic_tac_toe.wasm \
-  --source <ACCOUNT> \
-  --network <NETWORK>
-
-  # Interact with Deployed Contract
-  # Initialize a game
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- init_game \
-  --player_x <PLAYER_X_ADDRESS> \
-  --player_o <PLAYER_O_ADDRESS>
-
-# Make a move
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- make_move \
-  --player <PLAYER_ADDRESS> \
-  --position 4
-
-# Get game state
-stellar contract invoke \
-  --id <CONTRACT_ID> \
-  --network <NETWORK> \
-  -- get_state
-
-
-
-## Resources
-  Cougr Repository
-Soroban Documentation
-Stellar CLI Reference
-
-
----
-
-## 5. Verification Script: `scripts/verify_hygiene.sh`
+## Build and test commands
 
 ```bash
-#!/usr/bin/env bash
-#
-# verify_hygiene.sh — Verify all hygiene standards from #225 are met
-#
+cargo test
+stellar contract build
+```
 
-set -euo pipefail
+## Known limitations
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-EXAMPLES_DIR="$REPO_ROOT/examples"
-EXIT_CODE=0
-
-echo "=== Hygiene Verification (#225) ==="
-echo ""
-
-# --- Check 1: No tracked target/ directories ---
-echo "Check 1: No tracked target/ directories"
-tracked_targets=$(git -C "$REPO_ROOT" ls-files 'examples/**/target/**' 2>/dev/null || true)
-if [ -z "$tracked_targets" ]; then
-    echo "  PASS: No target/ files tracked"
-else
-    echo "  FAIL: Tracked target/ files found:"
-    echo "$tracked_targets" | sed 's/^/    /'
-    EXIT_CODE=1
-fi
-echo ""
-
-# --- Check 2: No .wasm files tracked ---
-echo "Check 2: No tracked .wasm files"
-tracked_wasm=$(git -C "$REPO_ROOT" ls-files 'examples/**/*.wasm' 2>/dev/null || true)
-if [ -z "$tracked_wasm" ]; then
-    echo "  PASS: No .wasm files tracked"
-else
-    echo "  FAIL: Tracked .wasm files found:"
-    echo "$tracked_wasm" | sed 's/^/    /'
-    EXIT_CODE=1
-fi
-echo ""
-
-# --- Check 3: No hardcoded contract IDs in READMEs ---
-echo "Check 3: No hardcoded contract IDs in README.md files"
-contract_ids=$(grep -rE 'C[A-Z2-7]{55}' "$EXAMPLES_DIR"/*/README.md 2>/dev/null || true)
-if [ -z "$contract_ids" ]; then
-    echo "  PASS: No hardcoded contract IDs found"
-else
-    echo "  FAIL: Hardcoded contract IDs found:"
-    echo "$contract_ids" | sed 's/^/    /'
-    EXIT_CODE=1
-fi
-echo ""
-
-# --- Check 4: .gitignore exists in every example ---
-echo "Check 4: .gitignore in every example directory"
-missing_gitignore=0
-for example_dir in "$EXAMPLES_DIR"/*/; do
-    if [ ! -f "$example_dir/.gitignore" ]; then
-        echo "  FAIL: Missing .gitignore in $(basename "$example_dir")"
-        missing_gitignore=$((missing_gitignore + 1))
-        EXIT_CODE=1
-    fi
-done
-if [ $missing_gitignore -eq 0 ]; then
-    echo "  PASS: All examples have .gitignore"
-fi
-echo ""
-
-# --- Check 5: .gitignore excludes target/ ---
-echo "Check 5: .gitignore excludes target/"
-missing_target_ignore=0
-for gitignore in "$EXAMPLES_DIR"/*/.gitignore; do
-    if [ ! -f "$gitignore" ]; then
-        continue
-    fi
-    if ! grep -q "^target/" "$gitignore" && ! grep -q "^/target/" "$gitignore"; then
-        echo "  FAIL: $(dirname "$gitignore")/.gitignore does not exclude target/"
-        missing_target_ignore=$((missing_target_ignore + 1))
-        EXIT_CODE=1
-    fi
-done
-if [ $missing_target_ignore -eq 0 ]; then
-    echo "  PASS: All .gitignore files exclude target/"
-fi
-echo ""
-
-# --- Check 6: cargo metadata --no-deps succeeds ---
-echo "Check 6: cargo metadata --no-deps succeeds for all examples"
-metadata_failed=0
-for example_dir in "$EXAMPLES_DIR"/*/; do
-    if [ ! -d "$example_dir" ]; then
-        continue
-    fi
-    example_name=$(basename "$example_dir")
-    if (cd "$example_dir" && cargo metadata --no-deps --format-version 1 >/dev/null 2>&1); then
-        :
-    else
-        echo "  FAIL: cargo metadata failed for $example_name"
-        metadata_failed=$((metadata_failed + 1))
-        EXIT_CODE=1
-    fi
-done
-if [ $metadata_failed -eq 0 ]; then
-    echo "  PASS: cargo metadata succeeds for all examples"
-fi
-echo ""
-
-# --- Summary ---
-if [ $EXIT_CODE -eq 0 ]; then
-    echo "=== ALL CHECKS PASSED ==="
-else
-    echo "=== SOME CHECKS FAILED ==="
-fi
-
-exit $EXIT_CODE
+- Does not use `GameApp` or `ScheduleStage` — validation and win detection run synchronously
+  inside `make_move` since a turn-based game with one decision point per call has no need for
+  staged scheduling.
+- Does not use `SimpleQueryBuilder` — there is exactly one game entity per contract instance,
+  so there is no entity population to scan by component type.
+- No timeout/forfeit mechanism for an unresponsive player.
+- No spectator or replay API beyond the read-only getters.
