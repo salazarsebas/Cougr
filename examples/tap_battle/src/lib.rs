@@ -9,14 +9,14 @@
 //!    → No seed phrases, no mnemonics — just Face ID / Touch ID
 //! 2. **Authentication + Session**: Player authenticates via passkey
 //!    → `verify_secp256r1()` validates the biometric signature
-//!    → `SessionBuilder` creates a gameplay session scoped to `tap` + `use_power`
+//!    → `SessionManager` creates a gameplay session scoped to `tap` + `use_power_up`
 //! 3. **Gameplay (gasless via session key)**: Rapid tapping is processed
 //!    through the session key with no per-transaction wallet prompts
 //! 4. **Result**: Scores compared, winner declared, stats recorded on-chain
 //!
 //! # Cougr-Core Integration
 //! - `secp256r1_auth`: Passkey registration and signature verification
-//! - `SessionBuilder`: Scoped session creation for gasless gameplay
+//! - `SessionManager`: Scoped session creation, execution, renewal, and status queries
 //! - ECS Components: `PasskeyIdentity`, `TapCounter`, `PowerUp`, `RoundState`
 //! - ECS World: Entity management for game objects
 
@@ -30,7 +30,7 @@ mod types;
 mod test;
 
 use cougr_core::SimpleWorld;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, BytesN, Env};
+use soroban_sdk::{contract, contractimpl, symbol_short, Address, Bytes, BytesN, Env, Symbol};
 
 // Re-export types for external use
 pub use types::*;
@@ -65,7 +65,7 @@ impl TapBattleContract {
     /// Authenticate via passkey and create a gameplay session.
     ///
     /// Verifies the secp256r1 signature (biometric challenge), then creates
-    /// a `SessionBuilder` session scoped to `tap` and `use_power` actions.
+    /// a `SessionManager` session scoped to `tap` and `use_power_up` actions.
     /// After this call, the player can submit rapid tap actions without
     /// per-transaction wallet prompts.
     ///
@@ -73,7 +73,7 @@ impl TapBattleContract {
     /// * `player` - The player's Stellar address
     /// * `signature` - secp256r1 signature (64 bytes) of the challenge
     /// * `challenge` - Random challenge that was signed (32 bytes)
-    /// * `duration` - Session duration in ledger sequences
+    /// * `duration` - Session duration in ledger sequences/seconds
     ///
     /// # Returns
     /// The session key address for subsequent gameplay calls
@@ -100,7 +100,7 @@ impl TapBattleContract {
     /// # Returns
     /// `TapResult` with current count, combo, multiplier, and score earned
     pub fn tap(env: Env, session_key: Address) -> TapResult {
-        let player = auth::validate_session(&env, &session_key);
+        let player = auth::validate_session(&env, &session_key, symbol_short!("tap"));
         game::process_tap(&env, &player)
     }
 
@@ -116,8 +116,72 @@ impl TapBattleContract {
     /// * `session_key` - The player's session address
     /// * `power_up` - Power-up kind (0 = DoubleTap, 1 = Shield, 2 = Burst)
     pub fn use_power_up(env: Env, session_key: Address, power_up: u32) {
-        let player = auth::validate_session(&env, &session_key);
+        let player = auth::validate_session(&env, &session_key, Symbol::new(&env, "use_power_up"));
         game::activate_power_up(&env, &player, power_up);
+    }
+
+    /// Extend session lifetime (owner must re-approve via wallet).
+    pub fn renew_session(
+        env: Env,
+        owner: Address,
+        key_id: BytesN<32>,
+        expires_in: u64,
+    ) -> cougr_core::session::ActiveSession {
+        owner.require_auth();
+        let new_expires = env.ledger().timestamp().saturating_add(expires_in);
+        let key = cougr_core::session::SessionManager::renew(&env, &owner, &key_id, new_expires)
+            .expect("renewed");
+        let status = cougr_core::session::SessionManager::status(&env, &owner, &key.key_id)
+            .expect("session status");
+        cougr_core::session::ActiveSession::from_status(&status, key.scope.expires_at)
+    }
+
+    /// Read session health for UI renewal prompts.
+    pub fn session_status(
+        env: Env,
+        owner: Address,
+        key_id: BytesN<32>,
+    ) -> cougr_core::session::SessionStatus {
+        cougr_core::session::SessionManager::status(&env, &owner, &key_id).expect("session status")
+    }
+
+    /// Tap using session first, falling back to direct owner auth when expired.
+    pub fn fallback_tap(env: Env, owner: Address, key_id: BytesN<32>) -> TapResult {
+        let session = cougr_core::accounts::SessionStorage::load(&env, &owner, &key_id)
+            .expect("session missing");
+        let action = cougr_core::accounts::GameAction {
+            system_name: symbol_short!("tap"),
+            data: Bytes::new(&env),
+        };
+        let session_intent = cougr_core::accounts::SignedIntent::session(
+            &env,
+            owner.clone(),
+            &key_id,
+            action.clone(),
+            session.next_nonce,
+            env.ledger().timestamp().saturating_add(60),
+        );
+        let direct_intent = cougr_core::accounts::SignedIntent::direct(
+            &env,
+            owner.clone(),
+            action,
+            cougr_core::accounts::ReplayProtection::next_account_nonce(&env, &owner),
+            env.ledger().timestamp().saturating_add(60),
+        );
+        cougr_core::session::SessionManager::fallback_execute(
+            &env,
+            &session_intent,
+            &direct_intent,
+        )
+        .expect("fallback tap");
+
+        game::process_tap(&env, &owner)
+    }
+
+    /// Get the latest session key ID for a player.
+    pub fn get_latest_session_key(env: Env, player: Address) -> BytesN<32> {
+        let keys = cougr_core::accounts::SessionStorage::load_all(&env, &player);
+        keys.last().expect("no active session").key_id
     }
 
     /// Start a competitive round between two players.

@@ -1,14 +1,16 @@
 //! Authentication and session management for Tap Battle.
 //!
-//! This module wraps cougr-core's secp256r1 authentication and SessionBuilder
+//! This module wraps cougr-core's secp256r1 authentication and SessionManager
 //! to provide the mobile-first auth flow:
 //! 1. Player registers a passkey (secp256r1 public key)
 //! 2. Player authenticates with biometrics → signature verified on-chain
-//! 3. SessionBuilder creates a scoped gameplay session (no per-tx wallet prompts)
+//! 3. SessionManager creates a scoped gameplay session (no per-tx wallet prompts)
 
 use soroban_sdk::{symbol_short, Address, Bytes, BytesN, Env, Symbol};
 
-use cougr_core::auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage, SessionBuilder};
+use cougr_core::accounts::{GameAction, SessionBuilder, SessionStorage};
+use cougr_core::auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage};
+use cougr_core::session::SessionManager;
 
 use crate::types::*;
 
@@ -45,7 +47,7 @@ pub fn register_passkey(env: &Env, player: &Address, pubkey: &BytesN<65>) {
 /// Authenticate a player via passkey and create a gameplay session.
 ///
 /// Verifies the secp256r1 signature against the stored public key, then
-/// uses `SessionBuilder` to create a session scoped to `tap` and `use_power`
+/// uses `SessionManager` to create a session scoped to `tap` and `use_power_up`
 /// actions. The session key allows gasless gameplay.
 ///
 /// # Returns
@@ -76,18 +78,11 @@ pub fn authenticate_and_create_session(
         .allow_action(symbol_short!("tap"))
         .allow_action(Symbol::new(env, "use_power_up"))
         .max_operations(DEFAULT_MAX_OPS)
-        .expires_at(env.ledger().sequence() as u64 + duration)
+        .expires_in(duration)
         .build_scope();
 
-    // Store session state on-chain
-    let session = SessionState {
-        player: player.clone(),
-        expires_at: session_scope.expires_at,
-        ops_remaining: session_scope.max_operations,
-    };
-    env.storage()
-        .persistent()
-        .set(&DataKey::Session(player.clone()), &session);
+    // Store session state via SessionManager::approve
+    SessionManager::approve(env, player, session_scope).expect("session approval failed");
 
     // Initialize tap counter for this player
     env.storage()
@@ -107,34 +102,34 @@ pub fn authenticate_and_create_session(
 // SessionSystem — Session validation
 // ============================================================================
 
-/// Validate that a session is still active and decrement operations.
+/// Validate that a session is still active and decrement operations via SessionManager.
 ///
 /// Checks expiration and remaining operations. Returns the player address
 /// associated with the session.
 ///
 /// # Panics
 /// Panics if the session has expired or has no remaining operations.
-pub fn validate_session(env: &Env, session_key: &Address) -> Address {
-    let mut session: SessionState = env
-        .storage()
-        .persistent()
-        .get(&DataKey::Session(session_key.clone()))
-        .expect("no active session");
+pub fn validate_session(env: &Env, session_key: &Address, action_name: Symbol) -> Address {
+    let keys = SessionStorage::load_all(env, session_key);
+    let session = keys.last().expect("no active session");
 
-    // Check expiration (ledger-based)
-    assert!(
-        (env.ledger().sequence() as u64) < session.expires_at,
-        "session expired"
-    );
+    let action = GameAction {
+        system_name: action_name,
+        data: Bytes::new(env),
+    };
 
-    // Check operations remaining
-    assert!(session.ops_remaining > 0, "session operations exhausted");
-
-    // Decrement operations
-    session.ops_remaining -= 1;
-    env.storage()
-        .persistent()
-        .set(&DataKey::Session(session_key.clone()), &session);
-
-    session.player.clone()
+    match SessionManager::execute_action(
+        env,
+        session_key,
+        &session,
+        action,
+        env.ledger().timestamp().saturating_add(60),
+    ) {
+        Ok(_) => session_key.clone(),
+        Err(cougr_core::accounts::AccountError::SessionExpired) => panic!("session expired"),
+        Err(cougr_core::accounts::AccountError::SessionBudgetExceeded) => {
+            panic!("session operations exhausted")
+        }
+        Err(e) => panic!("session validation failed: {:?}", e),
+    }
 }
