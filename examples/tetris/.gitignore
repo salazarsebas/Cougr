@@ -1,4 +1,5 @@
 /target
 test_snapshots/
 *.wasm
-Cargo.lock
+
+target/
