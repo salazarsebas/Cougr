@@ -1,22 +1,49 @@
-# 🎮 Space Invaders - On-Chain Game Example
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
-[![Tests](https://img.shields.io/badge/tests-13%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
-[![Stellar](https://img.shields.io/badge/Stellar-Testnet-blue)](https://stellar.org)
+# Space Invaders On-Chain Game
 
-A fully functional Space Invaders game implemented as a **Soroban smart contract** using the `cougr-core` ECS (Entity-Component-System) framework on the Stellar blockchain.
+# Space Invaders - On-Chain Game Example
 
-## 🚀 Live Deployment
+
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
+
+## Purpose and pattern
+
+
+This example demonstrates a shooter entity-update loop on Soroban with Cougr ECS concepts. It remains transitional while the arcade examples converge on the canonical `snake` `GameApp` architecture.
+
+## Public contract API
+
+| Function | Parameters | Return type | Description |
+|---|---|---:|---|
+| `init_game` | `none` | `()` | Initializes ship, invaders, score, lives, and game flags. |
+| `move_ship` | `direction: i32` | `i32` | Moves the ship left/right within bounds and returns x position. |
+| `shoot` | `none` | `bool` | Spawns a player bullet when possible. |
+| `update_tick` | `none` | `bool` | Advances bullets, invaders, collisions, score, and game-over checks. |
+| `get_score` | `none` | `u32` | Returns score. |
+| `get_lives` | `none` | `u32` | Returns remaining lives. |
+| `get_ship_position` | `none` | `i32` | Returns ship x position. |
+| `check_game_over` | `none` | `bool` | Returns terminal state. |
+| `get_active_invaders` | `none` | `u32` | Returns number of active invaders. |
+| `get_entity_count` | `none` | `u32` | Returns total tracked entity count. |
+
+## Live Deployment
 
 | Network | Contract ID | Status |
 |---------|-------------|--------|
-| **Testnet** | [`<CONTRACT_ID>`](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) | Active |
+| **Testnet** | [`<CONTRACT_ID>`](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) | 🟢 Active |
 
-> **Explorer**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>)
 
----
+## Architecture overview
 
-## 📋 Overview
+
+```text
+contract entrypoint
+  ├─ reads game state from Soroban storage
+  ├─ applies input or tick systems
+  └─ writes updated state back to storage
+
+## Overview
 
 This example demonstrates how to build on-chain game logic on the Stellar blockchain using **cougr-core's ECS architecture**. The game focuses exclusively on smart contract logic (no graphical interface) and includes:
 
@@ -31,7 +58,7 @@ This example demonstrates how to build on-chain game logic on the Stellar blockc
 
 ---
 
-## 🔧 Why Cougr-Core?
+## Why Cougr-Core?
 
 **Cougr-Core** provides an ECS (Entity-Component-System) architecture specifically designed for Soroban smart contracts. Here's how it benefits this project:
 
@@ -65,44 +92,47 @@ impl Bullet {
         self.velocity.apply_to(&mut self.position);
     }
 }
+
 ```
 
-### Cougr-Core vs Traditional Approach
+Ship, invader, bullet, score, and lives state is currently compacted in contract storage. `components.rs` and `systems.rs` expose the transitional ECS boundary for future migration.
 
-| Aspect | Traditional | With Cougr-Core |
-|--------|-------------|-----------------|
-| Entity Data | Scattered structs | Unified Component pattern |
-| Position Tracking | Manual x/y fields | `EntityPosition` + `CougrPosition` |
-| Movement Logic | Per-entity methods | Velocity component + System |
-| Health Management | Ad-hoc fields | `Health` component with damage API |
-| Entity Creation | Manual construction | `SimpleWorld::spawn_entity()` + components |
+## Storage model
 
----
+| Storage class | Data | Why |
+|---|---|---|
+| Instance storage | Per-contract game state where used by this example. | Keeps small arcade state close to the contract instance. |
+| Persistent storage | Player- or world-scoped state where the example needs durable keyed state. | Keeps game progress available across invocations. |
+| Temporary storage | Not used. | The examples favor deterministic recalculation over ephemeral caches. |
 
-## 🏗️ Quick Start
 
-### Prerequisites
+## Main gameplay flow
 
-| Tool | Version | Installation |
-|------|---------|--------------|
-| Rust | 1.70.0+ | [rustup.rs](https://rustup.rs) |
-| Stellar CLI | Latest | [Stellar Docs](https://developers.stellar.org/docs/tools/cli) |
-| WASM Target | - | `rustup target add wasm32v1-none` |
+## ️ Quick Start
 
-### Build
 
-```bash
-# Standard Rust build
-cargo build
+1. Call the initialization function to create the starting state.
+2. Submit an input action such as movement, jump, flap, rotation, or shoot.
+3. Call the tick/update function to run deterministic simulation logic.
+4. Query public getters for score, position, active state, or terminal status.
+5. Stop when the game-over/completed condition is reached, or reset/reinitialize where supported.
 
-# Build WASM for Soroban deployment
-stellar contract build
-```
+## Cougr APIs used
 
-### Test
+- `ComponentTrait` and custom component modules document the ECS data boundary.
+- `SimpleWorld`, `SimpleQueryBuilder`, `GameApp`, `ScheduleStage`, or `SystemConfig` are used where this transitional example has already adopted the maintained runtime shape.
+- Auth, privacy, ZK, and standards APIs are intentionally not used; these arcade examples focus on deterministic game logic.
+
+## Build and test commands
 
 ```bash
 cargo test
+
+stellar contract build
+```
+
+## Known limitations
+
 ```
 
 **Test Results**: 13 tests passing ✅
@@ -123,7 +153,7 @@ cargo test
 
 ---
 
-## 📖 Contract API
+## Contract API
 
 ### Core Functions
 
@@ -147,7 +177,7 @@ cargo test
 
 ---
 
-## 🎮 Game Mechanics
+## Game Mechanics
 
 ### Invaders
 
@@ -183,13 +213,13 @@ cargo test
 
 ---
 
-## 🌐 Deploy to Testnet
+## Deploy to Testnet
 
 ### 1. Setup Identity
 
 ```bash
 # Generate a new identity
-stellar keys generate --global deployer --network testnet
+stellar keys generate --global deployer --network <NETWORK>
 
 # Fund the account
 stellar keys address deployer | xargs -I {} curl "https://friendbot.stellar.org?addr={}"
@@ -205,7 +235,7 @@ stellar contract build
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/space_invaders.wasm \
   --source deployer \
-  --network testnet
+  --network <NETWORK>
 ```
 
 ### 3. Initialize & Play
@@ -215,18 +245,18 @@ stellar contract deploy \
 CONTRACT_ID="your_contract_id_here"
 
 # Initialize game
-stellar contract invoke --id $CONTRACT_ID --source deployer --network testnet -- init_game
+stellar contract invoke --id $CONTRACT_ID --source deployer --network <NETWORK> -- init_game
 
 # Play!
-stellar contract invoke --id $CONTRACT_ID --network testnet -- move_ship --direction 1
-stellar contract invoke --id $CONTRACT_ID --network testnet -- shoot
-stellar contract invoke --id $CONTRACT_ID --network testnet -- update_tick
-stellar contract invoke --id $CONTRACT_ID --network testnet -- get_score
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- move_ship --direction 1
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- shoot
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- update_tick
+stellar contract invoke --id $CONTRACT_ID --network <NETWORK> -- get_score
 ```
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 examples/space_invaders/
@@ -240,6 +270,10 @@ examples/space_invaders/
 
 ---
 
-## 📄 License
+## License
 
-MIT OR Apache-2.0
+
+- Transitional code may preserve older storage or scheduling patterns for compatibility reference.
+- No authentication, matchmaking, real-time rendering, or production randomness is included.
+- One contract instance generally represents one game or one keyed set of player games.
+- For new work, prefer the canonical `snake` module split and `GameApp` tick wiring.

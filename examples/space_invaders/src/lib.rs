@@ -30,12 +30,14 @@
 
 #![no_std]
 
+mod components;
 mod game_state;
+mod systems;
 
 #[cfg(test)]
 mod test;
 
-use crate::game_state::*;
+use crate::game_state::{INVADER_MOVE_INTERVAL, INVADER_WIN_Y, SHIP_Y, SHOOT_COOLDOWN};
 use soroban_sdk::{contract, contractimpl, Env, Vec};
 
 // Import cougr-core ECS framework components
@@ -43,10 +45,10 @@ use soroban_sdk::{contract, contractimpl, Env, Vec};
 use cougr_core::{Position as CougrPosition, SimpleWorld};
 
 // Re-export game state types for external use
-pub use game_state::{
-    Bullet, DataKey, Direction, EntityPosition, GameState, Health, Invader, InvaderType, Ship,
-    Velocity, GAME_HEIGHT, GAME_WIDTH, INVADER_COLS, INVADER_ROWS,
+pub use components::{
+    Bullet, Direction, EntityPosition, GameState, Health, Invader, InvaderType, Ship, Velocity,
 };
+pub use game_state::{DataKey, GAME_HEIGHT, GAME_WIDTH, INVADER_COLS, INVADER_ROWS};
 
 #[contract]
 pub struct SpaceInvadersContract;
@@ -262,7 +264,7 @@ impl SpaceInvadersContract {
             for j in 0..invaders.len() {
                 let mut invader = invaders.get(j).unwrap();
                 if invader.active
-                    && Self::check_collision(bullet.x(), bullet.y(), invader.x(), invader.y(), 2)
+                    && systems::check_collision(bullet.x(), bullet.y(), invader.x(), invader.y(), 2)
                 {
                     // Collision detected - update Health component
                     invader.health.take_damage(1);
@@ -284,7 +286,7 @@ impl SpaceInvadersContract {
         for i in 0..new_enemy_bullets.len() {
             let bullet = new_enemy_bullets.get(i).unwrap();
 
-            if Self::check_collision(bullet.x(), bullet.y(), state.ship_x(), SHIP_Y, 2) {
+            if systems::check_collision(bullet.x(), bullet.y(), state.ship_x(), SHIP_Y, 2) {
                 // Player hit - update ship's Health component
                 state.take_damage();
             } else {
@@ -420,11 +422,5 @@ impl SpaceInvadersContract {
             .instance()
             .get(&DataKey::EntityCount)
             .unwrap_or(0)
-    }
-
-    /// Helper function to check collision between two Position components
-    /// This follows cougr-core's collision detection pattern using positions
-    fn check_collision(x1: i32, y1: i32, x2: i32, y2: i32, tolerance: i32) -> bool {
-        (x1 - x2).abs() < tolerance && (y1 - y2).abs() < tolerance
     }
 }

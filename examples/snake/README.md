@@ -1,173 +1,92 @@
 # Snake On-Chain Game
 
-A fully functional Snake game implemented as a Soroban smart contract using the **cougr-core** ECS (Entity-Component-System) framework on the Stellar blockchain.
+**Classification: Canonical example.** This is the maintained arcade reference for Cougr examples. New arcade contracts should copy its `GameApp` wiring, `components.rs` / `systems.rs` split, README shape, and test coverage.
 
-## Table of Contents
+## Purpose and pattern
 
-- [Overview](#overview)
-- [Why cougr-core?](#why-cougr-core)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Contract Functions](#contract-functions)
-- [Deployment](#deployment)
-- [Project Structure](#project-structure)
-- [Creating Components](#creating-components)
-- [Troubleshooting](#troubleshooting)
+Snake demonstrates a deterministic arcade loop on Soroban using `cougr-core`'s basic ECS and `GameApp` tick model. The contract keeps persistent game state on chain, stores ECS entities in a `SimpleWorld`, and runs ordered systems for movement, collision, growth, and food spawning.
 
----
+## Public contract API
 
-## Overview
+| Function | Parameters | Return type | Description |
+|---|---|---:|---|
+| `init_game` | none | `()` | Initializes a new game on the default 10×10 grid. |
+| `init_game_with_size` | `grid_size: i32` | `()` | Initializes a new game on a custom square grid. |
+| `change_direction` | `direction: u32` | `bool` | Changes the snake direction (`0` up, `1` down, `2` left, `3` right); returns `false` for invalid values, reversals, or game-over state. |
+| `update_tick` | none | `()` | Advances the game by one `GameApp` tick. |
+| `get_score` | none | `u32` | Returns the current score. |
+| `check_game_over` | none | `bool` | Returns whether the game has reached a terminal state. |
+| `get_head_pos` | none | `(i32, i32)` | Returns the current snake-head position. |
+| `get_snake_length` | none | `u32` | Returns the number of snake entities. |
+| `get_food_pos` | none | `(i32, i32)` | Returns the current food position. |
+| `get_snake_positions` | none | `Vec<(i32, i32)>` | Returns all snake segment positions. |
+| `get_grid_size` | none | `i32` | Returns the configured grid size. |
 
-This implementation follows classic Snake game rules:
+## Architecture overview
 
-| Rule | Description |
-|------|-------------|
-| Movement | Snake moves continuously in current direction |
-| Control | Player can change direction (cannot reverse) |
-| Growth | Eating food increases snake length and score |
-| Game Over | Collision with walls or self ends the game |
-
----
-
-## Why cougr-core?
-
-The **cougr-core** package provides significant advantages for building on-chain games on Stellar/Soroban:
-
-### Benefits Comparison
-
-| Aspect | Without cougr-core | With cougr-core |
-|--------|-------------------|-----------------|
-| **Component Serialization** | Manual byte encoding for each type | Standardized `ComponentTrait` with `serialize()`/`deserialize()` |
-| **Type Identification** | Custom validation per component | Built-in `component_type()` returns unique `Symbol` |
-| **Storage Optimization** | One-size-fits-all approach | `Table` vs `Sparse` storage strategies |
-| **Entity Management** | Custom ID tracking | Standardized `EntityId` with generation |
-| **Code Reusability** | Write from scratch | Extend proven ECS patterns |
-
-### Key Features Used in This Example
-
-```rust
-// 1. Import from cougr-core
-use cougr_core::component::{Component, ComponentStorage, ComponentTrait};
-
-// 2. Implement ComponentTrait for type-safe serialization
-impl ComponentTrait for Position {
-    fn component_type() -> Symbol {
-        symbol_short!("position")  // Unique identifier
-    }
-
-    fn serialize(&self, env: &Env) -> Bytes { /* ... */ }
-    fn deserialize(env: &Env, data: &Bytes) -> Option<Self> { /* ... */ }
-
-    fn default_storage() -> ComponentStorage {
-        ComponentStorage::Table  // Optimized for dense data
-    }
-}
-
-// 3. Create Component wrapper for unified storage
-let component = Component::new(Position::component_type(), position.serialize(&env));
+```text
+contract entrypoint
+  ├─ loads GameState + SimpleWorld from persistent storage
+  ├─ builds a GameApp around the world
+  ├─ schedules systems by stage
+  │   ├─ Update: move_snake
+  │   └─ PostUpdate: self_collision -> food_collision
+  └─ writes GameState + SimpleWorld back to storage
 ```
 
-### Storage Strategy Optimization
+- `lib.rs` contains the Soroban contract entrypoints, storage access, and `GameApp` wiring.
+- `components.rs` contains serializable ECS components such as `Position`, `DirectionComponent`, `SnakeHead`, `SnakeSegment`, and `Food`.
+- `systems.rs` contains reusable game systems for movement, direction validation, collision checks, growth, and food spawning.
 
-| Component | Storage | Rationale |
-|-----------|---------|-----------|
-| `Position` | `Table` | Every entity has one, accessed every tick |
-| `Direction` | `Table` | Frequently read and updated |
-| `SnakeSegment` | `Table` | Dense access pattern for movement |
-| `SnakeHead` | `Sparse` | Only one entity, marker component |
-| `Food` | `Sparse` | Single entity at a time |
+## Storage model
 
----
+| Storage class | Data | Why |
+|---|---|---|
+| Instance storage | none | The example does not need contract-wide configuration shared across games. |
+| Persistent storage | `state: GameState`, `world: SimpleWorld` | Game progress must survive across transactions. `GameState` stores compact scalar data; `SimpleWorld` stores entities and component bytes. |
+| Temporary storage | none | No per-ledger cache is needed for deterministic gameplay. |
 
-## Architecture
+Within the `SimpleWorld`, dense components such as positions and directions use table-style access, while marker-style components such as food/head/segment are queried as needed.
 
-### Entity-Component-System Pattern
+## Main gameplay flow
 
-| Layer | Elements | Description |
-|-------|----------|-------------|
-| **Entities** | Snake Head, Segments, Food | Game objects identified by ID |
-| **Components** | Position, Direction, Markers | Data attached to entities |
-| **Systems** | Movement, Collision, Growth | Logic operating on components |
+1. A player calls `init_game` or `init_game_with_size`.
+2. Startup systems spawn the snake head at the grid center and create one food entity.
+3. The player calls `change_direction` to submit a valid non-reversing input.
+4. The player or a relayer calls `update_tick`.
+5. `GameApp` runs movement first, then collision and food checks.
+6. A wall/self collision sets `game_over`; eating food grows the snake, increments score, and spawns new food.
+7. Query functions expose score, positions, grid size, and terminal state.
 
-### Components Reference
+## Cougr APIs used
 
-| Component | Type | Data | Purpose |
-|-----------|------|------|---------|
-| `Position` | Data | `x: i32, y: i32` | Grid coordinates |
-| `DirectionComponent` | Data | `Direction` enum | Movement direction |
-| `SnakeHead` | Marker | - | Identifies head entity |
-| `SnakeSegment` | Data | `index: u32` | Body segment order |
-| `Food` | Marker | - | Identifies food entity |
+| API | Why it is used |
+|---|---|
+| `GameApp` | Provides the maintained arcade-loop pattern and owns scheduled system execution per tick. |
+| `ScheduleStage` / `SystemConfig` | Ensures movement runs before post-update collision and food systems. |
+| `SimpleWorld` | Stores snake, food, and component data in a Soroban-serializable ECS container. |
+| `SimpleQueryBuilder` | Scans entities by component type for food, head, and segment queries. |
+| `ComponentTrait` | Gives each custom component deterministic serialization and a stable component type. |
 
-### Systems Reference
+This example does not use Cougr auth, privacy, ZK, or standards modules because Snake is intentionally a single-player arcade-loop reference.
 
-| System | Input | Output | Description |
-|--------|-------|--------|-------------|
-| `move_snake` | World, grid_size | Option<Position> | Updates positions, detects wall collision |
-| `check_self_collision` | World | bool | Detects snake hitting itself |
-| `check_food_collision` | World | Option<EntityId> | Detects food consumption |
-| `grow_snake` | World | - | Adds segment at tail |
-| `spawn_food` | World, tick | - | Places food at unoccupied cell |
-| `update_direction` | World, Direction | bool | Validates and applies direction |
-
-### Recommended Runtime Path
-
-This example now follows the recommended Cougr runtime shape for Soroban:
-
-- `GameApp` is reconstructed from persisted `SimpleWorld` state per invocation
-- startup systems create the initial snake and food
-- tick logic runs through explicit schedule stages
-- component scans use `SimpleQueryBuilder`
-
----
-
-## Prerequisites
-
-| Tool | Version | Installation |
-|------|---------|--------------|
-| Rust | Stable | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
-| WASM Target | - | `rustup target add wasm32v1-none` |
-| Stellar CLI | Latest | `brew install stellar-cli` (macOS) |
-
-### Verify Installation
-
-```bash
-rustc --version    # Should show stable version
-stellar --version  # Should show CLI version
-```
-
----
-
-## Quick Start
-
-### 1. Clone and Navigate
-
-```bash
-git clone https://github.com/salazarsebas/Cougr.git
-cd Cougr/examples/snake
-```
-
-### 2. Build
-
-```bash
-# Development build
-cargo build
-
-# Build WASM contract
-stellar contract build
-```
-
-### 3. Test
+## Build and test commands
 
 ```bash
 cargo test
+stellar contract build
 ```
+
+
+## Known limitations
+
+**Recommended Testing Approach:**
+For comprehensive testing, use the `GameHarness` and `Scenario` APIs provided by `cougr-core`'s `testutils` feature (see [sandbox_tests.rs](src/sandbox_tests.rs)). This allows writing replayable multi-turn scenarios to verify movement trajectories, direction change validation, and tick updates.
 
 **Expected Output:**
 ```
-running 30 tests
-test result: ok. 30 passed; 0 failed; 0 ignored
+running 31 tests
+test result: ok. 31 passed; 0 failed; 0 ignored
 ```
 
 ### 4. Lint
@@ -224,7 +143,7 @@ cargo clippy -- -D warnings
 
 ```bash
 # 1. Generate keypair
-stellar keys generate --global alice --network testnet
+stellar keys generate --global alice --network <NETWORK>
 stellar keys address alice
 
 # 2. Fund account (visit URL with your address)
@@ -234,7 +153,7 @@ stellar keys address alice
 stellar contract deploy \
   --wasm target/wasm32v1-none/release/snake.wasm \
   --source alice \
-  --network testnet
+  --network <NETWORK>
 
 # Save the returned Contract ID!
 ```
@@ -245,23 +164,22 @@ stellar contract deploy \
 CONTRACT_ID="<your-contract-id>"
 
 # Initialize
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- init_game
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- init_game
 
 # Change direction (0=Up, 1=Down, 2=Left, 3=Right)
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- change_direction --direction 0
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- change_direction --direction 0
 
 # Advance game
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- update_tick
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- update_tick
 
 # Check score
-stellar contract invoke --id $CONTRACT_ID --source alice --network testnet -- get_score
+stellar contract invoke --id $CONTRACT_ID --source alice --network <NETWORK> -- get_score
 ```
 
 ### Deployed Contract
 
 | Network | Contract ID | Explorer |
 |---------|-------------|----------|
-| Testnet | `<CONTRACT_ID>` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>) |
 
 ---
 
@@ -373,4 +291,8 @@ cargo fmt --check && cargo clippy -- -D warnings && cargo test && stellar contra
 
 ## License
 
-Part of the Cougr project. See main repository for license information.
+
+- Food spawning is deterministic and suitable for examples, not adversarial randomness.
+- There is one game state per contract instance.
+- No authentication or ownership model is included.
+- Rendering and real-time scheduling are out of scope; callers drive ticks through contract invocations.

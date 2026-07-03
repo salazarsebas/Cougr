@@ -1,124 +1,65 @@
-# Flappy Bird - On-Chain Game Example using Cougr-Core
+# Flappy Bird On-Chain Game
 
-This example demonstrates how to build an on-chain game using the `cougr-core` ECS (Entity Component System) framework on the Stellar blockchain via Soroban smart contracts.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
-## Overview
+## Purpose and pattern
 
-This is a fully functional Flappy Bird game implemented as a Soroban smart contract. The game demonstrates:
+This example demonstrates a side-scroller gravity loop on Soroban with Cougr ECS concepts. It remains transitional while the arcade examples converge on the canonical `snake` `GameApp` architecture.
 
-- **ECS Architecture**: Using cougr-core's Entity Component System for game logic
-- **On-Chain State Management**: Storing game state persistently on the blockchain
-- **System-Based Logic**: Implementing game mechanics as modular systems
-- **Component Serialization**: Proper serialization of game components for blockchain storage
+## Public contract API
 
-## Learning Objectives
+| Function | Parameters | Return type | Description |
+|---|---|---:|---|
+| `init_game` | `none` | `()` | Initializes bird, velocity, pipes, score, and tick state. |
+| `flap` | `none` | `()` | Applies upward input velocity if the game is still active. |
+| `update_tick` | `none` | `()` | Runs one scheduled tick for gravity, movement, pipes, collisions, and scoring. |
+| `get_score` | `none` | `u32` | Returns the current score. |
+| `check_game_over` | `none` | `bool` | Returns whether the bird has crashed. |
+| `get_bird_pos` | `none` | `(i32, i32)` | Returns the bird position. |
 
-By studying this example, you'll learn:
+## Architecture overview
 
-1. How to integrate `cougr-core` into a Soroban smart contract
-2. How to serialize and deserialize ECS World state for on-chain storage
-3. How to implement game systems (gravity, movement, collision detection)
-4. How to create custom components with proper serialization
-5. How to structure a turn-based on-chain game
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-- **Rust** (1.70.0 or later): [Install Rust](https://www.rust-lang.org/tools/install)
-- **Stellar CLI**: [Install Stellar CLI](https://developers.stellar.org/docs/tools/cli/install)
-- **wasm32v1-none** target:
-  ```bash
-  rustup target add wasm32v1-none
-  ```
-
-## Project Structure
-
-```
-examples/flappy_bird/
-├── Cargo.toml              # Project dependencies and configuration
-├── src/
-│   ├── lib.rs              # Main contract implementation
-│   ├── components.rs       # Custom game components (BirdState, PipeConfig)
-│   ├── systems.rs          # Game systems (gravity, collision, scoring)
-└── README.md               # This file
+```text
+contract entrypoint
+  ├─ reads game state from Soroban storage
+  ├─ applies input or tick systems
+  └─ writes updated state back to storage
 ```
 
-## Architecture
+Bird, pipe, position, velocity, and scoring markers are represented as ECS components in `components.rs` and updated by systems in `systems.rs`.
 
-### Components
+## Storage model
 
-The game uses the following components from the ECS pattern:
+| Storage class | Data | Why |
+|---|---|---|
+| Instance storage | Per-contract game state where used by this example. | Keeps small arcade state close to the contract instance. |
+| Persistent storage | Player- or world-scoped state where the example needs durable keyed state. | Keeps game progress available across invocations. |
+| Temporary storage | Not used. | The examples favor deterministic recalculation over ephemeral caches. |
 
-1. **Position** (from cougr-core): 2D coordinates (x, y)
-2. **Velocity** (from cougr-core): Movement vector (x, y)
-3. **BirdState**: Tracks whether the bird is alive
-4. **PipeConfig**: Stores pipe gap size and position
-5. **PipeMarker**: Identifies entities as pipes and tracks if bird passed them
+## Main gameplay flow
 
-### Systems
+1. Call the initialization function to create the starting state.
+2. Submit an input action such as movement, jump, flap, rotation, or shoot.
+3. Call the tick/update function to run deterministic simulation logic.
+4. Query public getters for score, position, active state, or terminal status.
+5. Stop when the game-over/completed condition is reached, or reset/reinitialize where supported.
 
-Game logic is organized into systems:
+## Cougr APIs used
 
-1. **Gravity System**: Applies downward acceleration to the bird
-2. **Movement System**: Updates positions based on velocities
-3. **Pipe Movement System**: Moves pipes horizontally
-4. **Collision System**: Detects bird-pipe and bird-ground collisions
-5. **Score System**: Increments score when bird passes pipes
+- `ComponentTrait` and custom component modules document the ECS data boundary.
+- `SimpleWorld`, `SimpleQueryBuilder`, `GameApp`, `ScheduleStage`, or `SystemConfig` are used where this transitional example has already adopted the maintained runtime shape.
+- Auth, privacy, ZK, and standards APIs are intentionally not used; these arcade examples focus on deterministic game logic.
 
-### Runtime Shape
-
-This example follows the recommended Cougr Soroban runtime:
-
-- `GameApp` orchestrates each invocation
-- startup systems spawn the initial bird and pipe set
-- scheduled systems run in `PreUpdate`, `Update`, and `PostUpdate`
-- query-heavy scans use `SimpleQueryBuilder`
-
-### Contract Functions
-
-- `init_game()`: Initialize a new game with bird and pipes
-- `flap()`: Make the bird jump (apply upward velocity)
-- `update_tick()`: Execute one game tick (run all systems)
-- `get_score() -> u32`: Get current score
-- `check_game_over() -> bool`: Check if game has ended
-- `get_bird_pos() -> (i32, i32)`: Get bird's current position
-
-## Building the Contract
-
-### 1. Build with Cargo
-
-```bash
-cd examples/flappy_bird
-cargo build --target wasm32v1-none --release
-```
-
-### 2. Build with Stellar CLI
-
-```bash
-stellar contract build
-```
-
-This will generate the WASM file at:
-```
-target/wasm32v1-none/release/flappy_bird.wasm
-```
-
-### 3. Optimize (Optional)
-
-For production, you can further optimize the WASM:
-
-```bash
-stellar contract optimize --wasm target/wasm32v1-none/release/flappy_bird.wasm
-```
-
-## Running Tests
-
-Run the comprehensive test suite:
+## Build and test commands
 
 ```bash
 cargo test
+stellar contract build
 ```
+
+
+## Known limitations
 
 The tests cover:
 - Game initialization
@@ -376,4 +317,8 @@ This example is part of the Cougr project and follows the same license.
 
 ## Contributing
 
-Found a bug or have an improvement? Please open an issue or pull request in the main [Cougr repository](https://github.com/salazarsebas/Cougr).
+
+- Transitional code may preserve older storage or scheduling patterns for compatibility reference.
+- No authentication, matchmaking, real-time rendering, or production randomness is included.
+- One contract instance generally represents one game or one keyed set of player games.
+- For new work, prefer the canonical `snake` module split and `GameApp` tick wiring.

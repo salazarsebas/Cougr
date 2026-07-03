@@ -1,205 +1,98 @@
 # Pong On-Chain Game
 
-A fully functional Pong game implemented as a Soroban smart contract on the Stellar blockchain, demonstrating the use of the **Cougr-Core** ECS (Entity Component System) framework for on-chain gaming.
+> **Transitional example**: This example uses an older Cougr pattern and is preserved
+> for compatibility reference. For the current recommended approach, see `snake`.
 
-## Overview
+## Purpose and pattern
 
-This example showcases how to build on-chain game logic using Soroban smart contracts. The implementation includes:
-- Complete Pong game mechanics (paddles, ball physics, collisions, scoring)
-- On-chain state persistence using Soroban's storage
-- Comprehensive test suite with 16 unit tests
-- Clean, well-documented code following Rust and Soroban best practices
+This example demonstrates a two-player paddle physics loop on Soroban with Cougr ECS concepts. It remains transitional while the arcade examples converge on the canonical `snake` `GameApp` architecture.
 
-## Features
+## Public contract API
 
-- ✅ **Two-player gameplay**: Control paddles for Player 1 and Player 2
-- ✅ **Physics simulation**: Ball movement, velocity, and collision detection
-- ✅ **Scoring system**: Track scores and determine winners
-- ✅ **Boundary detection**: Paddles constrained to field, ball bounces off walls
-- ✅ **Game state management**: Initialize, play, and reset games
-- ✅ **Fully tested**: 16 comprehensive unit tests covering all game logic
+| Function | Parameters | Return type | Description |
+|---|---|---:|---|
+| `init_game` | `none` | `GameState` | Initializes paddles, ball, score, and active flag. |
+| `move_paddle` | `player: u32, direction: i32` | `GameState` | Moves a paddle and returns state. |
+| `update_tick` | `none` | `GameState` | Advances ball physics, collisions, scoring, and win checks. |
+| `get_game_state` | `none` | `GameState` | Returns current state. |
+| `reset_game` | `none` | `GameState` | Resets the game to the initial state. |
 
-## Prerequisites
+## Architecture overview
 
-Before you begin, ensure you have the following installed:
-
-- **Rust** (1.89.0 or newer): [Install Rust](https://www.rust-lang.org/tools/install)
-- **Cargo**: Comes with Rust
-- **WASM target**: `rustup target add wasm32v1-none`
-- **Stellar CLI** (optional, for deployment): `cargo install stellar-cli`
-
-## Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/salazarsebas/Cougr.git
-   cd Cougr/examples/pong
-   ```
-
-2. **Install WASM target** (if not already installed):
-   ```bash
-   rustup target add wasm32v1-none
-   ```
-
-## Building
-
-### Build for Testing
-```bash
-cargo build
+```text
+contract entrypoint
+  ├─ reads game state from Soroban storage
+  ├─ applies input or tick systems
+  └─ writes updated state back to storage
 ```
 
-### Build WASM Contract
-```bash
-cargo build --target wasm32v1-none --release
-```
+Paddle, ball, and score components are in `components.rs`; paddle and ball systems are in `systems.rs`.
 
-The compiled WASM file will be located at:
-```
-target/wasm32v1-none/release/pong.wasm
-```
+## Storage model
 
-## Testing
+| Storage class | Data | Why |
+|---|---|---|
+| Instance storage | Per-contract game state where used by this example. | Keeps small arcade state close to the contract instance. |
+| Persistent storage | Player- or world-scoped state where the example needs durable keyed state. | Keeps game progress available across invocations. |
+| Temporary storage | Not used. | The examples favor deterministic recalculation over ephemeral caches. |
 
-Run the comprehensive test suite:
+## Main gameplay flow
 
-```bash
-cargo test
-```
+1. Call the initialization function to create the starting state.
+2. Submit an input action such as movement, jump, flap, rotation, or shoot.
+3. Call the tick/update function to run deterministic simulation logic.
+4. Query public getters for score, position, active state, or terminal status.
+5. Stop when the game-over/completed condition is reached, or reset/reinitialize where supported.
 
-**Test Coverage**:
-- Game initialization
-- Paddle movement (up/down for both players)
-- Paddle boundary constraints
-- Ball physics and movement
-- Wall collisions and bouncing
-- Paddle-ball collisions
-- Scoring logic (both players)
-- Win condition (first to 5 points)
-- Game state persistence
-- Inactive game state handling
 
-All 16 tests should pass:
-```
-test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
-```
-
-## Usage
-
-### Contract Functions
-
-#### `init_game() -> GameState`
-Initialize a new game with default settings.
-
-**Returns**: Initial game state with centered paddles and ball.
-
-#### `move_paddle(player: u32, direction: i32) -> GameState`
-Move a player's paddle.
-
-**Parameters**:
-- `player`: Player ID (1 = Player1, 2 = Player2)
-- `direction`: Movement direction (-1 = Up, 1 = Down)
-
-**Returns**: Updated game state.
-
-#### `update_tick() -> GameState`
-Simulate one game tick (physics update).
-
-**Returns**: Updated game state after physics simulation.
-
-**Game Logic**:
-- Updates ball position based on velocity
-- Detects and handles wall collisions
-- Detects and handles paddle collisions
-- Awards points when ball passes paddles
-- Ends game when a player reaches winning score (5 points)
-
-#### `get_game_state() -> GameState`
-Retrieve the current game state.
-
-**Returns**: Current game state.
-
-#### `reset_game() -> GameState`
-Reset the game to initial state.
-
-**Returns**: Fresh game state.
-
-### Game State Structure
-
-```rust
-pub struct GameState {
-    pub player1_paddle_y: i32,    // Player 1 paddle Y position
-    pub player2_paddle_y: i32,    // Player 2 paddle Y position
-    pub ball_x: i32,              // Ball X position
-    pub ball_y: i32,              // Ball Y position
-    pub ball_vx: i32,             // Ball X velocity
-    pub ball_vy: i32,             // Ball Y velocity
-    pub player1_score: u32,       // Player 1 score
-    pub player2_score: u32,       // Player 2 score
-    pub game_active: bool,        // Whether game is active
-}
-```
-
-### Game Constants
-
-- **Field Size**: 100 x 60
-- **Paddle Height**: 15
-- **Paddle Speed**: 2 units per move
-- **Ball Speed**: 1 unit per tick
-- **Winning Score**: 5 points
-
-## Deployment
-
-### Deploy to Stellar Testnet
-
-> **Note**: Deployment requires the Stellar CLI and a funded test account.
-
-1. **Get a test account** from [Stellar Testnet Faucet](https://faucet-stellar.acachete.xyz)
+## Cougr APIs used
 
 2. **Deploy the contract**:
    ```bash
    stellar contract deploy \
      --wasm target/wasm32v1-none/release/pong.wasm \
      --source <your-secret-key> \
-     --network testnet
+     --network <NETWORK>
    ```
 
-3. **Save the contract ID** returned from the deployment.
 
-### Invoke Contract Functions
+- `ComponentTrait` and custom component modules document the ECS data boundary.
+- `SimpleWorld`, `SimpleQueryBuilder`, `GameApp`, `ScheduleStage`, or `SystemConfig` are used where this transitional example has already adopted the maintained runtime shape.
+- Auth, privacy, ZK, and standards APIs are intentionally not used; these arcade examples focus on deterministic game logic.
+
+## Build and test commands
 
 ```bash
+
+cargo test
+stellar contract build
+
 # Initialize a new game
 stellar contract invoke \
   --id <contract-id> \
-  --network testnet \
+  --network <NETWORK> \
   -- init_game
 
 # Move Player 1's paddle up
 stellar contract invoke \
   --id <contract-id> \
-  --network testnet \
+  --network <NETWORK> \
   -- move_paddle --player 1 --direction -1
 
 # Update game tick
 stellar contract invoke \
   --id <contract-id> \
-  --network testnet \
+  --network <NETWORK> \
   -- update_tick
 
 # Get current game state
 stellar contract invoke \
   --id <contract-id> \
-  --network testnet \
+  --network <NETWORK> \
   -- get_game_state
 ```
 
 ### Deployment Results
-
-**✅ Successfully Deployed to Stellar Testnet**
-
-**Contract ID**: `<CONTRACT_ID>`
-
-**Explorer Link**: [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/<CONTRACT_ID>)
 
 **Test Account**: `GA5VOXGSGDQBIY7W2UJ2GD23V3566NA7OF4YIL4QCFAVM3PGN7QQQHZA`
 
@@ -207,7 +100,7 @@ stellar contract invoke \
 
 1. **Initialize Game**:
    ```bash
-   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- init_game
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network <NETWORK> -- init_game
    ```
    **Result**: ✅ Success
    ```json
@@ -226,7 +119,7 @@ stellar contract invoke \
 
 2. **Move Paddle** (Player 1 up):
    ```bash
-   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- move_paddle --player 1 --direction -1
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network <NETWORK> -- move_paddle --player 1 --direction -1
    ```
    **Result**: ✅ Success - Paddle moved from y=30 to y=28
    ```json
@@ -239,7 +132,7 @@ stellar contract invoke \
 
 3. **Update Tick** (Physics simulation):
    ```bash
-   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network testnet -- update_tick
+   stellar contract invoke --id <CONTRACT_ID> --source pong-test --network <NETWORK> -- update_tick
    ```
    **Result**: ✅ Success - Ball moved from (50,30) to (51,31)
    ```json
@@ -253,8 +146,8 @@ stellar contract invoke \
 **Deployment Date**: January 23, 2026
 
 **Transaction Hashes**:
-- Deploy: `acd8c82bb0d7167fdd7b438af49dc78e47a90ed9fa682574d20e621aa01769a3`
-- [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/acd8c82bb0d7167fdd7b438af49dc78e47a90ed9fa682574d20e621aa01769a3)
+- Deploy: `<TRANSACTION_HASH>`
+- [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/<TRANSACTION_HASH>)
 
 ## Architecture
 
@@ -367,29 +260,13 @@ rustc --version  # Should be 1.89.0 or newer
 
 **Network errors**: Use `--simulate` flag first to test without deploying:
 ```bash
-stellar contract invoke --id <contract-id> --network testnet --simulate -- init_game
+stellar contract invoke --id <contract-id> --network <NETWORK> --simulate -- init_game
+
 ```
 
-**Insufficient funds**: Get more test XLM from the [faucet](https://faucet-stellar.acachete.xyz)
+## Known limitations
 
-## Contributing
-
-Contributions are welcome! Please ensure:
-- All tests pass (`cargo test`)
-- Code is formatted (`cargo fmt`)
-- No clippy warnings (`cargo clippy`)
-
-## License
-
-Licensed under MIT OR Apache-2.0
-
-## Resources
-
-- [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
-- [Stellar CLI](https://developers.stellar.org/docs/tools/cli)
-- [Cougr Repository](https://github.com/salazarsebas/Cougr)
-- [Rust Documentation](https://www.rust-lang.org/learn)
-
-## Acknowledgments
-
-This example was created to demonstrate on-chain gaming capabilities using Soroban smart contracts and serves as a practical guide for developers building games on the Stellar blockchain.
+- Transitional code may preserve older storage or scheduling patterns for compatibility reference.
+- No authentication, matchmaking, real-time rendering, or production randomness is included.
+- One contract instance generally represents one game or one keyed set of player games.
+- For new work, prefer the canonical `snake` module split and `GameApp` tick wiring.

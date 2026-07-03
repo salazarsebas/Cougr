@@ -767,4 +767,16 @@ mod tests {
 
         let _ = initial_food_pos; // Suppress unused warning
     }
+
+    #[test]
+    fn test_gameapp_tick_integration() {
+        let env = Env::default();
+        let mut app = GameApp::new(&env);
+        app.add_system_with_config(
+            "snake_tick_boundary",
+            |_world: &mut SimpleWorld, _env: &Env| {},
+            SystemConfig::new().in_stage(ScheduleStage::Update),
+        );
+        app.run(&env).unwrap();
+    }
 }
