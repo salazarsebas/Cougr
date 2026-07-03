@@ -8,8 +8,8 @@
 
 use soroban_sdk::{symbol_short, Address, Bytes, BytesN, Env, Symbol};
 
-use cougr_core::auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage};
 use cougr_core::accounts::{GameAction, SessionBuilder, SessionStorage};
+use cougr_core::auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage};
 use cougr_core::session::SessionManager;
 
 use crate::types::*;
@@ -127,7 +127,9 @@ pub fn validate_session(env: &Env, session_key: &Address, action_name: Symbol) -
     ) {
         Ok(_) => session_key.clone(),
         Err(cougr_core::accounts::AccountError::SessionExpired) => panic!("session expired"),
-        Err(cougr_core::accounts::AccountError::SessionBudgetExceeded) => panic!("session operations exhausted"),
+        Err(cougr_core::accounts::AccountError::SessionBudgetExceeded) => {
+            panic!("session operations exhausted")
+        }
         Err(e) => panic!("session validation failed: {:?}", e),
     }
 }

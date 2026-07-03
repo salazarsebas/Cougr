@@ -129,8 +129,10 @@ impl TapBattleContract {
     ) -> cougr_core::session::ActiveSession {
         owner.require_auth();
         let new_expires = env.ledger().timestamp().saturating_add(expires_in);
-        let key = cougr_core::session::SessionManager::renew(&env, &owner, &key_id, new_expires).expect("renewed");
-        let status = cougr_core::session::SessionManager::status(&env, &owner, &key.key_id).expect("session status");
+        let key = cougr_core::session::SessionManager::renew(&env, &owner, &key_id, new_expires)
+            .expect("renewed");
+        let status = cougr_core::session::SessionManager::status(&env, &owner, &key.key_id)
+            .expect("session status");
         cougr_core::session::ActiveSession::from_status(&status, key.scope.expires_at)
     }
 
@@ -145,7 +147,8 @@ impl TapBattleContract {
 
     /// Tap using session first, falling back to direct owner auth when expired.
     pub fn fallback_tap(env: Env, owner: Address, key_id: BytesN<32>) -> TapResult {
-        let session = cougr_core::accounts::SessionStorage::load(&env, &owner, &key_id).expect("session missing");
+        let session = cougr_core::accounts::SessionStorage::load(&env, &owner, &key_id)
+            .expect("session missing");
         let action = cougr_core::accounts::GameAction {
             system_name: symbol_short!("tap"),
             data: Bytes::new(&env),
@@ -165,7 +168,12 @@ impl TapBattleContract {
             cougr_core::accounts::ReplayProtection::next_account_nonce(&env, &owner),
             env.ledger().timestamp().saturating_add(60),
         );
-        cougr_core::session::SessionManager::fallback_execute(&env, &session_intent, &direct_intent).expect("fallback tap");
+        cougr_core::session::SessionManager::fallback_execute(
+            &env,
+            &session_intent,
+            &direct_intent,
+        )
+        .expect("fallback tap");
 
         game::process_tap(&env, &owner)
     }

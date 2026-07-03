@@ -136,18 +136,6 @@ impl Default for PlayerProfile {
     }
 }
 
-/// Session state component — tracks an active gameplay session.
-#[contracttype]
-#[derive(Clone, Debug)]
-pub struct SessionState {
-    /// Session key address (the player who owns this session)
-    pub player: Address,
-    /// Ledger sequence when the session expires
-    pub expires_at: u64,
-    /// Number of operations remaining in this session
-    pub ops_remaining: u32,
-}
-
 /// Result returned after each tap action.
 #[contracttype]
 #[derive(Clone, Debug)]
@@ -180,8 +168,6 @@ pub enum DataKey {
     Round,
     /// PlayerProfile for a player (Address)
     Profile(Address),
-    /// SessionState for a session key (Address)
-    Session(Address),
     /// Flag indicating if a round is active
     RoundActive,
     /// Count of cougr-core entities (ECS integration)

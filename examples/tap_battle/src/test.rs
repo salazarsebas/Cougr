@@ -536,10 +536,15 @@ fn test_renew_session_extends_play_window() {
     setup_session(&env, &contract_id, &player);
 
     let key_id = client.get_latest_session_key(&player);
-    let status_before = client.session_status(&player, &key_id);
+    let expires_at_before = env.as_contract(&contract_id, || {
+        cougr_core::accounts::SessionStorage::load(&env, &player, &key_id)
+            .expect("session missing")
+            .scope
+            .expires_at
+    });
 
     let renewed = client.renew_session(&player, &key_id, &20_000);
-    assert!(renewed.expires_at > status_before.expires_in);
+    assert!(renewed.expires_at > expires_at_before);
 }
 
 #[test]
