@@ -1,0 +1,28 @@
+name: Murdoku Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/murdoku/**'
+      - '!examples/murdoku/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/murdoku.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/murdoku/**'
+      - '!examples/murdoku/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/murdoku.yml'
+
+concurrency:
+  group: murdoku-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Murdoku Example CI
+      working_directory: examples/murdoku

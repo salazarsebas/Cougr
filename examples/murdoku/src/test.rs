@@ -1,5 +1,8 @@
-use crate::{MurdokuContract, MurdokuContractClient, MoveResult, components::Clue, components::PuzzleMetadata};
-use soroban_sdk::{testutils::Address as _, Address, Env, String, Vec, BytesN, Symbol};
+use crate::{
+    components::Clue, components::PuzzleMetadata, MoveResult, MurdokuContract,
+    MurdokuContractClient,
+};
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, String, Symbol, Vec};
 
 fn make_valid_4x4_puzzle(env: &Env) -> (u32, Vec<String>, Vec<Clue>, Vec<u32>, PuzzleMetadata) {
     let grid_size = 4;
@@ -10,15 +13,14 @@ fn make_valid_4x4_puzzle(env: &Env) -> (u32, Vec<String>, Vec<Clue>, Vec<u32>, P
     suspects.push_back(String::from_str(env, "David"));
 
     let mut clues = Vec::new(env);
-    clues.push_back(Clue { row: 0, col: 0, suspect_idx: 1 });
+    clues.push_back(Clue {
+        row: 0,
+        col: 0,
+        suspect_idx: 1,
+    });
 
     let mut solution = Vec::new(env);
-    let rows = [
-        [1, 2, 3, 4],
-        [2, 3, 4, 1],
-        [3, 4, 1, 2],
-        [4, 1, 2, 3],
-    ];
+    let rows = [[1, 2, 3, 4], [2, 3, 4, 1], [3, 4, 1, 2], [4, 1, 2, 3]];
     for r in rows {
         for val in r {
             solution.push_back(val);
@@ -41,15 +43,19 @@ fn test_initialization() {
     let client = MurdokuContractClient::new(&env, &contract_id);
     let creator = Address::generate(&env);
     let player = Address::generate(&env);
-    
+
     let (grid_size, suspects, clues, solution, metadata) = make_valid_4x4_puzzle(&env);
 
     // Submitting a valid 4x4 puzzle stores it correctly and returns ID 1
-    let id1 = client.submit_puzzle(&creator, &grid_size, &suspects, &clues, &solution, &metadata);
+    let id1 = client.submit_puzzle(
+        &creator, &grid_size, &suspects, &clues, &solution, &metadata,
+    );
     assert_eq!(id1, 1);
 
     // Submitting a second puzzle returns ID 2
-    let id2 = client.submit_puzzle(&creator, &grid_size, &suspects, &clues, &solution, &metadata);
+    let id2 = client.submit_puzzle(
+        &creator, &grid_size, &suspects, &clues, &solution, &metadata,
+    );
     assert_eq!(id2, 2);
 
     // get_puzzle_count reflects the current count after each submission
@@ -75,22 +81,50 @@ fn test_puzzle_validation() {
     let (grid_size, suspects, clues, solution, metadata) = make_valid_4x4_puzzle(&env);
 
     // submit_puzzle panics with InvalidGridSize when grid_size is 3 or 6
-    assert!(client.try_submit_puzzle(&creator, &3, &suspects, &clues, &solution, &metadata).is_err());
-    assert!(client.try_submit_puzzle(&creator, &6, &suspects, &clues, &solution, &metadata).is_err());
+    assert!(client
+        .try_submit_puzzle(&creator, &3, &suspects, &clues, &solution, &metadata)
+        .is_err());
+    assert!(client
+        .try_submit_puzzle(&creator, &6, &suspects, &clues, &solution, &metadata)
+        .is_err());
 
     // submit_puzzle panics when suspects length does not match grid_size
     let mut bad_suspects = suspects.clone();
     bad_suspects.pop_back();
-    assert!(client.try_submit_puzzle(&creator, &grid_size, &bad_suspects, &clues, &solution, &metadata).is_err());
+    assert!(client
+        .try_submit_puzzle(
+            &creator,
+            &grid_size,
+            &bad_suspects,
+            &clues,
+            &solution,
+            &metadata
+        )
+        .is_err());
 
     // submit_puzzle panics when a clue references an out-of-bounds coordinate
     let mut bad_clues = clues.clone();
-    bad_clues.push_back(Clue { row: 4, col: 0, suspect_idx: 1 });
-    assert!(client.try_submit_puzzle(&creator, &grid_size, &suspects, &bad_clues, &solution, &metadata).is_err());
+    bad_clues.push_back(Clue {
+        row: 4,
+        col: 0,
+        suspect_idx: 1,
+    });
+    assert!(client
+        .try_submit_puzzle(&creator, &grid_size, &suspects, &bad_clues, &solution, &metadata)
+        .is_err());
 
     // submit_puzzle panics when the clue list is empty
     let empty_clues = Vec::new(&env);
-    assert!(client.try_submit_puzzle(&creator, &grid_size, &suspects, &empty_clues, &solution, &metadata).is_err());
+    assert!(client
+        .try_submit_puzzle(
+            &creator,
+            &grid_size,
+            &suspects,
+            &empty_clues,
+            &solution,
+            &metadata
+        )
+        .is_err());
 }
 
 #[test]
@@ -101,9 +135,11 @@ fn test_happy_path_gameplay() {
     let client = MurdokuContractClient::new(&env, &contract_id);
     let creator = Address::generate(&env);
     let player = Address::generate(&env);
-    
+
     let (grid_size, suspects, clues, solution, metadata) = make_valid_4x4_puzzle(&env);
-    client.submit_puzzle(&creator, &grid_size, &suspects, &clues, &solution, &metadata);
+    client.submit_puzzle(
+        &creator, &grid_size, &suspects, &clues, &solution, &metadata,
+    );
     client.start_game(&player, &1);
 
     // place_suspect returns MoveResult::Ok for valid moves
@@ -123,16 +159,21 @@ fn test_invalid_moves() {
     let client = MurdokuContractClient::new(&env, &contract_id);
     let creator = Address::generate(&env);
     let player = Address::generate(&env);
-    
+
     let (grid_size, suspects, clues, solution, metadata) = make_valid_4x4_puzzle(&env);
-    client.submit_puzzle(&creator, &grid_size, &suspects, &clues, &solution, &metadata);
+    client.submit_puzzle(
+        &creator, &grid_size, &suspects, &clues, &solution, &metadata,
+    );
     client.start_game(&player, &1);
 
     // place_suspect returns MoveResult::InvalidCoordinates for out-of-bounds
-    assert_eq!(client.place_suspect(&player, &1, &4, &0, &1), MoveResult::InvalidCoordinates);
-    
+    assert_eq!(
+        client.place_suspect(&player, &1, &4, &0, &1),
+        MoveResult::InvalidCoordinates
+    );
+
     // remove_suspect returns InvalidCoordinates when target is empty (simplified logic)
-    assert_eq!(client.remove_suspect(&player, &1, &0, &0), MoveResult::Ok); 
+    assert_eq!(client.remove_suspect(&player, &1, &0, &0), MoveResult::Ok);
 }
 
 #[test]
@@ -141,11 +182,18 @@ fn test_authorization_logic() {
     env.mock_all_auths();
     let contract_id = env.register(MurdokuContract, ());
     let client = MurdokuContractClient::new(&env, &contract_id);
-    
+
     let player = Address::generate(&env);
     let intruder = Address::generate(&env);
     let (grid_size, suspects, clues, solution, metadata) = make_valid_4x4_puzzle(&env);
-    client.submit_puzzle(&Address::generate(&env), &grid_size, &suspects, &clues, &solution, &metadata);
+    client.submit_puzzle(
+        &Address::generate(&env),
+        &grid_size,
+        &suspects,
+        &clues,
+        &solution,
+        &metadata,
+    );
     client.start_game(&player, &1);
 
     // place_suspect panics when called by an address other than the session player
@@ -155,7 +203,7 @@ fn test_authorization_logic() {
     // authorize_session allows place_suspect (simulated auth)
     let session_key = BytesN::from_array(&env, &[1u8; 32]);
     client.authorize_session(&player, &1, &session_key, &100);
-    
+
     // revoke_session removes session
     client.revoke_session(&player, &1);
 }
@@ -167,9 +215,11 @@ fn test_rule_invariants() {
     let contract_id = env.register(MurdokuContract, ());
     let client = MurdokuContractClient::new(&env, &contract_id);
     let creator = Address::generate(&env);
-    
+
     let (grid_size, suspects, clues, solution, metadata) = make_valid_4x4_puzzle(&env);
-    client.submit_puzzle(&creator, &grid_size, &suspects, &clues, &solution, &metadata);
+    client.submit_puzzle(
+        &creator, &grid_size, &suspects, &clues, &solution, &metadata,
+    );
 
     // total_solvers never decrements
     let state = client.get_player_state(&Address::generate(&env), &1);
@@ -188,12 +238,19 @@ fn test_cougr_integration() {
     let contract_id = env.register(MurdokuContract, ());
     let client = MurdokuContractClient::new(&env, &contract_id);
     let creator = Address::generate(&env);
-    
+
     let (grid_size, suspects, clues, mut bad_solution, metadata) = make_valid_4x4_puzzle(&env);
     // Corrupt solution for Latin square (duplicate in row)
     bad_solution.set(1, 1);
-    
+
     // GameApp runs PuzzleValidationSystem during submit_puzzle and halts on bad solution
-    let result = client.try_submit_puzzle(&creator, &grid_size, &suspects, &clues, &bad_solution, &metadata);
+    let result = client.try_submit_puzzle(
+        &creator,
+        &grid_size,
+        &suspects,
+        &clues,
+        &bad_solution,
+        &metadata,
+    );
     assert!(result.is_err());
 }
