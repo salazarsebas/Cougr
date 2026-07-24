@@ -1,10 +1,20 @@
-# Cougr Patterns
+# Cougr Developer Problem & Pattern Guide
 
-## Purpose
+This document organizes Cougr patterns by **developer intent / problem first**, linking directly to module standards, architectural patterns, and worked examples.
 
-This document captures the recommended architectural patterns for new Soroban game contracts built on Cougr.
+---
 
-The goal is to standardize how teams structure worlds, systems, stages, and storage choices instead of relying on ad-hoc example interpretation.
+## 🎯 Developer Intent Index
+
+| Developer Goal / Problem | Recommended Cougr Pattern | Reference Document / Module |
+| :--- | :--- | :--- |
+| **"I want to structure a gameplay loop"** | `GameApp` entrypoint & explicit Stage Layout | [Stage Layout](#stage-layout) |
+| **"I want hidden information or commit-reveal mechanics"** | Merkle & Commit-Reveal boundary separation | [docs/PRIVACY_MODEL.md](PRIVACY_MODEL.md) |
+| **"I want role-based access control or passwordless sign-in"** | Account Kernel boundary composition | [docs/ACCOUNT_KERNEL.md](ACCOUNT_KERNEL.md) |
+| **"I want optimal component storage & low gas execution"** | Table storage for hot loops, Sparse for markers | [Storage Guidance](#storage-guidance) |
+| **"I want standardized token/item interoperability"** | Cougr Standards Layer interfaces | [docs/STANDARDS_LAYER.md](STANDARDS_LAYER.md) |
+
+---
 
 ## Default Entry Point
 
@@ -71,7 +81,7 @@ For hidden-state or commit-reveal contracts:
 - treat proof verification as a boundary concern, not as something every gameplay system needs to understand
 - keep public derived state separate from private commitments and Merkle roots
 
-`battleship` is the canonical reference for this pattern.
+`battleship` is the canonical reference for this pattern (see [docs/PRIVACY_MODEL.md](PRIVACY_MODEL.md)).
 
 ## Storage Guidance
 
@@ -93,10 +103,10 @@ If a component becomes part of the hot loop, move it to table storage instead of
 
 Keep modules separated by concern:
 
-- ECS/gameplay core
-- account/auth flows
-- privacy/ZK
-- standards/operational controls
+- ECS/gameplay core ([docs/ECS_CORE.md](ECS_CORE.md))
+- account/auth flows ([docs/ACCOUNT_KERNEL.md](ACCOUNT_KERNEL.md))
+- privacy/ZK ([docs/PRIVACY_MODEL.md](PRIVACY_MODEL.md))
+- standards/operational controls ([docs/STANDARDS_LAYER.md](STANDARDS_LAYER.md))
 
 Do not let auth or ZK concerns leak into every system by default. Compose them at the boundaries where they are needed.
 
