@@ -1,0 +1,27 @@
+# Skills Strategy
+
+*Part 12 of 17. A catalog of skills.sh-compatible Skills (per https://www.skills.sh/docs) for Cougr: modular, independently installable, composable, and thin, wrapping the CLI and documented recipes rather than reimplementing them.*
+
+## Design rule: Skills are distribution, not a second product surface
+
+Every Skill in this catalog should be a thin, well-scoped prompt/playbook that invokes the CLI, reads the existing documentation, or follows a documented recipe from [04-onchain-gaming-research.md](./04-onchain-gaming-research.md)'s patterns. None should contain logic that only exists inside the Skill; if a Skill needs to scaffold a project, it should shell out to `cougr new`, not reimplement scaffolding in prompt form. This keeps every Skill trivially replaceable and prevents the catalog from becoming a second, drifting implementation of the CLI, a real risk the current `skills/cougr-game-starter/SKILL.md` is already close to (it currently *is* the scaffolding mechanism, in the absence of a real CLI; once the CLI exists, that Skill should be rewritten to call it).
+
+## Catalog
+
+- **`cougr-init`**: scaffolds a new project by invoking `cougr new`, then walks the user through the choice of template (starter, turn-based, hidden-info, session-auth) in natural language, useful for a beginner who does not yet know which CLI flag they want. Supersedes and replaces the current `cougr-game-starter` skill's scaffolding role once the CLI ships.
+- **`cougr-component`**: helps design and generate a new ECS component/system pair, choosing between `impl_component!`, `impl_component_observed!`, and `impl_rich_component!` based on the data being modeled, then invokes `cougr add` or writes the boilerplate directly, explaining the tradeoff (fixed-size and cheap vs. observed-and-indexable vs. XDR-codec-and-flexible) in context.
+- **`cougr-pattern-advisor`**: given a description of a game mechanic, recommends the relevant pattern from `PATTERNS.md`/the on-chain/off-chain boundary guide in [04-onchain-gaming-research.md](./04-onchain-gaming-research.md), for example, "I want a real-time dodge mechanic" gets pointed at the real-time-approximation pattern rather than told to put every frame on-chain.
+- **`cougr-zk-circuit`**: scaffolds usage of one of the four existing circuit builders (`hidden_cards`, `fog_of_war`, `fair_dice`, `sealed_bid`), and explicitly surfaces the trusted-setup/production-readiness warning from `internal/cougr-core-circuits/AUDIT.md` every time it is invoked, so this real limitation (flagged in [15-risks.md](./15-risks.md)) cannot be silently missed by a new user working through an AI assistant.
+- **`cougr-account-kernel`**: scaffolds account abstraction (session keys, passkey/secp256r1 registration) using the `accounts` module and `SessionBuilder`, paired with guidance on the Beta-stability caveat from ADR 0002 so users understand the API surface may still change.
+- **`cougr-check`**: a thin wrapper invoking `cougr check` and explaining any failures in plain language, useful for a contributor preparing a PR who wants a natural-language explanation of a hygiene or standards failure rather than raw CI output.
+- **`cougr-example-audit`**: for maintainers/contributors, walks a given example against `EXAMPLE_STANDARD.md` and reports canonical-vs-transitional gaps, operationalizing the standardization effort already visibly underway in the git history (PR #226, #228, #233) as a repeatable, self-serve tool instead of manual review.
+- **`cougr-release-notes`**: given a diff or set of merged PRs, drafts CHANGELOG entries in the project's existing Added/Changed/Stability-Notes/Upgrade-Notes format, keeping the changelog discipline that is currently a manual strength consistent as contribution volume grows.
+- **`cougr-docs-lint`**: checks a documentation change against the terminology glossary and maturity-tier vocabulary defined in [09-design-strategy.md](./09-design-strategy.md), catching drift (inconsistent naming, wrong stability claims) before it reaches the docs site.
+
+## Composability without coupling
+
+Each Skill declares one dependency only: the `cougr` CLI (and, for `cougr-zk-circuit`/`cougr-account-kernel`, the specific crate modules they scaffold against). None depend on each other. A user can install `cougr-check` alone without ever touching `cougr-init`, and a maintainer can install only `cougr-example-audit` for repository hygiene without installing anything player/game-facing. This mirrors the same composability principle applied to the CLI and SDK in [05-ecosystem-vision.md](./05-ecosystem-vision.md): the connective tissue is the shared CLI and shared documentation, not inter-Skill dependencies.
+
+## Sequencing
+
+Ship `cougr-init` and `cougr-component` first, immediately after the CLI itself exists, since they are the direct beneficiaries of the CLI's `new`/`add` commands and give the CLI its first natural-language front end. `cougr-check` and `cougr-example-audit` should follow shortly after for contributor-side value, they cost little to build since they wrap existing hygiene tooling. `cougr-zk-circuit`, `cougr-account-kernel`, and `cougr-pattern-advisor` follow once the corresponding documentation (on-chain/off-chain boundary guide, patterns-by-problem restructuring) exists, since a Skill that recommends a pattern is only as good as the documentation backing its recommendations.
