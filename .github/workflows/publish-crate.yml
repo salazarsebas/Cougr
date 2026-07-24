@@ -83,10 +83,14 @@ jobs:
       - name: Check crates.io version
         id: crates
         run: |
-          response="$(curl -fsSL "https://crates.io/api/v1/crates/${{ steps.crate.outputs.name }}" || true)"
+          # crates.io rejects requests with no descriptive User-Agent (403);
+          # see https://crates.io/data-access
+          response="$(curl -fsSL \
+            -H "User-Agent: cougr-core-publish-workflow (+https://github.com/salazarsebas/Cougr)" \
+            "https://crates.io/api/v1/crates/${{ steps.crate.outputs.name }}")"
           published=false
 
-          if [ -n "$response" ] && echo "$response" | jq -e --arg version "${{ steps.crate.outputs.version }}" '.versions[]? | select(.num == $version)' >/dev/null; then
+          if echo "$response" | jq -e --arg version "${{ steps.crate.outputs.version }}" '.versions[]? | select(.num == $version)' >/dev/null; then
             published=true
           fi
 
