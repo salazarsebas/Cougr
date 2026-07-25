@@ -1,0 +1,25 @@
+[package]
+name = "cougr-cli"
+version = "1.1.0"
+edition = "2021"
+description = "Cougr CLI - toolchain diagnostics and project scaffolding for Cougr (Soroban-compatible ECS framework for on-chain gaming on Stellar)"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/salazarsebas/Cougr"
+homepage = "https://github.com/salazarsebas/Cougr"
+keywords = ["cli", "soroban", "stellar", "developer-tools", "toolchain"]
+categories = ["command-line-utilities", "development-tools"]
+rust-version = "1.70.0"
+publish = true
+
+[lib]
+crate-type = ["rlib"]
+
+[[bin]]
+name = "cougr"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+
+[dev-dependencies]
