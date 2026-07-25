@@ -1,0 +1,405 @@
+# Cougr piece catalog — embedded in the binary at compile time.
+#
+# Each [[piece]] entry describes a self-contained component/system pair (or
+# standards-layer module) that `cougr add <name>` copies into the caller's
+# project as owned, editable source.
+#
+# Fields
+# ──────
+# name        – unique identifier used as the CLI argument (e.g. "session-auth")
+# description – one-line summary shown by `cougr add --list`
+# maturity    – "stable" | "beta" | "experimental"
+# source      – canonical example or module the piece is derived from
+#
+# [[piece.files]]
+# target  – destination path relative to the project's src/ directory
+# content – verbatim source that will be written to that file
+#
+# [[piece.cargo_deps]]
+# line    – a dependency line to append to [dependencies] in Cargo.toml if absent
+# dev     – true means append to [dev-dependencies] instead
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. session-auth
+# ─────────────────────────────────────────────────────────────────────────────
+[[piece]]
+name        = "session-auth"
+description = "Session-key auth: approve once, play frictionlessly, renew on expiry (SessionManager lifecycle)"
+maturity    = "beta"
+source      = "examples/session_arena"
+
+[[piece.files]]
+target  = "session_auth/mod.rs"
+content = '''
+//! session_auth — session-key authorisation piece.
+//!
+//! Copied from examples/session_arena by `cougr add session-auth`.
+//!
+//! Flow: `approve_session` once → `tap` many times without wallet prompts →
+//! `renew_session` before expiry → `fallback_tap` when session is stale.
+//!
+//! Add to your contract:
+//!   1. Import the piece:  `use crate::session_auth::SessionAuth;`
+//!   2. Call `SessionAuth::approve_session` from your `#[contractimpl]` impl.
+//!   3. Call `SessionAuth::tap` / `SessionAuth::fallback_tap` in your game actions.
+
+#![allow(unused_imports)]
+
+use cougr_core::accounts::{
+    GameAction, ReplayProtection, SessionBuilder, SessionStorage, SignedIntent,
+};
+use cougr_core::impl_component;
+use cougr_core::session::{ActiveSession, SessionManager};
+use soroban_sdk::{contracttype, symbol_short, Address, BytesN, Bytes, Env, Symbol};
+
+// ── Score component ──────────────────────────────────────────────────────────
+
+/// Simple per-player tap counter stored in instance storage.
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct SessionScore {
+    pub taps: u32,
+}
+
+impl_component!(SessionScore, "sess_score", Table, { taps: u32 });
+
+// ── Session helpers ───────────────────────────────────────────────────────────
+
+/// Thin helper that wraps the `SessionManager` lifecycle for a single action
+/// called "tap".  Rename the action and score type to suit your game.
+pub struct SessionAuth;
+
+impl SessionAuth {
+    /// One-time owner approval that creates a scoped session key.
+    pub fn approve_session(
+        env: &Env,
+        owner: &Address,
+        max_ops: u32,
+        expires_in: u64,
+    ) -> ActiveSession {
+        owner.require_auth();
+        let scope = SessionBuilder::new(env)
+            .allow_action(symbol_short!("tap"))
+            .max_operations(max_ops)
+            .expires_in(expires_in)
+            .build_scope();
+        let key = SessionManager::approve(env, owner, scope).expect("session approved");
+        let status =
+            SessionManager::status(env, owner, &key.key_id).expect("session status");
+        ActiveSession::from_status(&status, key.scope.expires_at)
+    }
+
+    /// Gameplay action authorised via the active session (no wallet prompt).
+    pub fn tap(env: &Env, owner: &Address, key_id: &BytesN<32>) -> u32 {
+        let session = SessionStorage::load(env, owner, key_id).expect("session missing");
+        let action = GameAction {
+            system_name: symbol_short!("tap"),
+            data: Bytes::new(env),
+        };
+        SessionManager::execute_action(
+            env,
+            owner,
+            &session,
+            action,
+            env.ledger().timestamp().saturating_add(60),
+        )
+        .expect("session tap");
+        Self::increment_score(env, owner)
+    }
+
+    /// Extend session lifetime (owner must re-approve via wallet).
+    pub fn renew_session(
+        env: &Env,
+        owner: &Address,
+        key_id: &BytesN<32>,
+        expires_in: u64,
+    ) -> ActiveSession {
+        owner.require_auth();
+        let new_expires = env.ledger().timestamp().saturating_add(expires_in);
+        let key =
+            SessionManager::renew(env, owner, key_id, new_expires).expect("renewed");
+        let status =
+            SessionManager::status(env, owner, &key.key_id).expect("session status");
+        ActiveSession::from_status(&status, key.scope.expires_at)
+    }
+
+    /// Tap using session first, falling back to direct owner auth when expired.
+    pub fn fallback_tap(env: &Env, owner: &Address, key_id: &BytesN<32>) -> u32 {
+        let session = SessionStorage::load(env, owner, key_id).expect("session missing");
+        let action = GameAction {
+            system_name: symbol_short!("tap"),
+            data: Bytes::new(env),
+        };
+        let session_intent = SignedIntent::session(
+            env,
+            owner.clone(),
+            key_id,
+            action.clone(),
+            session.next_nonce,
+            env.ledger().timestamp().saturating_add(60),
+        );
+        let direct_intent = SignedIntent::direct(
+            env,
+            owner.clone(),
+            action,
+            ReplayProtection::next_account_nonce(env, owner),
+            env.ledger().timestamp().saturating_add(60),
+        );
+        SessionManager::fallback_execute(env, &session_intent, &direct_intent)
+            .expect("fallback tap");
+        Self::increment_score(env, owner)
+    }
+
+    /// Read the current tap count for a player.
+    pub fn score(env: &Env, owner: &Address) -> u32 {
+        let key = (Symbol::new(env, "score"), owner.clone());
+        env.storage()
+            .instance()
+            .get(&key)
+            .map(|s: SessionScore| s.taps)
+            .unwrap_or(0)
+    }
+
+    fn increment_score(env: &Env, owner: &Address) -> u32 {
+        let key = (Symbol::new(env, "score"), owner.clone());
+        let mut score: SessionScore = env
+            .storage()
+            .instance()
+            .get(&key)
+            .unwrap_or(SessionScore { taps: 0 });
+        score.taps = score.taps.saturating_add(1);
+        env.storage().instance().set(&key, &score);
+        score.taps
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cougr_core::test::GameHarness;
+    // GameHarness is only available with the testutils feature; skip otherwise.
+    #[allow(unused_imports)]
+    use soroban_sdk::{testutils::Address as _, Address, Env};
+}
+'''
+
+[[piece.cargo_deps]]
+line = 'cougr-core = "1.1.0"'
+dev  = false
+
+[[piece.cargo_deps]]
+line = 'cougr-core = { version = "1.1.0", features = ["testutils"] }'
+dev  = true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. hidden-hand
+# ─────────────────────────────────────────────────────────────────────────────
+[[piece]]
+name        = "hidden-hand"
+description = "Hidden-card ZK proof flow: init a table, verify deal proofs via HiddenHandBuilder (Experimental)"
+maturity    = "experimental"
+source      = "examples/hidden_hand"
+
+[[piece.files]]
+target  = "hidden_hand/mod.rs"
+content = '''
+//! hidden_hand — ZK hidden-card circuit piece.
+//!
+//! Copied from examples/hidden_hand by `cougr add hidden-hand`.
+//!
+//! Uses `cougr_core::circuits::hidden_cards` to build a Groth16 verification
+//! spec for private card deals.  Both `init_table` and `verify_deal` are
+//! stand-alone functions you can call from your `#[contractimpl]` impl.
+//!
+//! ⚠️  Maturity: Experimental — the circuit API may change between minor versions.
+
+use cougr_core::circuits::hidden_cards;
+use cougr_core::zk::Groth16Proof;
+use soroban_sdk::{contracttype, symbol_short, Address, BytesN, Env, Symbol};
+
+// ── Table configuration ───────────────────────────────────────────────────────
+
+/// Stores the deck/hand sizes that were used to generate the circuit spec.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct HiddenTableConfig {
+    pub deck_size: u32,
+    pub hand_size: u32,
+}
+
+// ── Functions ─────────────────────────────────────────────────────────────────
+
+/// Store deck / hand dimensions and validate the circuit spec.
+pub fn init_table(env: &Env, deck_size: u32, hand_size: u32) -> HiddenTableConfig {
+    let _spec = hidden_cards(env, deck_size, hand_size).expect("valid hidden-cards spec");
+    let config = HiddenTableConfig { deck_size, hand_size };
+    env.storage().instance().set(&table_key(env), &config);
+    config
+}
+
+/// Verify a deal proof against the stored table configuration.
+///
+/// Returns `true` if the proof is valid for the given deck root, hand
+/// commitment, and player identity.
+pub fn verify_deal(
+    env: &Env,
+    player: &Address,
+    deck_root: &BytesN<32>,
+    hand_commitment: &BytesN<32>,
+    proof: &Groth16Proof,
+) -> bool {
+    let config: HiddenTableConfig = env
+        .storage()
+        .instance()
+        .get(&table_key(env))
+        .expect("table not initialized — call init_table first");
+    let spec =
+        hidden_cards(env, config.deck_size, config.hand_size).expect("circuit spec");
+    spec.verify_hidden_hand(env, proof, deck_root, hand_commitment, player_id(player))
+        .unwrap_or(false)
+}
+
+// ── Internals ─────────────────────────────────────────────────────────────────
+
+fn table_key(_env: &Env) -> Symbol {
+    symbol_short!("hh_table")
+}
+
+/// Cheap deterministic player id derived from the first 4 address bytes.
+pub fn player_id(player: &Address) -> u32 {
+    let bytes = player.to_string().to_bytes();
+    let mut id = 0u32;
+    for i in 0..bytes.len().min(4) {
+        id = id.wrapping_add(u32::from(bytes.get(i).unwrap_or(0)));
+    }
+    id
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cougr_core::circuits::{hidden_cards, test_fixtures, CircuitId};
+    use cougr_core::test::GameHarness;
+    #[allow(unused_imports)]
+    use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
+}
+'''
+
+[[piece.cargo_deps]]
+line = 'cougr-core = "1.1.0"'
+dev  = false
+
+[[piece.cargo_deps]]
+line = 'cougr-core = { version = "1.1.0", features = ["testutils"] }'
+dev  = true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. standards/pausable
+# ─────────────────────────────────────────────────────────────────────────────
+[[piece]]
+name        = "standards/pausable"
+description = "Emergency pause/unpause guard backed by persistent storage (Pausable from cougr_core::ops)"
+maturity    = "stable"
+source      = "src/standards/pausable.rs"
+
+[[piece.files]]
+target  = "standards/pausable.rs"
+content = '''
+//! standards/pausable — emergency pause guard piece.
+//!
+//! Copied from src/standards/pausable.rs by `cougr add standards/pausable`.
+//!
+//! Usage in your contract:
+//!
+//! ```rust,ignore
+//! use crate::standards::pausable::ContractPausable;
+//!
+//! // In your #[contractimpl]:
+//! pub fn pause(env: Env, caller: Address) {
+//!     caller.require_auth();
+//!     ContractPausable::pause(&env, &caller).expect("pause failed");
+//! }
+//!
+//! pub fn some_action(env: Env) {
+//!     ContractPausable::require_not_paused(&env).expect("contract is paused");
+//!     // … game logic …
+//! }
+//! ```
+
+use cougr_core::ops::{Pausable, PausedEvent, StandardsError, UnpausedEvent};
+use soroban_sdk::{symbol_short, Address, Env};
+
+/// Contract-level pause guard using a well-known storage key.
+///
+/// Wrap your own logic around this type — add role checks, emit events, or
+/// extend with admin-only gating as your game requires.
+pub struct ContractPausable;
+
+impl ContractPausable {
+    fn pausable(env: &Env) -> Pausable {
+        Pausable::new(symbol_short!("contract"))
+    }
+
+    pub fn is_paused(env: &Env) -> bool {
+        Self::pausable(env).is_paused(env)
+    }
+
+    pub fn require_not_paused(env: &Env) -> Result<(), StandardsError> {
+        Self::pausable(env).require_not_paused(env)
+    }
+
+    pub fn require_paused(env: &Env) -> Result<(), StandardsError> {
+        Self::pausable(env).require_paused(env)
+    }
+
+    pub fn pause(env: &Env, caller: &Address) -> Result<PausedEvent, StandardsError> {
+        Self::pausable(env).pause(env, caller)
+    }
+
+    pub fn unpause(env: &Env, caller: &Address) -> Result<UnpausedEvent, StandardsError> {
+        Self::pausable(env).unpause(env, caller)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::{testutils::Address as _, Address, Env};
+
+    #[test]
+    fn pause_and_unpause_round_trip() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let caller = Address::generate(&env);
+
+        assert!(!ContractPausable::is_paused(&env));
+        assert!(ContractPausable::require_not_paused(&env).is_ok());
+
+        ContractPausable::pause(&env, &caller).unwrap();
+        assert!(ContractPausable::is_paused(&env));
+        assert!(ContractPausable::require_not_paused(&env).is_err());
+        assert!(ContractPausable::require_paused(&env).is_ok());
+
+        ContractPausable::unpause(&env, &caller).unwrap();
+        assert!(!ContractPausable::is_paused(&env));
+    }
+
+    #[test]
+    fn double_pause_returns_error() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let caller = Address::generate(&env);
+
+        ContractPausable::pause(&env, &caller).unwrap();
+        assert!(ContractPausable::pause(&env, &caller).is_err());
+    }
+}
+'''
+
+[[piece.cargo_deps]]
+line = 'cougr-core = "1.1.0"'
+dev  = false
+
+[[piece.cargo_deps]]
+line = 'soroban-sdk = { version = "25.1.0", features = ["testutils"] }'
+dev  = true
