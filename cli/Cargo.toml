@@ -1,0 +1,16 @@
+[package]
+name = "cougr-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Cougr CLI — hygiene and development tooling for the Cougr ECS framework"
+license = "MIT"
+publish = false
+
+[[bin]]
+name = "cougr"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+regex = "1"
+anyhow = "1"
