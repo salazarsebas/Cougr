@@ -15,6 +15,7 @@
 
 mod check;
 mod context;
+mod doctor;
 mod verify;
 
 use anyhow::Result;
@@ -71,6 +72,12 @@ enum Commands {
         #[arg(long)]
         canonical_only: bool,
     },
+
+    /// Diagnose the local toolchain: Rust, wasm target, stellar CLI, cargo.
+    ///
+    /// Verifies your environment is ready for Cougr development.
+    /// Each check reports pass/fail with an actionable fix command.
+    Doctor,
 }
 
 fn main() -> Result<()> {
@@ -94,5 +101,6 @@ fn main() -> Result<()> {
                 check::run(&ctx)
             }
         }
+        Commands::Doctor => doctor::run(),
     }
 }
