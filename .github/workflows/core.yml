@@ -8,6 +8,7 @@ on:
       - 'internal/**'
       - 'tests/**'
       - 'benches/**'
+      - 'cli/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/core.yml'
@@ -19,6 +20,7 @@ on:
       - 'internal/**'
       - 'tests/**'
       - 'benches/**'
+      - 'cli/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/core.yml'
@@ -59,3 +61,9 @@ jobs:
 
       - name: Build library
         run: cargo build
+
+      - name: Run hygiene check (cli)
+        run: cargo run --bin cougr -- check --path .
+
+      - name: Run verified check (canonical examples)
+        run: cargo run --bin cougr -- check --path . --verified --canonical-only
