@@ -37,3 +37,6 @@ Thumbs.db
 .claude/settings.json
 
 doocs/
+
+# Showcase generator output
+site/showcase/

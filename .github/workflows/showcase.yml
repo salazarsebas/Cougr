@@ -1,0 +1,59 @@
+name: Showcase Generator
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/**'
+      - 'tools/cougr-showcase/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/showcase.yml'
+      - '!.github/**/*.md'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/**'
+      - 'tools/cougr-showcase/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/showcase.yml'
+      - '!.github/**/*.md'
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: showcase-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-generate:
+    name: Build & Generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Clippy
+        run: cargo clippy -p cougr-showcase -- -D warnings
+
+      - name: Build
+        run: cargo build -p cougr-showcase
+
+      - name: Generate showcase
+        run: cargo run -p cougr-showcase -- --output-dir site/showcase
+
+      - name: Verify output
+        run: |
+          test -f site/showcase/index.html && echo "✓ index.html generated"
+          test -f site/showcase/spawn_and_move.html && echo "✓ detail pages generated"
+          echo "All checks passed: $(ls site/showcase/*.html | wc -l) HTML files generated"

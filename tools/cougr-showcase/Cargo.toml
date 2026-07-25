@@ -1,0 +1,15 @@
+[package]
+name = "cougr-showcase"
+version = "0.1.0"
+edition = "2021"
+description = "Static gallery generator for the Cougr example catalog - builds a browsable showcase of all on-chain game examples"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/salazarsebas/Cougr"
+homepage = "https://github.com/salazarsebas/Cougr"
+keywords = ["ecs", "game", "soroban", "stellar", "showcase"]
+categories = ["game-engines", "web-programming", "command-line-utilities"]
+rust-version = "1.70.0"
+publish = false
+
+[dependencies]
