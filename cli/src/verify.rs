@@ -5,6 +5,10 @@
 //!
 //! The base hygiene checks from `check.rs` are a subset; this module adds
 //! the full canonical-quality assessment required for the verified badge.
+//!
+//! Part of #258: produces structured pass/fail data that the showcase/
+//! example gallery generator consumes via `--output`, CI uploads the
+//! resulting `verified.json` as a build artifact.
 
 use crate::check::{
     check_cargo_metadata, check_cargo_toml_description, check_example_gitignore,
@@ -23,7 +27,17 @@ use std::process::{exit, Command};
 // ---------------------------------------------------------------------------
 
 /// Run verified-quality checks and return structured results.
-pub fn run(ctx: &CheckContext, json: bool, run_build: bool, canonical_only: bool) -> Result<()> {
+///
+/// When `output_path` is provided, writes the JSON report to that file
+/// (for consumption by the showcase/gallery generator). The JSON is also
+/// printed to stdout when `json` is true or when writing to a file.
+pub fn run(
+    ctx: &CheckContext,
+    json: bool,
+    run_build: bool,
+    canonical_only: bool,
+    output_path: Option<&str>,
+) -> Result<()> {
     // Filter to canonical examples if requested
     let target_examples: Vec<&crate::context::Example> = if canonical_only {
         let canonicals = canonical_example_names();
@@ -95,12 +109,24 @@ pub fn run(ctx: &CheckContext, json: bool, run_build: bool, canonical_only: bool
         });
     }
 
-    // Output
-    if json {
-        let json_out =
-            serde_json::to_string_pretty(&results).context("failed to serialize JSON output")?;
-        println!("{}", json_out);
+    // Output: serialize once, then decide print vs file vs both
+    let json_out: Option<String> = if json || output_path.is_some() {
+        Some(serde_json::to_string_pretty(&results).context("failed to serialize JSON output")?)
     } else {
+        None
+    };
+
+    if let Some(ref out) = json_out {
+        println!("{}", out);
+    }
+    if let Some(path) = output_path {
+        if let Some(ref out) = json_out {
+            fs::write(path, out)
+                .context(format!("failed to write verified badge report to {}", path))?;
+            eprintln!("Verified badge report written to {}", path);
+        }
+    }
+    if json_out.is_none() {
         print_human_summary(&results);
     }
 

@@ -70,6 +70,13 @@ enum Commands {
         /// When --verified is active, this filters to the canonical list.
         #[arg(long)]
         canonical_only: bool,
+
+        /// Write verified badge results to a JSON file (for showcase/gallery consumption).
+        ///
+        /// When provided with --verified, the structured pass/fail data is written
+        /// to this path in addition to stdout. Implies --json.
+        #[arg(short = 'o', long)]
+        output: Option<String>,
     },
 }
 
@@ -84,12 +91,13 @@ fn main() -> Result<()> {
             json,
             full,
             canonical_only,
+            output,
         } => {
             let cwd = std::env::current_dir()?;
             let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
 
             if verified {
-                verify::run(&ctx, json, full, canonical_only)
+                verify::run(&ctx, json || output.is_some(), full, canonical_only, output.as_deref())
             } else {
                 check::run(&ctx)
             }

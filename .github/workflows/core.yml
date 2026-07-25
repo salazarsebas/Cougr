@@ -66,4 +66,12 @@ jobs:
         run: cargo run --bin cougr -- check --path .
 
       - name: Run verified check (canonical examples)
-        run: cargo run --bin cougr -- check --path . --verified --canonical-only
+        run: cargo run --bin cougr -- check --path . --verified --canonical-only --output verified.json
+
+      - name: Upload verified badge report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-badge-report
+          path: verified.json
+          retention-days: 30
