@@ -1,0 +1,20 @@
+[package]
+name = "cougr-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Cougr CLI - scaffold, validate, and inspect Cougr on-chain game projects"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/salazarsebas/Cougr"
+homepage = "https://github.com/salazarsebas/Cougr"
+keywords = ["ecs", "game", "soroban", "blockchain", "stellar", "cli"]
+categories = ["game-engines", "command-line-utilities", "wasm"]
+rust-version = "1.70.0"
+publish = true
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+
+[[bin]]
+name = "cougr"
+path = "src/main.rs"
