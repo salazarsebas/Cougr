@@ -123,11 +123,7 @@ fn check_tracked_artifacts(repo_root: &Path, failures: &mut Vec<String>) {
 }
 
 /// Check 4: no hardcoded contract IDs (`C[A-Z2-7]{55}`) in example READMEs.
-pub fn check_readme_contract_ids(
-    example_dir: &Path,
-    name: &str,
-    failures: &mut Vec<String>,
-) {
+pub fn check_readme_contract_ids(example_dir: &Path, name: &str, failures: &mut Vec<String>) {
     let readme = example_dir.join("README.md");
     if !readme.is_file() {
         return;
@@ -150,11 +146,7 @@ pub fn check_readme_contract_ids(
 }
 
 /// Check 5: each example must have a `.gitignore` containing `target/`.
-pub fn check_example_gitignore(
-    example_dir: &Path,
-    name: &str,
-    failures: &mut Vec<String>,
-) {
+pub fn check_example_gitignore(example_dir: &Path, name: &str, failures: &mut Vec<String>) {
     let gitignore = example_dir.join(".gitignore");
     if !gitignore.is_file() {
         failures.push(format!("examples/{}: missing .gitignore", name));
@@ -172,20 +164,13 @@ pub fn check_example_gitignore(
             }
         }
         Err(e) => {
-            failures.push(format!(
-                "examples/{}: cannot read .gitignore: {}",
-                name, e
-            ));
+            failures.push(format!("examples/{}: cannot read .gitignore: {}", name, e));
         }
     }
 }
 
 /// Check 6: example `.gitignore` must NOT ignore `Cargo.lock`.
-fn check_example_gitignore_cargo_lock(
-    example_dir: &Path,
-    name: &str,
-    failures: &mut Vec<String>,
-) {
+fn check_example_gitignore_cargo_lock(example_dir: &Path, name: &str, failures: &mut Vec<String>) {
     let gitignore = example_dir.join(".gitignore");
     if !gitignore.is_file() {
         return; // already flagged by check_example_gitignore
@@ -208,11 +193,7 @@ fn check_example_gitignore_cargo_lock(
 }
 
 /// Check 7: `Cargo.toml` must have a non-empty `description` field.
-pub fn check_cargo_toml_description(
-    example_dir: &Path,
-    name: &str,
-    failures: &mut Vec<String>,
-) {
+pub fn check_cargo_toml_description(example_dir: &Path, name: &str, failures: &mut Vec<String>) {
     let cargo_toml = example_dir.join("Cargo.toml");
     if !cargo_toml.is_file() {
         failures.push(format!("examples/{}: missing Cargo.toml", name));
@@ -238,20 +219,13 @@ pub fn check_cargo_toml_description(
             }
         }
         Err(e) => {
-            failures.push(format!(
-                "examples/{}: cannot read Cargo.toml: {}",
-                name, e
-            ));
+            failures.push(format!("examples/{}: cannot read Cargo.toml: {}", name, e));
         }
     }
 }
 
 /// Check 8: `cargo metadata --no-deps` must succeed.
-pub fn check_cargo_metadata(
-    example_dir: &Path,
-    name: &str,
-    failures: &mut Vec<String>,
-) {
+pub fn check_cargo_metadata(example_dir: &Path, name: &str, failures: &mut Vec<String>) {
     let output = Command::new("cargo")
         .args(["metadata", "--no-deps", "--format-version", "1"])
         .current_dir(example_dir)

@@ -97,7 +97,13 @@ fn main() -> Result<()> {
             let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
 
             if verified {
-                verify::run(&ctx, json || output.is_some(), full, canonical_only, output.as_deref())
+                verify::run(
+                    &ctx,
+                    json || output.is_some(),
+                    full,
+                    canonical_only,
+                    output.as_deref(),
+                )
             } else {
                 check::run(&ctx)
             }
