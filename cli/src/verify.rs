@@ -79,19 +79,20 @@ pub fn run(ctx: &CheckContext, json: bool, run_build: bool, canonical_only: bool
         }
 
         let all_pass = criteria.iter().all(|c| c.pass);
+        let unmet = if all_pass {
+            vec![]
+        } else {
+            criteria
+                .iter()
+                .filter(|c| !c.pass)
+                .map(|c| c.id.clone())
+                .collect()
+        };
         results.push(ExampleResult {
             example: ex.name.clone(),
             verified: all_pass,
             criteria,
-            unmet: if all_pass {
-                vec![]
-            } else {
-                criteria
-                    .iter()
-                    .filter(|c| !c.pass)
-                    .map(|c| c.id.clone())
-                    .collect()
-            },
+            unmet,
         });
     }
 
@@ -462,11 +463,7 @@ fn check_lib_rs_separation(lib: &Path, criteria: &mut Vec<Criterion>) {
                 "module_lib_separation",
                 "Module: lib.rs separation (no components/systems inline)",
                 clean,
-                if clean {
-                    None
-                } else {
-                    Some(detail.join("; "))
-                },
+                if clean { None } else { Some(detail.join("; ")) },
             ));
         }
         Err(_) => {
@@ -501,12 +498,28 @@ fn check_readme_sections(dir: &Path, criteria: &mut Vec<Criterion>) {
 
     let required: &[(&str, &[&str])] = &[
         ("purpose", &["## Purpose", "## Purpose and pattern"]),
-        ("api", &["## Public contract API", "## Contract API", "## API"]),
-        ("architecture", &["## Architecture", "## Architecture overview"]),
+        (
+            "api",
+            &["## Public contract API", "## Contract API", "## API"],
+        ),
+        (
+            "architecture",
+            &["## Architecture", "## Architecture overview"],
+        ),
         ("storage", &["## Storage", "## Storage model"]),
-        ("gameplay", &["## Main gameplay flow", "## Gameplay", "## Gameplay flow"]),
+        (
+            "gameplay",
+            &["## Main gameplay flow", "## Gameplay", "## Gameplay flow"],
+        ),
         ("cougr_apis", &["## Cougr APIs", "## Cougr APIs used"]),
-        ("build", &["## Build", "## Build and test", "## Build and test commands"]),
+        (
+            "build",
+            &[
+                "## Build",
+                "## Build and test",
+                "## Build and test commands",
+            ],
+        ),
         ("limitations", &["## Known limitations", "## Limitations"]),
     ];
 
@@ -558,7 +571,10 @@ fn check_test_coverage(dir: &Path, criteria: &mut Vec<Criterion>) {
         if has_tests {
             None
         } else {
-            Some("no test file found (test.rs, tests.rs, sandbox_tests.rs, or #[test] in lib.rs)".into())
+            Some(
+                "no test file found (test.rs, tests.rs, sandbox_tests.rs, or #[test] in lib.rs)"
+                    .into(),
+            )
         },
     ));
 
@@ -571,7 +587,10 @@ fn check_test_coverage(dir: &Path, criteria: &mut Vec<Criterion>) {
         if enough_tests {
             Some(format!("{} tests found", test_count))
         } else {
-            Some(format!("only {} test(s) found (expect at least 3)", test_count))
+            Some(format!(
+                "only {} test(s) found (expect at least 3)",
+                test_count
+            ))
         },
     ));
 
@@ -651,7 +670,11 @@ fn check_classification(dir: &Path, criteria: &mut Vec<Criterion>) {
         || contents.contains("transitional example");
 
     if is_canonical || is_transitional {
-        let marker = if is_canonical { "canonical" } else { "transitional" };
+        let marker = if is_canonical {
+            "canonical"
+        } else {
+            "transitional"
+        };
         criteria.push(Criterion::new(
             "classification",
             "Classification: marked as canonical or transitional",
@@ -723,10 +746,7 @@ fn check_cargo_test(dir: &Path, criteria: &mut Vec<Criterion>) {
                     let stdout = String::from_utf8_lossy(&out.stdout);
                     Some(format!(
                         "cargo test failed:\n{}",
-                        indent_lines(
-                            &format!("{}\n{}", stdout.trim(), stderr.trim()),
-                            "      "
-                        )
+                        indent_lines(&format!("{}\n{}", stdout.trim(), stderr.trim()), "      ")
                     ))
                 },
             ));

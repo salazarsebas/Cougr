@@ -127,7 +127,7 @@ fn check_rust_version() -> CheckResult {
 
     match installed {
         Some(ref version) => {
-            if version_cmp(version, MIN_RUST_VERSION) >= 0 {
+            if version_cmp(version, MIN_RUST_VERSION).is_ge() {
                 CheckResult::ok(
                     "Rust toolchain",
                     &format!("rustc {} (≥ {})", version, MIN_RUST_VERSION),
@@ -153,10 +153,12 @@ fn check_rust_version() -> CheckResult {
 
 /// Parse version from `rustc --version` output, e.g. `rustc 1.70.0 (90c541806 2023-05-31)`.
 fn parse_rustc_version(output: &str) -> Option<String> {
-    // Expected format: "rustc X.Y.Z (...)"
+    // Expected format: "rustc X.Y.Z (...)" or "rustc X.Y.Z-nightly (...)"
     let parts: Vec<&str> = output.split_whitespace().collect();
     if parts.len() >= 2 {
-        let version = parts[1];
+        let raw = parts[1];
+        // Strip pre-release suffix (e.g. "-nightly")
+        let version = raw.split('-').next().unwrap_or(raw);
         // Validate it looks like a semver
         if version.chars().filter(|c| *c == '.').count() >= 2
             && version.chars().all(|c| c.is_ascii_digit() || c == '.')
@@ -189,10 +191,7 @@ fn check_wasm_target() -> CheckResult {
     let stdout = String::from_utf8_lossy(&output.stdout);
 
     if stdout.contains("wasm32v1-none") {
-        CheckResult::ok(
-            "wasm32v1-none target",
-            "wasm32v1-none target installed",
-        )
+        CheckResult::ok("wasm32v1-none target", "wasm32v1-none target installed")
     } else {
         CheckResult::fail(
             "wasm32v1-none target",
@@ -240,7 +239,7 @@ fn check_stellar_cli() -> CheckResult {
 
     match parse_stellar_version(&combined) {
         Some(ref version) => {
-            if version_cmp(version, MIN_STELLAR_CLI_VERSION) >= 0 {
+            if version_cmp(version, MIN_STELLAR_CLI_VERSION).is_ge() {
                 CheckResult::ok(
                     "stellar CLI",
                     &format!("stellar {} (≥ {})", version, MIN_STELLAR_CLI_VERSION),
@@ -320,11 +319,8 @@ fn check_cargo() -> CheckResult {
 /// Compare two semver strings.
 /// Returns `Ordering::Greater` if `a > b`, `Equal` if same, `Less` if `a < b`.
 fn version_cmp(a: &str, b: &str) -> std::cmp::Ordering {
-    let parse = |v: &str| -> Vec<u64> {
-        v.split('.')
-            .filter_map(|s| s.parse::<u64>().ok())
-            .collect()
-    };
+    let parse =
+        |v: &str| -> Vec<u64> { v.split('.').filter_map(|s| s.parse::<u64>().ok()).collect() };
 
     let va = parse(a);
     let vb = parse(b);

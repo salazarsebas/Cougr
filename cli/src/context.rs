@@ -49,7 +49,7 @@ pub fn resolve(
             anyhow::bail!("example '{}' not found at {}", name, example_dir.display());
         }
         vec![Example {
-            name,
+            name: name.to_string(),
         }]
     } else if explicit_root.is_none() && is_inside_example_dir(cwd) {
         // Auto-detect: if cwd is inside examples/<name>/, just check that one.
@@ -116,10 +116,7 @@ fn find_repo_root(cwd: &Path) -> Result<PathBuf> {
 /// True when `cwd` is inside an `examples/<name>/` directory.
 fn is_inside_example_dir(cwd: &Path) -> bool {
     if let Some(parent) = cwd.parent() {
-        parent
-            .file_name()
-            .map(|n| n == "examples")
-            .unwrap_or(false)
+        parent.file_name().map(|n| n == "examples").unwrap_or(false)
     } else {
         false
     }
@@ -131,7 +128,10 @@ fn discover_examples(repo_root: &Path) -> Result<Vec<Example>> {
     let mut examples = Vec::new();
 
     if !examples_dir.is_dir() {
-        anyhow::bail!("examples/ directory not found at {}", examples_dir.display());
+        anyhow::bail!(
+            "examples/ directory not found at {}",
+            examples_dir.display()
+        );
     }
 
     for entry in fs::read_dir(&examples_dir).context("cannot read examples/ directory")? {
