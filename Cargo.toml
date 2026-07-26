@@ -1,6 +1,7 @@
 [workspace]
 members = [
     ".",
+    "cli",
     "internal/cougr-core-circuits",
     "internal/cougr-core-session",
     "internal/cougr-core-test",
@@ -21,6 +22,7 @@ categories = ["game-engines", "data-structures", "wasm"]
 rust-version = "1.70.0"
 exclude = [
     ".github/**",
+    "cli/**",
     "examples/**",
     "public/**",
     "research/**",
