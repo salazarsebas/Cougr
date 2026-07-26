@@ -28,9 +28,11 @@ function deckRoot(salt, deck) {
 
 mkdirSync(FIXTURES, { recursive: true });
 
-// hidden_cards
-const deck = Array.from({ length: 52 }, (_, i) => i + 1);
-const hand = [1, 2, 3, 4, 5];
+// hidden_cards (deck and hand sizes can be customized via env vars DECK_SIZE and HAND_SIZE)
+const DECK_SIZE = Number(process.env.DECK_SIZE || "52");
+const HAND_SIZE = Number(process.env.HAND_SIZE || "5");
+const deck = Array.from({ length: DECK_SIZE }, (_, i) => i + 1);
+const hand = Array.from({ length: HAND_SIZE }, (_, i) => i + 1);
 const deckSalt = "12345";
 const playerId = "2";
 const handCommitment = hash([playerId, ...hand]);
@@ -43,8 +45,8 @@ writeFileSync(
       deck_root: deckRootVal,
       hand_commitment: handCommitment,
       player_id: playerId,
-      deck_size: "52",
-      hand_size: "5",
+      deck_size: String(DECK_SIZE),
+      hand_size: String(HAND_SIZE),
       hand,
       deck,
       deck_salt: deckSalt,
