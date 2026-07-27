@@ -1,4 +1,4 @@
-# ADR 0004: Include Standards In The Stable 1.0 Contract
+# ADR 0008: Include Standards In The Stable 1.0 Contract
 
 ## Status
 
