@@ -1,0 +1,34 @@
+[package]
+name = "{{crate_name}}"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "{{description}}"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "{{soroban_sdk_version}}"
+cougr-core = "{{cougr_core_version}}"
+
+[dev-dependencies]
+soroban-sdk = { version = "{{soroban_sdk_version}}", features = ["testutils"] }
+cougr-core = { version = "{{cougr_core_version}}", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
+
+[workspace]
