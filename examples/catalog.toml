@@ -1,0 +1,73 @@
+# Cougr Example Catalog
+#
+# This file is the single source of truth for all example metadata.
+# It is consumed by the gallery generator, CI validation, and documentation tooling.
+#
+# Schema:
+#   [example.<name>]
+#   name             = string            # Directory name under examples/
+#   category         = string            # One of: arcade / board / puzzle / hidden-information / card / other
+#   maturity         = string            # canonical | transitional
+#   cougr_features   = list of strings   # Cougr APIs demonstrated (e.g. ecs, game-app, soroban-game, privacy, session-auth, zk-circuits, rich-components, auth, standards, commit-reveal)
+#   screenshot       = optional string   # Relative path to screenshot (populated by gallery generator)
+#   testnet_contract = optional string   # Deployed testnet contract ID (populated after deployment)
+
+[example.spawn_and_move]
+name = "spawn_and_move"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "ecs"]
+
+[example.tic_tac_toe]
+name = "tic_tac_toe"
+category = "board"
+maturity = "canonical"
+cougr_features = ["soroban-game", "rich-components", "game-app"]
+
+[example.session_arena]
+name = "session_arena"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "session-auth", "game-app"]
+
+[example.hidden_hand]
+name = "hidden_hand"
+category = "card"
+maturity = "canonical"
+cougr_features = ["soroban-game", "zk-circuits", "privacy"]
+
+[example.fog_explorer]
+name = "fog_explorer"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "zk-circuits", "privacy"]
+
+[example.dice_duel]
+name = "dice_duel"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "zk-circuits", "privacy"]
+
+[example.blind_auction]
+name = "blind_auction"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "zk-circuits", "privacy"]
+
+[example.snake]
+name = "snake"
+category = "arcade"
+maturity = "canonical"
+cougr_features = ["game-app", "ecs"]
+
+[example.battleship]
+name = "battleship"
+category = "hidden-information"
+maturity = "canonical"
+cougr_features = ["privacy", "commit-reveal", "game-app", "ecs"]
+
+[example.guild_arena]
+name = "guild_arena"
+category = "other"
+maturity = "canonical"
+cougr_features = ["auth", "standards", "game-app"]
