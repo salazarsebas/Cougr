@@ -238,6 +238,39 @@ The following table maps each canonical example to its primary Cougr APIs:
 
 ---
 
+---
+
+## 9. Preview Image
+
+Every canonical example must have a `preview.svg` checked into its directory. This image is displayed in the examples gallery and must represent the actual game state, not a placeholder or hand-drawn mockup.
+
+### Board / grid games
+
+Generate `preview.svg` using the tooling in `tools/preview-gen/`:
+
+```bash
+cd tools/preview-gen
+node generate.js <example-name>
+```
+
+The generator reads a state JSON from `tools/preview-gen/states/<example-name>.json`. That state must be derived from a specific, named test assertion in the example's `src/test.rs` — not invented. See [tools/preview-gen/README.md](../tools/preview-gen/README.md) for the full contributor workflow.
+
+### Real-time / physics arcade games
+
+Games where no single frame conveys how the game works (Snake, Asteroids, Pong, Flappy Bird, Geometry Dash, etc.) may use the category fallback renderer:
+
+```bash
+node generate.js snake   # snake is registered in FALLBACK_GAMES
+```
+
+This produces a branded category-icon card rather than a fake gameplay screenshot. Using the fallback is acceptable and honest; faking a state screenshot for a real-time game is not.
+
+### Checklist item
+
+See the [Quality Checklist](#quality-checklist) below for the corresponding checklist entry.
+
+---
+
 ## Quality Checklist
 
 Copy this checklist into a follow-up cleanup issue for each example:
@@ -282,6 +315,12 @@ Copy this checklist into a follow-up cleanup issue for each example:
 - [ ] No committed `.wasm` artifacts
 - [ ] `Cargo.lock` committed
 - [ ] `Cargo.toml` has no unused dependencies or wildcard versions
+
+### Preview image
+- [ ] `preview.svg` present in the example directory
+- [ ] State data is traceable to a named test assertion in `src/test.rs` (see `_source` field in the corresponding `states/*.json`)
+- [ ] Generated via `tools/preview-gen/` — not hand-drawn or manually edited
+- [ ] For real-time/arcade games: category fallback used rather than a faked screenshot
 
 ### Classification
 - [ ] Marked as canonical or transitional in the README

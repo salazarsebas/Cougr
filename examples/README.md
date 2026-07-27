@@ -46,54 +46,54 @@ After reading the canonical examples, explore transitional examples for addition
 
 These are the maintained reference architectures. They are held to the full standard in [EXAMPLE_STANDARD.md](./EXAMPLE_STANDARD.md) and stay current as `cougr-core` evolves.
 
-| Example | Category | Focus |
-|---|---|---|
-| `spawn_and_move` | **Starter / canonical** | Complete idiomatic Cougr pattern: `SorobanGame` + `impl_component_observed!` + typed ECS |
-| `tic_tac_toe` | **Rich components / canonical** | Turn-based game with `impl_rich_component!` for `Address` and `Vec` fields |
-| `session_arena` | **Session UX / canonical** | `session::SessionManager` lifecycle and multi-round state (Beta) |
-| `hidden_hand` | **ZK circuits / canonical** | `circuits::HiddenHandBuilder` — hidden-card ZK proof flow (Experimental) |
-| `fog_explorer` | **ZK circuits / canonical** | `circuits::FogExplorerBuilder` — fog-of-war exploration with Merkle proofs (Experimental) |
-| `dice_duel` | **ZK circuits / canonical** | `circuits::FairDiceBuilder` — fair dice roll with on-chain verification (Experimental) |
-| `blind_auction` | **ZK circuits / canonical** | `circuits::SealedBidBuilder` — sealed-bid auction with commit-reveal ZK (Experimental) |
-| `snake` | **Arcade (GameApp) / canonical** | Arcade loop, `GameApp` tick model, basic ECS |
-| `battleship` | **Hidden information / canonical** | Commit-reveal and selective state disclosure using `privacy::stable` |
-| `guild_arena` | **Authentication & recovery / canonical** | Account abstraction, social recovery, multi-device authorization |
+| Example | Category | Focus | Preview |
+|---|---|---|---|
+| `spawn_and_move` | **Starter / canonical** | Complete idiomatic Cougr pattern: `SorobanGame` + `impl_component_observed!` + typed ECS | — |
+| `tic_tac_toe` | **Rich components / canonical** | Turn-based game with `impl_rich_component!` for `Address` and `Vec` fields | [preview.svg](./tic_tac_toe/preview.svg) |
+| `session_arena` | **Session UX / canonical** | `session::SessionManager` lifecycle and multi-round state (Beta) | — |
+| `hidden_hand` | **ZK circuits / canonical** | `circuits::HiddenHandBuilder` — hidden-card ZK proof flow (Experimental) | — |
+| `fog_explorer` | **ZK circuits / canonical** | `circuits::FogExplorerBuilder` — fog-of-war exploration with Merkle proofs (Experimental) | — |
+| `dice_duel` | **ZK circuits / canonical** | `circuits::FairDiceBuilder` — fair dice roll with on-chain verification (Experimental) | — |
+| `blind_auction` | **ZK circuits / canonical** | `circuits::SealedBidBuilder` — sealed-bid auction with commit-reveal ZK (Experimental) | — |
+| `snake` | **Arcade (GameApp) / canonical** | Arcade loop, `GameApp` tick model, basic ECS | — |
+| `battleship` | **Hidden information / canonical** | Commit-reveal and selective state disclosure using `privacy::stable` | [preview.svg](./battleship/preview.svg) |
+| `guild_arena` | **Authentication & recovery / canonical** | Account abstraction, social recovery, multi-device authorization | — |
 
 ### Transitional examples
 
 These examples were written before the current standard or intentionally preserve an older pattern for compatibility reference. They still pass `cargo test` and `stellar contract build` but may not follow the latest module structure or README depth.
 
-| Example | Category | Focus |
-|---|---|---|
-| `ai_dungeon_master_arena` | ZK / x402 | Proof-backed encounters and x402 premium actions |
-| `angry_birds` | Physics-inspired arcade | Projectile logic and destructible-state gameplay |
-| `arkanoid` | Arcade | Paddle, collision, and brick lifecycle management |
-| `asteroids` | Arcade | Entity-heavy movement, collisions, and spawning |
-| `bomberman` | Grid action | Tile updates, hazards, and timed interactions |
-| `checkers` | Board | Jump/capture rules and multi-step turn validation |
-| `chess` | Board / strategy | Rule validation and proof-oriented move flow |
-| `connect_four` | Board | Gravity-drop column logic and vertical/horizontal/diagonal win detection |
-| `cross_asset_racing_league` | Multi-asset racing | Payment-gated boost mechanics with cross-asset payment flows |
-| `flappy_bird` | Arcade | Tight tick-loop updates and obstacle generation |
-| `geometry_dash` | Reflex | Deterministic timing and obstacle progression |
-| `guild_treasury_wars` | DAO / ZK | DAO-governed factions with stellar-zk commitments |
-| `memory_match` | Card matching | Pair-reveal mechanics and memory-state tracking |
-| `minesweeper` | Puzzle | Grid reveal, mine detection, and adjacency logic |
-| `murdoku` | Puzzle | Ephemeral ECS validation and creator registry |
-| `pac_man` | Maze action | Grid navigation and adversarial movement patterns |
-| `pokemon_mini` | Turn-based battle | Combat sequencing and match state transitions |
-| `pong` | Arcade | Minimal competitive loop and ECS fundamentals |
-| `proof_of_hunt` | Hidden-state exploration | stellar-zk proof verification and x402 premium actions |
-| `reversi` | Board | Piece-flipping logic and territory control |
-| `rock_paper_scissors` | Commit-reveal | Hidden choices and reveal resolution |
-| `shadow_draft_card_game` | Card / hidden-hand | Hidden-hand draft with SHA-256 commit-reveal |
-| `space_invaders` | Wave shooter | Formation movement and repeated tick systems |
-| `sudoku` | Puzzle | Grid constraints and cell-entry validation |
-| `tap_battle` | Casual competitive | Lightweight action resolution and progression |
-| `tetris` | Puzzle | Piece state, rotation, and board clearing |
-| `tower_defense` | Strategy | Wave spawning, tower attacks, and health reduction |
-| `trading_card_game` | Card / strategy | Structured turns, card effects, and state composition |
-| `treasure_hunt` | Hidden-state exploration | Off-chain Merkle map commitments with on-chain proof-gated discovery |
+| Example | Category | Focus | Preview |
+|---|---|---|---|
+| `ai_dungeon_master_arena` | ZK / x402 | Proof-backed encounters and x402 premium actions | — |
+| `angry_birds` | Physics-inspired arcade | Projectile logic and destructible-state gameplay | — |
+| `arkanoid` | Arcade | Paddle, collision, and brick lifecycle management | — |
+| `asteroids` | Arcade | Entity-heavy movement, collisions, and spawning | — |
+| `bomberman` | Grid action | Tile updates, hazards, and timed interactions | — |
+| `checkers` | Board | Jump/capture rules and multi-step turn validation | [preview.svg](./checkers/preview.svg) |
+| `chess` | Board / strategy | Rule validation and proof-oriented move flow | — |
+| `connect_four` | Board | Gravity-drop column logic and vertical/horizontal/diagonal win detection | — |
+| `cross_asset_racing_league` | Multi-asset racing | Payment-gated boost mechanics with cross-asset payment flows | — |
+| `flappy_bird` | Arcade | Tight tick-loop updates and obstacle generation | — |
+| `geometry_dash` | Reflex | Deterministic timing and obstacle progression | — |
+| `guild_treasury_wars` | DAO / ZK | DAO-governed factions with stellar-zk commitments | — |
+| `memory_match` | Card matching | Pair-reveal mechanics and memory-state tracking | — |
+| `minesweeper` | Puzzle | Grid reveal, mine detection, and adjacency logic | — |
+| `murdoku` | Puzzle | Ephemeral ECS validation and creator registry | — |
+| `pac_man` | Maze action | Grid navigation and adversarial movement patterns | — |
+| `pokemon_mini` | Turn-based battle | Combat sequencing and match state transitions | — |
+| `pong` | Arcade | Minimal competitive loop and ECS fundamentals | — |
+| `proof_of_hunt` | Hidden-state exploration | stellar-zk proof verification and x402 premium actions | — |
+| `reversi` | Board | Piece-flipping logic and territory control | — |
+| `rock_paper_scissors` | Commit-reveal | Hidden choices and reveal resolution | — |
+| `shadow_draft_card_game` | Card / hidden-hand | Hidden-hand draft with SHA-256 commit-reveal | — |
+| `space_invaders` | Wave shooter | Formation movement and repeated tick systems | — |
+| `sudoku` | Puzzle | Grid constraints and cell-entry validation | — |
+| `tap_battle` | Casual competitive | Lightweight action resolution and progression | — |
+| `tetris` | Puzzle | Piece state, rotation, and board clearing | — |
+| `tower_defense` | Strategy | Wave spawning, tower attacks, and health reduction | — |
+| `trading_card_game` | Card / strategy | Structured turns, card effects, and state composition | — |
+| `treasure_hunt` | Hidden-state exploration | Off-chain Merkle map commitments with on-chain proof-gated discovery | — |
 
 ## Choosing A Reference
 
