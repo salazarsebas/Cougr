@@ -1,0 +1,19 @@
+{
+  "name": "cougr-preview-gen",
+  "version": "1.0.0",
+  "description": "Generate SVG preview images for Cougr contract-only examples from scenario state data.",
+  "type": "module",
+  "bin": {
+    "preview-gen": "./generate.js"
+  },
+  "scripts": {
+    "gen:tic_tac_toe": "node generate.js tic_tac_toe",
+    "gen:checkers": "node generate.js checkers",
+    "gen:battleship": "node generate.js battleship",
+    "gen:all": "node generate.js tic_tac_toe && node generate.js checkers && node generate.js battleship"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

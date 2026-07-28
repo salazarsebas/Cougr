@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 400 480" width="400" height="480">
+  <defs>
+    <style>
+      text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="480" fill="#0f172a" rx="12"/>
+
+  <!-- Board grid cells -->
+
+  <!-- Row 0 -->
+  <rect x="2" y="2" width="129" height="129" fill="#fef08a22" rx="4"/>
+  <!-- grid lines -->
+  <line x1="133" y1="2" x2="133" y2="398" stroke="#334155" stroke-width="3"/>
+  <line x1="2" y1="133" x2="398" y2="133" stroke="#334155" stroke-width="3"/>
+
+  <rect x="135" y="2" width="129" height="129" fill="#fef08a22" rx="4"/>
+  <line x1="266" y1="2" x2="266" y2="398" stroke="#334155" stroke-width="3"/>
+
+  <rect x="268" y="2" width="129" height="129" fill="#fef08a22" rx="4"/>
+
+  <!-- Row 1 -->
+  <rect x="2" y="135" width="129" height="129" fill="#1e293b" rx="4"/>
+  <rect x="135" y="135" width="129" height="129" fill="#1e293b" rx="4"/>
+  <line x1="2" y1="266" x2="398" y2="266" stroke="#334155" stroke-width="3"/>
+  <rect x="268" y="135" width="129" height="129" fill="#1e293b" rx="4"/>
+
+  <!-- Row 2 -->
+  <rect x="2" y="268" width="129" height="129" fill="#1e293b" rx="4"/>
+  <rect x="135" y="268" width="129" height="129" fill="#1e293b" rx="4"/>
+  <rect x="268" y="268" width="129" height="129" fill="#1e293b" rx="4"/>
+
+  <!-- X marks — top row cells 0,1,2 (winning) -->
+  <!-- Cell 0: cx=66.5, cy=66.5 -->
+  <line x1="30" y1="30" x2="103" y2="103" stroke="#fda4af" stroke-width="14" stroke-linecap="round"/>
+  <line x1="103" y1="30" x2="30" y2="103" stroke="#fda4af" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Cell 1: cx=199.5, cy=66.5 -->
+  <line x1="163" y1="30" x2="236" y2="103" stroke="#fda4af" stroke-width="14" stroke-linecap="round"/>
+  <line x1="236" y1="30" x2="163" y2="103" stroke="#fda4af" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Cell 2: cx=332.5, cy=66.5 -->
+  <line x1="296" y1="30" x2="369" y2="103" stroke="#fda4af" stroke-width="14" stroke-linecap="round"/>
+  <line x1="369" y1="30" x2="296" y2="103" stroke="#fda4af" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- O marks — cells 3 (cx=66.5, cy=199.5) and 4 (cx=199.5, cy=199.5) -->
+  <circle cx="66" cy="199" r="43" fill="none" stroke="#38bdf8" stroke-width="12"/>
+  <circle cx="199" cy="199" r="43" fill="none" stroke="#38bdf8" stroke-width="12"/>
+
+  <!-- Status bar -->
+  <rect x="0" y="400" width="400" height="80" fill="#1e293b" rx="0"/>
+  <rect x="0" y="400" width="400" height="2" fill="#334155"/>
+
+  <!-- Status badge -->
+  <rect x="16" y="416" width="160" height="36" rx="18" fill="#f43f5e22"/>
+  <text x="96" y="440" text-anchor="middle" font-size="15" font-weight="700" fill="#f43f5e">✕  wins</text>
+
+  <!-- Move counter -->
+  <text x="384" y="440" text-anchor="end" font-size="13" fill="#64748b">Move 5</text>
+
+  <!-- Cougr watermark -->
+  <text x="200" y="468" text-anchor="middle" font-size="10" fill="#64748b" letter-spacing="2">COUGR · TIC-TAC-TOE</text>
+</svg>
