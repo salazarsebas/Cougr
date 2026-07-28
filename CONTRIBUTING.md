@@ -41,6 +41,7 @@ Documentation should be professional, current, and proportionate:
 - explain decisions and usage patterns without turning every page into a long-form essay
 - use tables when they improve scanability, not as a default for all content
 - keep root-level documentation limited to material with clear long-term value
+- follow the terminology and voice rules in [docs/VOICE_GUIDE.md](docs/VOICE_GUIDE.md) for all doc, example, and marketing copy
 
 ## Pull Requests
 

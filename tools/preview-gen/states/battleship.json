@@ -1,0 +1,29 @@
+{
+  "_source": "examples/battleship/src/test.rs — composite of test_attack_and_reveal_miss (lines 88-125) and test_attack_and_reveal_hit (lines 127-159) patterns. Extended to a representative mid-game state.",
+  "_description": "Mid-game attack-phase state. Player A has fired 8 shots; Player B has fired 6 shots. Cell index formula: y * 10 + x. Hit = ship cell revealed. Miss = empty cell revealed. Key reveals from tests: grid_b[0]=Miss (A attacks (0,0) on B's board); grid_b[10]=Hit (A attacks (0,1), ship present). Grid layout extended to show realistic attack spread.",
+  "_coord_formula": "index = y * 10 + x",
+  "grid_a": {
+    "11": "Hit",
+    "12": "Miss",
+    "21": "Miss",
+    "31": "Hit",
+    "32": "Miss",
+    "41": "Hit"
+  },
+  "grid_b": {
+    "0":  "Miss",
+    "10": "Hit",
+    "11": "Hit",
+    "20": "Miss",
+    "22": "Miss",
+    "33": "Hit",
+    "43": "Miss",
+    "53": "Miss"
+  },
+  "ship_remaining_a": 14,
+  "ship_remaining_b": 14,
+  "total_ships": 17,
+  "phase": "Attack",
+  "turn": "A",
+  "winner": null
+}
