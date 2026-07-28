@@ -32,7 +32,7 @@ A single documentation site (see [10-repository-strategy.md](./10-repository-str
 | Game Patterns (by problem, not by module) | **Gap** | `PATTERNS.md` exists but is organized by API surface; needs a "by problem" companion or restructure per [08-ux-strategy.md](./08-ux-strategy.md) stage 4. |
 | On-Chain / Off-Chain Boundary Guide | **Gap, second priority** | Identified as the highest-leverage missing content in [04-onchain-gaming-research.md](./04-onchain-gaming-research.md). |
 | Smart Contract Patterns (Soroban-specific, not game-specific) | Partial (scattered across `PATTERNS.md`, `STANDARDS_LAYER.md`) | Should be consolidated into one Learn-section page distinguishing "Cougr patterns" from "general Soroban patterns" so readers know which parts are portable knowledge. |
-| Testing Guide | **Gap** | `GameHarness`/`Scenario`/`SnapshotAssert` exist and are used across 3,700+ lines of tests but have no standalone guide. Named explicitly in [08-ux-strategy.md](./08-ux-strategy.md) stage 5. |
+| Testing Guide | Exists (`docs/learn/TESTING_GUIDE.md`) | `GameHarness`/`Scenario`/`SnapshotAssert` standalone guide covering sandbox setup, scenarios, fixtures, snapshots, replay logs, and snapshot conventions. |
 | Deployment Guide | Partial (README dev commands) | Should explicitly hand off to the `stellar` CLI with a short, current recipe, consistent with the decision in [06-product-strategy.md](./06-product-strategy.md) not to wrap deployment in Cougr's own CLI. |
 
 ## Reference documents

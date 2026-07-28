@@ -72,7 +72,7 @@ hand commitment appear on chain, and only as arguments to a verification call.
 | `zk::Groth16Proof` | Proof accepted directly as a contract argument |
 | `impl_component!` | `DealsVerified` is a single scalar per seat |
 | `SorobanGame` / `impl_soroban_game!` | Removes hand-written world load/save boilerplate |
-| `test::GameHarness`, `circuits::test_fixtures` | Real pipeline proofs in an integration test |
+| `test::GameHarness`, `circuits::test_fixtures` | Real pipeline proofs in an integration test (see [Testing Guide](../../docs/learn/TESTING_GUIDE.md)) |
 
 ## Build and test
 

@@ -70,7 +70,7 @@ cheaper `impl_component!`.
 | `impl_component!` | `TurnState` is three scalars — no codec required |
 | `SorobanGame` / `impl_soroban_game!` | Removes hand-written world load/save boilerplate |
 | `SimpleWorld` | Holds all three components under one entity |
-| `test::GameHarness`, `Scenario` | Drives alternating turns in an integration test |
+| `test::GameHarness`, `Scenario` | Drives alternating turns in an integration test (see [Testing Guide](../../docs/learn/TESTING_GUIDE.md)) |
 
 ## Build and test
 

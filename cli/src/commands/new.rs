@@ -71,6 +71,8 @@ fn report_success(target: &Path, crate_name: &str, template: Template, files: &[
     println!("  cargo test                # run the GameHarness test suite");
     println!("  stellar contract build    # compile the contract to WASM");
     println!();
+    println!("Testing guide: docs/learn/TESTING_GUIDE.md");
+    println!();
     println!("`stellar contract build` needs the Stellar CLI and the wasm32v1-none target:");
     println!("  rustup target add wasm32v1-none");
     println!("  cargo install --locked stellar-cli");

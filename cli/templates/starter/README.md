@@ -59,7 +59,7 @@ game state is a single read and a single write per call.
 | `impl_component!` | `Moves` is read on demand, so it does not need events |
 | `SorobanGame` / `impl_soroban_game!` | Removes hand-written world load/save boilerplate |
 | `SimpleWorld` | Typed component storage for a growing entity population |
-| `test::GameHarness`, `Scenario`, `WorldFixture` | Sandbox for full-round integration tests |
+| `test::GameHarness`, `Scenario`, `WorldFixture` | Sandbox for full-round integration tests (see [Testing Guide](../../docs/learn/TESTING_GUIDE.md)) |
 
 ## Build and test
 

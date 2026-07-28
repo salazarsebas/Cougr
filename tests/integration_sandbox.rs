@@ -114,3 +114,95 @@ fn mock_players_rotate_through_scenario() {
 
     assert_eq!(slots, [0, 1, 2, 0, 1, 2]);
 }
+
+mod worked_example_verification {
+    use cougr_core::component::ComponentTrait;
+    use cougr_core::game::SorobanGame;
+    use cougr_core::test::{
+        GameHarness, ReplayLog, Scenario, SnapshotAssert, TurnIndex, WorldFixture,
+    };
+    use cougr_core::{impl_component, impl_soroban_game};
+    use soroban_sdk::{contract, contractimpl, contracttype, Env};
+
+    #[contracttype]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct Position {
+        pub x: i32,
+        pub y: i32,
+    }
+    impl_component!(Position, "pos", Table, { x: i32, y: i32 });
+
+    #[contract]
+    #[derive(Clone)]
+    pub struct BattleArena;
+
+    impl_soroban_game!(BattleArena, "world");
+
+    #[contractimpl]
+    impl BattleArena {
+        pub fn spawn(env: Env) -> u32 {
+            let mut world = BattleArena::load_world(&env);
+            let entity = world.spawn_entity();
+            world.set_typed(&env, entity, &Position { x: 0, y: 0 });
+            BattleArena::save_world(&env, &world);
+            entity
+        }
+
+        pub fn move_right(env: Env, entity: u32) {
+            let mut world = BattleArena::load_world(&env);
+            if let Some(mut pos) = world.get_typed::<Position>(&env, entity) {
+                pos.x += 1;
+                world.set_typed(&env, entity, &pos);
+                BattleArena::save_world(&env, &world);
+            }
+        }
+
+        pub fn entity_count(env: Env) -> u32 {
+            BattleArena::load_world(&env)
+                .next_entity_id()
+                .saturating_sub(1)
+        }
+    }
+
+    #[test]
+    fn test_full_sandbox_flow() {
+        let env = Env::default();
+        let mut harness = GameHarness::new(env, BattleArena);
+
+        harness.mock_players(2);
+        harness.mock_all_auths();
+
+        let mut fixture = WorldFixture::empty(harness.env());
+        let preseeded_id = fixture.spawn_entity();
+        fixture.set_typed(harness.env(), preseeded_id, &Position { x: 10, y: 10 });
+        fixture.inject::<BattleArena>(&harness);
+
+        let client = BattleArenaClient::new(harness.env(), harness.contract_id());
+        assert_eq!(client.entity_count(), 1);
+
+        let mut replay_log = ReplayLog::new();
+
+        Scenario::new("arena battle sequence")
+            .players(2)
+            .turns(3)
+            .run(&harness, |_player, turn, h| {
+                let c = BattleArenaClient::new(h.env(), h.contract_id());
+                c.spawn();
+                c.move_right(&preseeded_id);
+
+                replay_log.record::<BattleArena>(turn, h);
+            });
+
+        assert_eq!(client.entity_count(), 4);
+        assert_eq!(replay_log.len(), 3);
+
+        let current_fixture = WorldFixture::read_from_contract::<BattleArena>(&harness);
+        SnapshotAssert::assert_entity_count(current_fixture.world(), 4);
+
+        replay_log.assert_differs_at(0, 2);
+
+        let turn_0_fixture = replay_log.fork_from::<BattleArena>(&harness, 0);
+        SnapshotAssert::assert_entity_count(turn_0_fixture.world(), 2);
+    }
+}
+

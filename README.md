@@ -329,4 +329,5 @@ stellar contract build
 - [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) — ZK proof tiers
 - [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) — session keys and recovery
 - [docs/PATTERNS.md](docs/PATTERNS.md) — recommended gameplay patterns
+- [docs/learn/TESTING_GUIDE.md](docs/learn/TESTING_GUIDE.md) — GameHarness, Scenario, and Snapshot testing guide
 - [examples/README.md](examples/README.md) — example catalog and usage guide

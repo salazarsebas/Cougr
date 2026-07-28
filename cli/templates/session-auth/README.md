@@ -71,7 +71,7 @@ entrypoint.
 | `session::ActiveSession` | Client-facing view of expiry and remaining budget |
 | `impl_component!` | `Score` is one scalar per player |
 | `SorobanGame` / `impl_soroban_game!` | Removes hand-written world load/save boilerplate |
-| `test::GameHarness`, `test::MockSession` | Session flows exercised in an integration test |
+| `test::GameHarness`, `test::MockSession` | Session flows exercised in an integration test (see [Testing Guide](../../docs/learn/TESTING_GUIDE.md)) |
 
 ## Build and test
 
