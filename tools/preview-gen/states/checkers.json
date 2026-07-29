@@ -1,0 +1,19 @@
+{
+  "_source": "examples/checkers/src/systems.rs :: initial_board (lines 202-218) + examples/checkers/src/test.rs :: test_init_sets_standard_start_position (lines 22-38)",
+  "_description": "Standard checkers opening position. P1 (value=1) occupies dark squares (row+col odd) in rows 0-2. P2 (value=-1) occupies dark squares in rows 5-7. Rows 3-4 are the empty middle zone. Verified against test_init_sets_standard_start_position assertions: (0,1)=1, (2,7)=1, (5,0)=-1, (7,6)=-1, (0,0)=0, (4,4)=0.",
+  "_board_layout": "8x8 grid, row-major. dark square = (row+col)%2==1. P1=1, P2=-1, empty=0",
+  "cells": [
+    0,  1,  0,  1,  0,  1,  0,  1,
+    1,  0,  1,  0,  1,  0,  1,  0,
+    0,  1,  0,  1,  0,  1,  0,  1,
+    0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,
+   -1,  0, -1,  0, -1,  0, -1,  0,
+    0, -1,  0, -1,  0, -1,  0, -1,
+   -1,  0, -1,  0, -1,  0, -1,  0
+  ],
+  "current_player": 1,
+  "move_number": 1,
+  "status": "Active",
+  "winner": 0
+}

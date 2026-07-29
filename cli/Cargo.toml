@@ -5,6 +5,17 @@ edition = "2021"
 description = "Cougr CLI — hygiene and development tooling for the Cougr ECS framework"
 license = "MIT"
 publish = false
+version = "1.1.0"
+edition = "2021"
+description = "Command-line tooling for Cougr — scaffold Soroban game contracts wired to cougr-core"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/salazarsebas/Cougr"
+homepage = "https://github.com/salazarsebas/Cougr"
+keywords = ["cli", "soroban", "stellar", "game", "scaffold"]
+categories = ["command-line-utilities", "development-tools", "game-development"]
+rust-version = "1.82.0"
+include = ["src/**", "templates/**", "tests/**", "build.rs", "README.md"]
 
 [[bin]]
 name = "cougr"
@@ -16,3 +27,10 @@ regex = "1"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+clap = { version = "4.6", features = ["derive"] }
+# `debug-embed` keeps the templates compiled into the binary in debug builds
+# too, so `cougr new` behaves identically for contributors and end users.
+rust-embed = { version = "8.12", features = ["debug-embed"] }
+
+[dev-dependencies]
+tempfile = "3"

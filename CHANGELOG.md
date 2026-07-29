@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`cougr-cli`** — new workspace member publishing the `cougr` binary
+- **`cougr new <name> [--template <name>]`** — scaffolds a Soroban game contract crate
+  following the canonical `lib.rs` / `components.rs` / `systems.rs` layout, with a
+  passing `test::GameHarness` suite and a dependency on the published `cougr-core`
+  release rather than a path dependency
+- **Four embedded templates**, each derived from a canonical example and compiled into
+  the binary so `cougr new` works offline: `starter` (`spawn_and_move`), `turn-based`
+  (`tic_tac_toe`), `hidden-info` (`hidden_hand`), `session-auth` (`session_arena`)
+- **CLI CI workflow** — lints and tests `cougr-cli`, then generates each template and
+  runs `cargo fmt`, `clippy`, `cargo test`, and a `wasm32v1-none` release build against it
+
 ## 1.1.0
 
 ### Added

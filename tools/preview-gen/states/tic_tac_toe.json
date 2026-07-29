@@ -1,0 +1,15 @@
+{
+  "_source": "examples/tic_tac_toe/src/test.rs :: test_x_wins_row_top (lines 158-169)",
+  "_description": "X wins via the top row (cells 0,1,2). Derived from the move sequence: X→0, O→3, X→1, O→4, X→2.",
+  "_move_sequence": [
+    { "player": "X", "cell": 0 },
+    { "player": "O", "cell": 3 },
+    { "player": "X", "cell": 1 },
+    { "player": "O", "cell": 4 },
+    { "player": "X", "cell": 2 }
+  ],
+  "cells": [1, 1, 1, 2, 2, 0, 0, 0, 0],
+  "status": 1,
+  "is_x_turn": true,
+  "move_count": 5
+}
