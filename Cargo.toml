@@ -5,7 +5,6 @@ members = [
     "internal/cougr-core-circuits",
     "internal/cougr-core-session",
     "internal/cougr-core-test",
-    "cli",
 ]
 resolver = "2"
 
