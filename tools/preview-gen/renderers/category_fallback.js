@@ -8,11 +8,12 @@
  * Input:
  *   game:     string  — game slug, e.g. "snake"
  *   category: string  — e.g. "Arcade"
- *   color:    string  — hex accent color
  *   icon:     string  — emoji icon
  *
  * Produces a 400×300 SVG.
  */
+
+import { BRAND, LINE, FONT_STYLE, TINT, px } from '../theme.js';
 
 const W = 400;
 const H = 300;
@@ -21,20 +22,23 @@ function slugToTitle(slug) {
   return slug.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-export function render({ game, category, color, icon }) {
+export function render({ game, category, icon }) {
   const title = slugToTitle(game);
 
-  // Darken version of color for gradient stop
-  const darkBg = '#0f172a';
-  const cardBg = '#1e293b';
-  const border = '#334155';
-  const textMuted = '#64748b';
-  const textPrimary = '#f1f5f9';
+  // One brand accent for every fallback card, rather than a per-game hue: the
+  // palette in docs/BRAND.md is a small fixed vocabulary by design, and the
+  // icon and title already distinguish the games.
+  const color = BRAND.colorPrimary;
+  const darkBg = BRAND.colorBg;
+  const cardBg = BRAND.colorSurface;
+  const border = LINE.stroke;
+  const textMuted = BRAND.colorTextSecondary;
+  const textPrimary = BRAND.colorText;
 
   return `<svg xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
   <defs>
-    <style>text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
+    <style>${FONT_STYLE}</style>
     <radialGradient id="glow" cx="50%" cy="45%" r="50%">
       <stop offset="0%" stop-color="${color}" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="${darkBg}" stop-opacity="0"/>
@@ -46,11 +50,11 @@ export function render({ game, category, color, icon }) {
   </defs>
 
   <!-- Background -->
-  <rect width="${W}" height="${H}" fill="${darkBg}" rx="12"/>
-  <rect x="1" y="1" width="${W-2}" height="${H-2}" fill="url(#glow)" rx="11"/>
+  <rect width="${W}" height="${H}" fill="${darkBg}" rx="${px(BRAND.radiusLg)}"/>
+  <rect x="1" y="1" width="${W-2}" height="${H-2}" fill="url(#glow)" rx="${px(BRAND.radiusLg) - 1}"/>
 
   <!-- Card -->
-  <rect x="32" y="32" width="${W-64}" height="${H-64}" fill="${cardBg}" rx="16"
+  <rect x="32" y="32" width="${W-64}" height="${H-64}" fill="${cardBg}" rx="${px(BRAND.radiusLg)}"
         stroke="url(#border_grad)" stroke-width="1.5"/>
 
   <!-- Decorative corner accents -->
@@ -67,7 +71,7 @@ export function render({ game, category, color, icon }) {
         fill="${textPrimary}" letter-spacing="0.5">${title}</text>
 
   <!-- Category badge -->
-  <rect x="${W/2 - 50}" y="${H/2 + 46}" width="100" height="24" rx="12" fill="${color}22"/>
+  <rect x="${W/2 - 50}" y="${H/2 + 46}" width="100" height="24" rx="12" fill="${color}${TINT}"/>
   <text x="${W/2}" y="${H/2 + 63}" text-anchor="middle" font-size="12" font-weight="600"
         fill="${color}">${category}</text>
 

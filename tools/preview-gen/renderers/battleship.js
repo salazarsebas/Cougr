@@ -22,6 +22,8 @@
  * we render *both* grids stacked, using state.grid_a and state.grid_b.
  */
 
+import { BRAND, GAME, LINE, FONT_STYLE, TINT, px } from '../theme.js';
+
 const GRID = 10;
 const CELL_SZ = 36;         // each cell is 36×36px
 const BOARD_W = GRID * CELL_SZ;   // 360
@@ -32,25 +34,25 @@ const STATUS_H = 72;
 const SVG_H = 2 * BOARD_H + GAP + STATUS_H + 60;  // header space
 
 const COLORS = {
-  bg: '#0f172a',
-  sea: '#0c4a6e',            // empty/unknown cell
-  hit: '#ef4444',            // hit cell fill
-  hit_stroke: '#fca5a5',
-  miss: '#334155',           // miss cell fill
-  miss_mark: '#94a3b8',
-  grid_line: '#1e3a5f',
-  label_axis: '#64748b',
-  header_text: '#f1f5f9',
-  header_a: '#f43f5e',
-  header_b: '#38bdf8',
-  status_bar: '#1e293b',
-  divider: '#475569',
-  badge_a: '#f43f5e',
-  badge_b: '#38bdf8',
-  badge_finished: '#22c55e',
-  badge_setup: '#f59e0b',
-  badge_attack: '#38bdf8',
-  text_muted: '#64748b',
+  bg: BRAND.colorBg,
+  sea: BRAND.colorSurface,          // unattacked / unknown cell
+  hit: GAME.hit,                    // struck cell fill
+  hit_stroke: GAME.hitMark,
+  miss: BRAND.colorBg,              // resolved as empty water
+  miss_mark: BRAND.colorTextSecondary,
+  grid_line: LINE.stroke,
+  label_axis: BRAND.colorTextSecondary,
+  header_text: BRAND.colorText,
+  header_a: BRAND.colorPrimary,
+  header_b: BRAND.colorAccent,
+  status_bar: BRAND.colorSurface,
+  divider: LINE.stroke,
+  badge_a: BRAND.colorPrimary,
+  badge_b: BRAND.colorAccent,
+  badge_finished: BRAND.colorTierStable,
+  badge_setup: BRAND.colorTierBeta,
+  badge_attack: BRAND.colorAccent,
+  text_muted: BRAND.colorTextSecondary,
 };
 
 const COL_LABELS = ['A','B','C','D','E','F','G','H','I','J'];
@@ -87,7 +89,7 @@ function renderGrid(cells, offsetX, offsetY, label, labelColor) {
       else if (result === 'Miss') fill = COLORS.miss;
 
       out += `<rect x="${x+0.5}" y="${y+0.5}" width="${CELL_SZ-1}" height="${CELL_SZ-1}"
-        fill="${fill}" rx="2"/>`;
+        fill="${fill}" rx="${px(BRAND.radiusSm) / 2}"/>`;
 
       // Hit marker: X
       if (result === 'Hit') {
@@ -110,15 +112,15 @@ function renderGrid(cells, offsetX, offsetY, label, labelColor) {
   for (let i = 0; i <= GRID; i++) {
     out += `<line x1="${offsetX + i*CELL_SZ}" y1="${offsetY}"
       x2="${offsetX + i*CELL_SZ}" y2="${offsetY + BOARD_H}"
-      stroke="${COLORS.grid_line}" stroke-width="0.75"/>`;
+      stroke="${COLORS.grid_line}" stroke-opacity="${LINE.gridOpacity}" stroke-width="0.75"/>`;
     out += `<line x1="${offsetX}" y1="${offsetY + i*CELL_SZ}"
       x2="${offsetX + BOARD_W}" y2="${offsetY + i*CELL_SZ}"
-      stroke="${COLORS.grid_line}" stroke-width="0.75"/>`;
+      stroke="${COLORS.grid_line}" stroke-opacity="${LINE.gridOpacity}" stroke-width="0.75"/>`;
   }
 
   // Board border
   out += `<rect x="${offsetX}" y="${offsetY}" width="${BOARD_W}" height="${BOARD_H}"
-    fill="none" stroke="${COLORS.divider}" stroke-width="1.5" rx="2"/>`;
+    fill="none" stroke="${COLORS.divider}" stroke-opacity="${LINE.borderOpacity}" stroke-width="1.5" rx="2"/>`;
 
   return out;
 }
@@ -167,11 +169,11 @@ export function render(state) {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 ${SVG_W} ${totalSvgH}" width="${SVG_W}" height="${totalSvgH}">
   <defs>
-    <style>text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
+    <style>${FONT_STYLE}</style>
   </defs>
 
   <!-- Background -->
-  <rect width="${SVG_W}" height="${totalSvgH}" fill="${COLORS.bg}" rx="12"/>
+  <rect width="${SVG_W}" height="${totalSvgH}" fill="${COLORS.bg}" rx="${px(BRAND.radiusLg)}"/>
 
   <!-- Grid A: Player A's attacks on B's fleet -->
 `;
@@ -206,11 +208,11 @@ export function render(state) {
   svg += `
   <!-- Status bar -->
   <rect x="0" y="${statusBarY}" width="${SVG_W}" height="${STATUS_H}" fill="${COLORS.status_bar}" rx="0"/>
-  <rect x="0" y="${statusBarY}" width="${SVG_W}" height="1.5" fill="${COLORS.divider}"/>
+  <rect x="0" y="${statusBarY}" width="${SVG_W}" height="1.5" fill="${COLORS.divider}" fill-opacity="${LINE.borderOpacity}"/>
 
   <!-- Status badge -->
   <rect x="12" y="${statusBarY+14}" width="${Math.min(statusText.length * 9 + 24, SVG_W - 24)}" height="30" rx="15"
-        fill="${statusColor}22"/>
+        fill="${statusColor}${TINT}"/>
   <text x="${12 + Math.min(statusText.length * 9 + 24, SVG_W - 24)/2}"
         y="${statusBarY+34}" text-anchor="middle" font-size="13" font-weight="600"
         fill="${statusColor}">${statusText}</text>
