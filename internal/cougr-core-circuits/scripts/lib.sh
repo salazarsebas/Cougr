@@ -10,5 +10,7 @@ cougr_circuits_root() {
 cougr_circuits_export_path() {
   local root
   root="$(cougr_circuits_root)"
-  export PATH="$root/node_modules/.bin:$PATH"
+  local repo_root
+  repo_root="$(cd "$root/../.." && pwd)"
+  export PATH="$repo_root/target/circom_bin/bin:$root/node_modules/.bin:$PATH"
 }
