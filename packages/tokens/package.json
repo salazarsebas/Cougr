@@ -1,0 +1,33 @@
+{
+  "name": "cougr-tokens",
+  "version": "1.0.0",
+  "description": "Cougr design tokens: the single versioned source for color, type, spacing, radius, and logo values shared by the documentation site and the showcase.",
+  "type": "module",
+  "main": "./dist/tokens.js",
+  "exports": {
+    ".": "./dist/tokens.js",
+    "./css": "./dist/tokens.css",
+    "./tokens.css": "./dist/tokens.css",
+    "./source": "./tokens.json"
+  },
+  "files": [
+    "dist/",
+    "tokens.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "check": "node build.js --check",
+    "prepare": "node build.js"
+  },
+  "keywords": [
+    "cougr",
+    "design-tokens",
+    "css-custom-properties"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

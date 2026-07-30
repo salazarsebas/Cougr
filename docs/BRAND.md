@@ -146,6 +146,8 @@ if a future pass wants a further-simplified glyph specifically for 16px contexts
   written vocabulary list) to be their own follow-up rather than folded into this color/type/logo
   pass.
 - Consuming these tokens as an actual code package (CSS variables / Tailwind config / etc.) —
-  explicitly out of scope per #259, tracked as a sibling sub-issue.
+  explicitly out of scope per #259, and now shipped separately as
+  [`packages/tokens`](../packages/tokens). This document stays the source of truth; that package
+  encodes it. Change a value here first, then mirror it there and rebuild.
 - Any change to `README.md`'s current logo usage — a follow-up application of this system, not
   part of defining it.
