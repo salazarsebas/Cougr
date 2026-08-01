@@ -7,7 +7,7 @@
 use serde::Deserialize;
 
 /// Raw TOML source embedded at compile time.
-const CATALOG_TOML: &str = include_str!("../pieces.toml");
+const CATALOG_TOML: &str = include_str!("../../pieces.toml");
 
 // ── Data model ────────────────────────────────────────────────────────────────
 

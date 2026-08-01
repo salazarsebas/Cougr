@@ -16,7 +16,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::catalog::{self, Piece, PieceFile};
+use crate::commands::catalog::{self, Piece, PieceFile};
 
 // ── Public entry points ───────────────────────────────────────────────────────
 
@@ -76,7 +76,7 @@ pub fn run_add(piece_name: &str, project_root: &Path) -> anyhow::Result<()> {
             let path = src_dir.join(&f.target);
             eprintln!("  {}", path.display());
         }
-        eprintln!("\nTo preview what would be written, inspect the cougr-cli pieces.toml:");
+        eprintln!("\nTo preview what would be written, inspect the pieces.toml catalog:");
         for f in &conflicts {
             eprintln!(
                 "\n  # target: src/{}\n{}",
@@ -155,7 +155,7 @@ pub fn run_add(piece_name: &str, project_root: &Path) -> anyhow::Result<()> {
 
 // ── Mod declaration wiring ────────────────────────────────────────────────────
 
-/// Append `pub mod <module>;` (or `pub mod <parent> { pub mod <child>; }`) to
+/// Append `pub mod <module>;` (or leave a TODO comment for nested modules) to
 /// `lib.rs` for each file in the piece, without clobbering existing content.
 ///
 /// Skips a declaration if an identical `mod <name>` line already appears in
@@ -184,7 +184,7 @@ fn wire_mod_declarations(lib_rs: &Path, piece: &Piece) -> anyhow::Result<()> {
                     additions.push(decl);
                 }
             }
-            // two-level: "standards/pausable.rs" → pub mod standards { pub mod pausable; }
+            // two-level: "standards/pausable.rs"
             // We don't create nested module blocks automatically because the
             // parent module might be a directory mod.  Instead we add both
             // declarations and leave it for the user to place them correctly.
@@ -192,7 +192,6 @@ fn wire_mod_declarations(lib_rs: &Path, piece: &Piece) -> anyhow::Result<()> {
                 let parent_decl = format!("pub mod {parent};");
                 let child_decl = format!("pub mod {child};");
                 if !original.contains(&child_decl) {
-                    // Write a comment block so the user knows exactly what to add.
                     let note = format!(
                         "// TODO(cougr add): wire the following inside src/{parent}/mod.rs:\n\
                          //   {child_decl}\n\
@@ -205,7 +204,6 @@ fn wire_mod_declarations(lib_rs: &Path, piece: &Piece) -> anyhow::Result<()> {
                 }
             }
             _ => {
-                // Deeper nesting — just leave a comment.
                 let note = format!("// TODO(cougr add): manually wire module for {}", file.target);
                 additions.push(note);
             }
