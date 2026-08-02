@@ -1,0 +1,50 @@
+name: CLI CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: cli-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cli:
+    name: CLI Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --manifest-path cli/Cargo.toml --check
+
+      - name: Run clippy
+        run: cargo clippy --manifest-path cli/Cargo.toml --all-targets --all-features -- -D warnings
+
+      - name: Run unit and CLI tests
+        run: cargo test -p cougr-cli
+
+      - name: Run template generation tests
+        # Tests that generate templates and compile them require the ignored tests to be run
+        run: cargo test -p cougr-cli -- --ignored
