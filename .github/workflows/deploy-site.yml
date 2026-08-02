@@ -3,7 +3,7 @@ name: CI & Deploy
 on:
   push:
     branches: [main]
-  pull_request:
+  pull_request_target:
     branches: [main]
     types: [opened, reopened, synchronize, closed]
 
@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Setup Rust
         if: github.event.action != 'closed'
@@ -42,7 +44,7 @@ jobs:
         run: mdbook build
 
       - name: Deploy PR Preview
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request_target'
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./book/
