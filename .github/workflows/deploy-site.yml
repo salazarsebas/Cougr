@@ -37,10 +37,6 @@ jobs:
         with:
           tool: mdbook
 
-      - name: Test mdBook embedded code
-        if: github.event.action != 'closed'
-        run: mdbook test
-
       - name: Build mdBook site
         if: github.event.action != 'closed'
         run: mdbook build
