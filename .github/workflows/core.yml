@@ -63,10 +63,10 @@ jobs:
         run: cargo build
 
       - name: Run hygiene check (cli)
-        run: cargo run --bin cougr -- check --path .
+        run: cargo run -p cougr-cli -- check --path .
 
       - name: Run verified check (canonical examples)
-        run: cargo run --bin cougr -- check --path . --verified --canonical-only --output verified.json
+        run: cargo run -p cougr-cli -- check --path . --verified --canonical-only --output verified.json
 
       - name: Upload verified badge report
         if: always()

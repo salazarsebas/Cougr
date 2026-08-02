@@ -44,7 +44,7 @@ pub fn resolve(
 
     // 2. Determine examples to check
     let examples = if let Some(name) = single_example {
-        let example_dir = repo_root.join("examples").join(&name);
+        let example_dir = repo_root.join("examples").join(name);
         if !example_dir.is_dir() {
             anyhow::bail!("example '{}' not found at {}", name, example_dir.display());
         }

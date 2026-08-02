@@ -99,8 +99,7 @@ fn main() -> ExitCode {
             name,
             template,
             path,
-        } => commands::new::run(&name, template, path.as_deref())
-            .map_err(anyhow::Error::from),
+        } => commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from),
 
         Command::Check {
             path,
@@ -110,7 +109,7 @@ fn main() -> ExitCode {
             full,
             canonical_only,
             output,
-        } => {
+        } => (|| -> Result<()> {
             let cwd = std::env::current_dir()?;
             let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
 
@@ -126,7 +125,7 @@ fn main() -> ExitCode {
                 check::run(&ctx)?;
             }
             Ok(())
-        }
+        })(),
     };
 
     match result {
