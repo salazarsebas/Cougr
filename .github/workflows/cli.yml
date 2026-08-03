@@ -1,0 +1,67 @@
+name: CLI CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'cli/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/cli.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'cli/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/cli.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: cli-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cli:
+    name: cougr-cli
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --check -p cougr-cli
+
+      - name: Clippy
+        run: cargo clippy -p cougr-cli --all-targets --all-features -- -D warnings
+
+      - name: Test
+        run: cargo test -p cougr-cli
+
+      - name: Validate generated templates
+        run: |
+          set -euo pipefail
+          cargo build -p cougr-cli
+          bin="$PWD/target/debug/cougr"
+          for template in starter turn-based hidden-info session-auth; do
+            scratch="$(mktemp -d)"
+            "$bin" new demo --template "$template" --path "$scratch"
+            (
+              cd "$scratch/demo"
+              cargo fmt --check
+              cargo clippy --all-targets --all-features -- -D warnings
+              cargo test
+              cargo build --release --target wasm32v1-none
+            )
+          done

@@ -8,6 +8,7 @@ on:
     paths:
       - 'src/**'
       - 'internal/**'
+      - 'cli/**'
       - 'tests/**'
       - 'benches/**'
       - 'Cargo.toml'
@@ -55,6 +56,9 @@ jobs:
 
       - name: Check package
         run: cargo package
+
+      - name: Check cougr-cli package
+        run: cargo package -p cougr-cli
 
   publish:
     name: Publish to crates.io

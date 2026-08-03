@@ -1,7 +1,6 @@
 [workspace]
 members = [
     ".",
-    "internal/cougr-cli",
     "cli",
     "internal/cougr-core-circuits",
     "internal/cougr-core-session",
