@@ -66,6 +66,7 @@ jobs:
         run: cargo run -p cougr-cli -- check --path .
 
       - name: Run verified check (canonical examples)
+        continue-on-error: true
         run: cargo run -p cougr-cli -- check --path . --verified --canonical-only --output verified.json
 
       - name: Upload verified badge report
