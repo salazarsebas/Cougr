@@ -424,6 +424,7 @@ dependencies = [
 name = "cougr-core"
 version = "1.1.0"
 dependencies = [
+ "cougr-core",
  "soroban-sdk",
  "wee_alloc",
 ]

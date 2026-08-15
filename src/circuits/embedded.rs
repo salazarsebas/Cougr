@@ -2,9 +2,13 @@
 //!
 //! Regenerate via `internal/cougr-core-circuits`: `bun run pipeline`.
 
-use soroban_sdk::{BytesN, Env};
+#[cfg(any(test, feature = "testutils"))]
+use soroban_sdk::BytesN;
+use soroban_sdk::Env;
 
-use crate::zk::types::{Groth16Proof, Scalar, VerificationKey};
+use crate::zk::types::VerificationKey;
+#[cfg(any(test, feature = "testutils"))]
+use crate::zk::types::{Groth16Proof, Scalar};
 
 use super::generated;
 #[cfg(any(test, feature = "testutils"))]

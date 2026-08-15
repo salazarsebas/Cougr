@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 KEYS="$ROOT/keys"
-POWER="${PTAU_POWER:-14}"
+POWER="${PTAU_POWER:-16}"
 PTAU="$KEYS/pot${POWER}_final.ptau"
 
 mkdir -p "$KEYS"
