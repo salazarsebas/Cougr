@@ -1,0 +1,9 @@
+# mdBook build output — never commit
+book/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

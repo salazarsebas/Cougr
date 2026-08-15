@@ -1,0 +1,62 @@
+name: Cougr Site
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'cougr-site/**'
+      - 'docs/**'
+      - 'ARCHITECTURE.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
+      - 'SECURITY.md'
+      - '.github/workflows/cougr-site.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'cougr-site/**'
+      - 'docs/**'
+      - 'ARCHITECTURE.md'
+      - 'CONTRIBUTING.md'
+      - 'CHANGELOG.md'
+      - 'SECURITY.md'
+      - '.github/workflows/cougr-site.yml'
+
+concurrency:
+  group: cougr-site-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: Build and verify cougr-site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Sync docs into cougr-site/src
+        run: python3 cougr-site/sync.py
+
+      # The sync reads straight from this checkout, so any drift here means
+      # cougr-site/src was committed out of date with its docs/*.md source.
+      - name: Verify synced content matches docs/*.md
+        run: |
+          if ! git diff --quiet -- cougr-site/src; then
+            echo "cougr-site/src is out of sync with its source docs."
+            echo "Run 'python3 cougr-site/sync.py' and commit the result."
+            git diff --stat -- cougr-site/src
+            exit 1
+          fi
+
+      - uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: 'latest'
+
+      - name: Build the book
+        working-directory: ./cougr-site
+        run: mdbook build
