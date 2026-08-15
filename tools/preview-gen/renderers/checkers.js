@@ -16,31 +16,30 @@
  * Produces a 480×560 SVG (8×8 board 480×480 + status bar 80px).
  */
 
+import { BRAND, LINE, FONT_STYLE, TINT, px } from '../theme.js';
+
 const COLS = 8;
 const SIZE = 480;
 const CELL = SIZE / COLS;   // 60
 const TOTAL_H = SIZE + 80;
 
 const COLORS = {
-  bg: '#0f172a',
-  light_sq: '#1e293b',
-  dark_sq: '#334155',
-  p1_piece: '#f43f5e',      // rose-500
-  p1_king: '#fda4af',       // rose-300
-  p1_stroke: '#9f1239',
-  p2_piece: '#38bdf8',      // sky-400
-  p2_king: '#93c5fd',       // blue-300
-  p2_stroke: '#0369a1',
-  crown: '#fbbf24',
-  status_bar: '#1e293b',
-  divider: '#475569',
-  text_primary: '#f1f5f9',
-  text_muted: '#64748b',
-  badge_p1: '#f43f5e',
-  badge_p2: '#38bdf8',
-  badge_draw: '#94a3b8',
-  label_p1: '#fda4af',
-  label_p2: '#7dd3fc',
+  bg: BRAND.colorBg,
+  light_sq: BRAND.colorSurface,
+  dark_sq: BRAND.colorBg,
+  p1_piece: BRAND.colorPrimary,
+  p2_piece: BRAND.colorAccent,
+  // Kings keep their side's color and are marked by the crown, rather than by
+  // a second tint per side that the brand palette does not define.
+  crown: BRAND.logoCream,
+  piece_stroke: BRAND.colorBg,
+  status_bar: BRAND.colorSurface,
+  divider: LINE.stroke,
+  text_primary: BRAND.colorText,
+  text_muted: BRAND.colorTextSecondary,
+  badge_p1: BRAND.colorPrimary,
+  badge_p2: BRAND.colorAccent,
+  badge_draw: BRAND.colorTextSecondary,
 };
 
 function cellAt(cells, row, col) {
@@ -58,23 +57,20 @@ function renderPiece(x, y, value) {
   const isKing = Math.abs(value) === 2;
   const isP1 = value > 0;
 
-  const fill = isKing
-    ? (isP1 ? COLORS.p1_king : COLORS.p2_king)
-    : (isP1 ? COLORS.p1_piece : COLORS.p2_piece);
-  const stroke = isP1 ? COLORS.p1_stroke : COLORS.p2_stroke;
+  const fill = isP1 ? COLORS.p1_piece : COLORS.p2_piece;
 
   let out = '';
 
   // Drop shadow
   out += `<circle cx="${cx+1}" cy="${cy+2}" r="${r}" fill="#00000044"/>`;
   // Main piece
-  out += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+  out += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${COLORS.piece_stroke}" stroke-width="2"/>`;
   // Inner ring highlight
-  out += `<circle cx="${cx}" cy="${cy}" r="${r*0.6}" fill="none" stroke="${fill}" stroke-width="1.5" opacity="0.5"/>`;
+  out += `<circle cx="${cx}" cy="${cy}" r="${r*0.6}" fill="none" stroke="${COLORS.crown}" stroke-width="1.5" opacity="0.35"/>`;
 
-  // King crown indicator — a smaller gold circle in the center
+  // King indicator — a cream disc in the center, legible on either side's color
   if (isKing) {
-    out += `<circle cx="${cx}" cy="${cy}" r="${r*0.3}" fill="${COLORS.crown}" opacity="0.9"/>`;
+    out += `<circle cx="${cx}" cy="${cy}" r="${r*0.34}" fill="${COLORS.crown}"/>`;
   }
 
   return out;
@@ -109,11 +105,11 @@ export function render(state) {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 ${SIZE} ${TOTAL_H}" width="${SIZE}" height="${TOTAL_H}">
   <defs>
-    <style>text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
+    <style>${FONT_STYLE}</style>
   </defs>
 
   <!-- Background -->
-  <rect width="${SIZE}" height="${TOTAL_H}" fill="${COLORS.bg}" rx="12"/>
+  <rect width="${SIZE}" height="${TOTAL_H}" fill="${COLORS.bg}" rx="${px(BRAND.radiusLg)}"/>
 
   <!-- Board squares -->
 `;
@@ -144,25 +140,25 @@ export function render(state) {
 
   // Board border
   svg += `  <rect x="0" y="0" width="${SIZE}" height="${SIZE}" fill="none"
-    stroke="${COLORS.divider}" stroke-width="1.5" rx="0"/>\n`;
+    stroke="${COLORS.divider}" stroke-opacity="${LINE.borderOpacity}" stroke-width="1.5" rx="0"/>\n`;
 
   // Status bar
   svg += `
   <!-- Status bar -->
   <rect x="0" y="${SIZE}" width="${SIZE}" height="80" fill="${COLORS.status_bar}"/>
-  <rect x="0" y="${SIZE}" width="${SIZE}" height="1.5" fill="${COLORS.divider}"/>
+  <rect x="0" y="${SIZE}" width="${SIZE}" height="1.5" fill="${COLORS.divider}" fill-opacity="${LINE.borderOpacity}"/>
 
   <!-- Status badge -->
-  <rect x="12" y="${SIZE+14}" width="190" height="32" rx="16" fill="${statusColor}22"/>
+  <rect x="12" y="${SIZE+14}" width="190" height="32" rx="16" fill="${statusColor}${TINT}"/>
   <text x="107" y="${SIZE+35}" text-anchor="middle" font-size="14" font-weight="600"
         fill="${statusColor}">${statusText}</text>
 
   <!-- Piece counts -->
   <circle cx="${SIZE-110}" cy="${SIZE+30}" r="7" fill="${COLORS.p1_piece}"/>
-  <text x="${SIZE-98}" y="${SIZE+35}" font-size="13" fill="${COLORS.label_p1}">${p1} pieces</text>
+  <text x="${SIZE-98}" y="${SIZE+35}" font-size="13" fill="${COLORS.p1_piece}">${p1} pieces</text>
 
   <circle cx="${SIZE-50}" cy="${SIZE+30}" r="7" fill="${COLORS.p2_piece}"/>
-  <text x="${SIZE-38}" y="${SIZE+35}" font-size="13" fill="${COLORS.label_p2}">${p2}</text>
+  <text x="${SIZE-38}" y="${SIZE+35}" font-size="13" fill="${COLORS.p2_piece}">${p2}</text>
 
   <!-- Cougr watermark -->
   <text x="${SIZE/2}" y="${SIZE+65}" text-anchor="middle" font-size="10"

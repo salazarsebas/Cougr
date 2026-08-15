@@ -15,6 +15,14 @@ Most Cougr examples are headless smart contracts with no frontend. A showcase ga
 
 - Node.js ≥ 18 (ESM modules, no npm dependencies)
 
+Renderers read their colors from [`packages/tokens`](../../packages/tokens), whose `dist/` is
+generated rather than committed. `generate.js` builds it automatically on first run, so there is no
+setup step to remember. To build it yourself:
+
+```bash
+cd packages/tokens && node build.js
+```
+
 ---
 
 ## Usage
@@ -104,22 +112,21 @@ export function render(state) {
 ```
 
 **SVG design guidelines:**
-- Dark background (`#0f172a`)
-- Board area with subtle grid lines (`#334155`)
+- Dark background (`BRAND.colorBg`)
+- Board area with subtle grid lines (`LINE.stroke` at `LINE.gridOpacity`)
 - Status bar at the bottom (64–80px) showing turn/result
 - `COUGR · GAME_NAME` watermark in the status bar
 - No external image references or fonts (SVG must render without network access)
 
 ### Step 4 — Register the renderer
 
-In `generate.js`, add an import and register the renderer:
+In `generate.js`, register the renderer by path. It is imported on demand, after the design tokens
+it reads have been built:
 
 ```js
-import { render as renderYourGame } from './renderers/your_game.js';
-
 const RENDERERS = {
   // ... existing ...
-  your_game: renderYourGame,   // ← add this
+  your_game: './renderers/your_game.js',   // ← add this
 };
 ```
 
@@ -127,9 +134,11 @@ If your game is a real-time/physics game with no meaningful static state, add it
 
 ```js
 const FALLBACK_GAMES = {
-  your_game: { category: 'Arcade', color: '#6366f1', icon: '🚀' },
+  your_game: { category: 'Arcade', icon: '🚀' },
 };
 ```
+
+Fallback cards take their accent from the brand tokens, so there is no per-game color to pick.
 
 ### Step 5 — Run and verify
 
@@ -168,17 +177,38 @@ The fallback is explicitly labeled "Real-time game — no static board state" so
 
 ---
 
-## Palette Reference
+## Palette
 
-| Token | Hex | Use |
-|---|---|---|
-| `bg` | `#0f172a` | SVG background |
-| `card` | `#1e293b` | Cell / status bar background |
-| `grid_line` | `#334155` | Board grid dividers |
-| `p1_accent` | `#f43f5e` | Player 1 / X pieces |
-| `p2_accent` | `#38bdf8` | Player 2 / O pieces |
-| `hit` | `#ef4444` | Battleship hit cell |
-| `miss` | `#334155` | Battleship miss cell |
-| `win_highlight` | `#fef08a22` | Winning-line cell tint |
-| `text_muted` | `#64748b` | Labels, watermark |
-| `text_primary` | `#f1f5f9` | Main status text |
+Renderers do not define their own colors. `theme.js` resolves them from
+[`packages/tokens`](../../packages/tokens), the shared design token package that also feeds the
+documentation site, so the showcase and the docs cannot drift apart. The values themselves are
+specified in [docs/BRAND.md](../../docs/BRAND.md).
+
+Import `theme.js` rather than writing a hex literal:
+
+```js
+import { BRAND, LINE, FONT_STYLE, TINT, px } from '../theme.js';
+
+const COLORS = {
+  bg: BRAND.colorBg,
+  card: BRAND.colorSurface,
+  p1: BRAND.colorPrimary,
+  p2: BRAND.colorAccent,
+  label: BRAND.colorTextSecondary,
+};
+```
+
+| Export | Use |
+|---|---|
+| `BRAND` | Brand tokens in dark mode. Previews are dark-surface artifacts so they sit on either a light or a dark gallery page. |
+| `GAME` | The few game-semantic values the brand palette deliberately does not define, currently the battleship hit colors. |
+| `LINE` | Stroke color plus grid and border opacities for hairlines. |
+| `FONT_STYLE` | The `<style>` body every renderer emits, using the brand sans stack. |
+| `TINT` | Alpha suffix for badge fills, as in `${statusColor}${TINT}`. |
+| `px(token)` | Strips the unit off a spacing or radius token for an SVG attribute. |
+
+To change a preview color, edit `packages/tokens/tokens.json`, run `node build.js` there, then
+regenerate the previews with `npm run gen:all`. Do not edit a hex value in a renderer.
+
+Renderers are imported after the tokens are built, so a renderer can read `BRAND` at module load.
+Register new ones by path in `RENDERERS`, not by a static import.
