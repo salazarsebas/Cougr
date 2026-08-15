@@ -1,9 +1,6 @@
 # mdBook build output — never commit
 book/
 
-# Temporary directory created by sync.py when cloning the core repo
-.tmp-source/
-
 # macOS
 .DS_Store
 

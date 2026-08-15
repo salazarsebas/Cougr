@@ -1,7 +1,6 @@
 [book]
 authors = ["Cougr Contributors"]
 language = "en"
-multilingual = false
 src = "src"
 title = "Cougr Documentation"
 
