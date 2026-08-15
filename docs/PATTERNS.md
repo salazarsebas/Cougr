@@ -23,6 +23,7 @@ Start here if you know what you're trying to build but not which Cougr module an
 | **To serialize mutations / guard against reentrancy-like issues** | `ExecutionGuard` | — | [STANDARDS_LAYER.md § ExecutionGuard](./STANDARDS_LAYER.md#executionguard) |
 | **Delayed or timelocked execution** | `DelayedExecutionPolicy` | — | [STANDARDS_LAYER.md § DelayedExecutionPolicy](./STANDARDS_LAYER.md#delayedexecutionpolicy) |
 | **To batch several operations safely** | `BatchExecutor` | — | [STANDARDS_LAYER.md § BatchExecutor](./STANDARDS_LAYER.md#batchexecutor) |
+| **To decide what belongs on-chain at all** (which state and rules justify their cost, and which should stay client-side) | The five-question boundary framework, applied per piece of state | [`battleship`](../examples/battleship), [`snake`](../examples/snake), [`blind_auction`](../examples/blind_auction) | [ONCHAIN_OFFCHAIN_BOUNDARY.md](./ONCHAIN_OFFCHAIN_BOUNDARY.md) |
 | **To know whether I even need ECS** | Direct contract model for small/config-driven contracts | — | [When Not To Use ECS](#when-not-to-use-ecs) below |
 | **To pick table vs. sparse storage** | Table for hot-loop state, sparse for infrequent markers | — | [Storage Guidance](#storage-guidance) below |
 | **A thin, explicit contract entrypoint / gameplay loop** | `GameApp` + explicit stage placement | [`spawn_and_move`](../examples/spawn_and_move), [`snake`](../examples/snake) | [Default Entry Point](#default-entry-point) and [Stage Layout](#stage-layout) below |
