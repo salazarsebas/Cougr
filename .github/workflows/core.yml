@@ -8,6 +8,7 @@ on:
       - 'internal/**'
       - 'tests/**'
       - 'benches/**'
+      - 'cli/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/core.yml'
@@ -19,6 +20,7 @@ on:
       - 'internal/**'
       - 'tests/**'
       - 'benches/**'
+      - 'cli/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/core.yml'
@@ -59,3 +61,18 @@ jobs:
 
       - name: Build library
         run: cargo build
+
+      - name: Run hygiene check (cli)
+        run: cargo run -p cougr-cli -- check --path .
+
+      - name: Run verified check (canonical examples)
+        continue-on-error: true
+        run: cargo run -p cougr-cli -- check --path . --verified --canonical-only --output verified.json
+
+      - name: Upload verified badge report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-badge-report
+          path: verified.json
+          retention-days: 30
