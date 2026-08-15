@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import os
 import re
-import shutil
-import subprocess
-import tempfile
 
-REPO_URL = "https://github.com/salazarsebas/Cougr.git"
+# cougr-site/ lives directly under the repo root, so the source docs are
+# always right next to this script's own directory. No network clone needed.
+SITE_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(SITE_DIR)
 
 # Mapping from source repo path to mdBook src path
 MAPPING = {
@@ -27,43 +27,32 @@ MAPPING = {
 }
 
 def sync():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        print(f"Cloning {REPO_URL} into {tmpdir}...")
-        # Use LOCAL_COUGR_PATH for fast local testing if available
-        local_path = os.environ.get("LOCAL_COUGR_PATH")
-        if local_path and os.path.exists(local_path):
-            print(f"Using local path: {local_path}")
-            repo_path = local_path
-        else:
-            subprocess.run(["git", "clone", "--depth", "1", REPO_URL, tmpdir], check=True)
-            repo_path = tmpdir
+    # Discover adr files dynamically
+    adr_dir = os.path.join(REPO_ROOT, "docs/adr")
+    if os.path.exists(adr_dir):
+        for filename in os.listdir(adr_dir):
+            if filename.endswith(".md"):
+                repo_rel = f"docs/adr/{filename}"
+                mdbook_rel = f"reference/adr/{filename}"
+                MAPPING[repo_rel] = mdbook_rel
 
-        # Discover adr files dynamically
-        adr_dir = os.path.join(repo_path, "docs/adr")
-        if os.path.exists(adr_dir):
-            for filename in os.listdir(adr_dir):
-                if filename.endswith(".md"):
-                    repo_rel = f"docs/adr/{filename}"
-                    mdbook_rel = f"reference/adr/{filename}"
-                    MAPPING[repo_rel] = mdbook_rel
+    # Copy files and rewrite links
+    for repo_rel, mdbook_rel in MAPPING.items():
+        src_file = os.path.join(REPO_ROOT, repo_rel)
+        if not os.path.exists(src_file):
+            print(f"Warning: {repo_rel} not found in source repo.")
+            continue
 
-        # Copy files and rewrite links
-        for repo_rel, mdbook_rel in MAPPING.items():
-            src_file = os.path.join(repo_path, repo_rel)
-            if not os.path.exists(src_file):
-                print(f"Warning: {repo_rel} not found in source repo.")
-                continue
+        with open(src_file, "r") as f:
+            content = f.read()
 
-            with open(src_file, "r") as f:
-                content = f.read()
+        content = rewrite_links(content, repo_rel)
 
-            content = rewrite_links(content, repo_rel)
-
-            dest_file = os.path.join("src", mdbook_rel)
-            os.makedirs(os.path.dirname(dest_file), exist_ok=True)
-            with open(dest_file, "w") as f:
-                f.write(content)
-            print(f"Synced {repo_rel} -> src/{mdbook_rel}")
+        dest_file = os.path.join(SITE_DIR, "src", mdbook_rel)
+        os.makedirs(os.path.dirname(dest_file), exist_ok=True)
+        with open(dest_file, "w") as f:
+            f.write(content)
+        print(f"Synced {repo_rel} -> src/{mdbook_rel}")
 
 def rewrite_links(content, current_file_repo_rel):
     """
