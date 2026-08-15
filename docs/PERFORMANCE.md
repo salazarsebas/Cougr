@@ -140,3 +140,9 @@ For real contracts, evaluate:
 Performance guidance should always be tied back to those conditions.
 
 If benchmark results and your data shape disagree, trust the data shape first.
+
+## Related
+
+This guide answers where a component should live once you have decided it belongs on-chain. For
+the prior decision, whether a piece of state or logic justifies being on-chain in the first place,
+see [ONCHAIN_OFFCHAIN_BOUNDARY.md](./ONCHAIN_OFFCHAIN_BOUNDARY.md).

@@ -1,0 +1,67 @@
+name: Design Tokens
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/tokens/**'
+      - 'docs/BRAND.md'
+      - '.github/workflows/design-tokens.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/tokens/**'
+      - 'docs/BRAND.md'
+      - '.github/workflows/design-tokens.yml'
+
+concurrency:
+  group: design-tokens-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tokens:
+    name: Build and verify tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      # docs/BRAND.md is the source of truth; this fails when tokens.json has
+      # drifted from it, which is the drift a generated-and-ignored dist/ cannot
+      # catch on its own.
+      - name: Verify tokens match docs/BRAND.md
+        working-directory: ./packages/tokens
+        run: node build.js --check
+
+      - name: Build
+        working-directory: ./packages/tokens
+        run: node build.js
+
+      - name: Confirm the built outputs load
+        working-directory: ./packages/tokens
+        run: |
+          test -s dist/tokens.css
+          node --input-type=module -e "
+            import { light, dark, tokens, theme, version } from './dist/tokens.js';
+            const names = Object.keys(light);
+            if (names.length === 0) throw new Error('no tokens exported');
+            for (const mode of ['light', 'dark']) {
+              const missing = names.filter((n) => tokens[mode][n] === undefined);
+              if (missing.length) throw new Error(\`\${mode} is missing: \${missing.join(', ')}\`);
+            }
+            if (theme('dark') !== dark) throw new Error('theme(\"dark\") did not resolve');
+            console.log(\`ok: v\${version}, \${names.length} tokens in both modes\`);
+          "
+
+      - name: Confirm dist/ is not tracked
+        run: |
+          if git ls-files --error-unmatch packages/tokens/dist >/dev/null 2>&1; then
+            echo "packages/tokens/dist is generated and must not be committed."
+            exit 1
+          fi
+          echo "dist/ is untracked, as expected."

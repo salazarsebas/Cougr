@@ -11,7 +11,7 @@ KEYS="$ROOT/keys"
 
 mkdir -p "$KEYS"
 
-POWER="${PTAU_POWER:-14}"
+POWER="${PTAU_POWER:-16}"
 PTAU="$KEYS/pot${POWER}_final.ptau"
 if [[ ! -f "$PTAU" ]]; then
   "$(dirname "$0")/download-ptau.sh"

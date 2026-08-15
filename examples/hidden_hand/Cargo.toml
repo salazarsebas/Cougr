@@ -11,11 +11,11 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = "25.1.0"
-cougr-core = "1.1.0"
+cougr-core = { path = "../../" }
 
 [dev-dependencies]
 soroban-sdk = { version = "25.1.0", features = ["testutils"] }
-cougr-core = { version = "1.1.0", features = ["testutils"] }
+cougr-core = { path = "../../", features = ["testutils"] }
 
 [profile.release]
 opt-level = "z"

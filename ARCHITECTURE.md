@@ -92,7 +92,7 @@ CougrAccount (trait)
 
 Key traits: `CougrAccount`, `SessionKeyProvider`, `RecoveryProvider`, `MultiDeviceProvider`.
 
-`SessionBuilder` provides a fluent API for constructing scoped session keys. `authorize_with_fallback` handles graceful degradation from session keys to direct authorization.
+`SessionBuilder` provides a fluent API for constructing scoped session keys. `authorize_with_fallback` handles graceful degradation from session keys to direct authorization. See [ADR 0005](docs/adr/0005-session-ux.md).
 
 ## Standards (`src/standards/`)
 
@@ -126,7 +126,7 @@ Circuit builders: `hidden_cards`, `fog_of_war`, `fair_dice`, `sealed_bid` →
 
 The test sandbox uses `no_std` + `alloc` with Soroban `testutils` — not `std`.
 Enable with `cougr-core` feature `testutils`. Modules: `GameHarness`, `Scenario`,
-`WorldFixture`, `ReplayLog`, `SnapshotAssert`. See [ADR 0007](docs/adr/0007-workspace-subcrates.md).
+`WorldFixture`, `ReplayLog`, `SnapshotAssert`. See [ADR 0004](docs/adr/0004-sandbox-design.md) and [ADR 0007](docs/adr/0007-workspace-subcrates.md).
 
 ## Feature Flags
 

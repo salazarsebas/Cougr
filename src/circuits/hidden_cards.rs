@@ -66,4 +66,28 @@ mod tests {
         // Encoding path smoke test (production uses VK from `bun run pipeline`).
         let _ = spec.verify_hidden_hand(&env, &proof, &deck, &hand, 1);
     }
+
+    #[test]
+    fn hidden_cards_supports_non_default_hand_size() {
+        let env = Env::default();
+        let spec = hidden_cards(&env, 52, 7).unwrap();
+        assert_eq!(spec.circuit_id, CircuitId::HiddenCards);
+        assert_eq!(spec.params, CircuitParams::HiddenCards(52, 7));
+
+        let g1 = G1Point {
+            bytes: BytesN::from_array(&env, &[0u8; 64]),
+        };
+        let g2 = G2Point {
+            bytes: BytesN::from_array(&env, &[0u8; 128]),
+        };
+        let proof = Groth16Proof {
+            a: g1.clone(),
+            b: g2,
+            c: g1,
+        };
+
+        let deck = BytesN::from_array(&env, &[2u8; 32]);
+        let hand = BytesN::from_array(&env, &[3u8; 32]);
+        let _ = spec.verify_hidden_hand(&env, &proof, &deck, &hand, 1);
+    }
 }

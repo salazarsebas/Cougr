@@ -46,6 +46,22 @@ cougr-core = "1.1.0"
 soroban-sdk = "25.1.0"
 ```
 
+Or scaffold a whole project with the CLI:
+
+```bash
+cargo install cougr-cli
+
+cougr new my-game --template starter
+cd my-game
+cargo test
+```
+
+`cougr new` generates a contract crate following the canonical
+`lib.rs` / `components.rs` / `systems.rs` layout with a passing `GameHarness`
+test suite. Four templates are available — `starter`, `turn-based`,
+`hidden-info`, and `session-auth` — each derived from a canonical example. See
+[`cli/README.md`](cli/README.md).
+
 ## Quick start — your first on-chain game in 30 lines
 
 ```toml
@@ -278,6 +294,7 @@ pause.pause(&env);
 | Path | Purpose |
 |---|---|
 | `src/` | Core framework |
+| `cli/` | `cougr-cli` — the `cougr` binary and its embedded project templates |
 | `examples/spawn_and_move/` | Canonical starter — spawn + movement with ECS events |
 | `examples/tic_tac_toe/` | Turn-based game with rich components and address ownership |
 | `examples/*/` | 20+ standalone game contracts (asteroids, chess, battleship …) |
@@ -312,4 +329,5 @@ stellar contract build
 - [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) — ZK proof tiers
 - [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) — session keys and recovery
 - [docs/PATTERNS.md](docs/PATTERNS.md) — recommended gameplay patterns
+- [docs/ONCHAIN_OFFCHAIN_BOUNDARY.md](docs/ONCHAIN_OFFCHAIN_BOUNDARY.md) — deciding what belongs on-chain
 - [examples/README.md](examples/README.md) — example catalog and usage guide
