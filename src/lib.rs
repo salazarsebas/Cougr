@@ -14,6 +14,7 @@ The public API is intentionally split into:
 - `zk::experimental` for fast-moving proof-verification APIs
 - `circuits` for pre-built ZK game circuit builders (Experimental)
 - `session` for end-to-end session UX (`SessionManager`, `SessionStatus`; Beta)
+- `cors` for HTTP gateway policy validation and dynamic origin allowlists
 - `test` for the on-chain game sandbox (`GameHarness`, `Scenario`, `WorldFixture`; `testutils` feature)
 
 # Golden Path
@@ -66,6 +67,9 @@ mod change_tracker;
 pub mod circuits;
 pub mod commands;
 pub mod component;
+/// HTTP gateway policy tooling: CORS configuration validation and a dynamic
+/// origin allowlist for servers in front of a game contract.
+pub mod cors;
 #[cfg(feature = "debug")]
 #[doc(hidden)]
 pub mod debug;
