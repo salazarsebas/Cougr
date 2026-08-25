@@ -6,6 +6,10 @@ on:
     paths:
       - 'cougr-site/**'
       - 'docs/**'
+      - 'examples/catalog.toml'
+      - 'examples/**/README.md'
+      - 'examples/**/preview.svg'
+      - 'packages/tokens/tokens.json'
       - 'ARCHITECTURE.md'
       - 'CONTRIBUTING.md'
       - 'CHANGELOG.md'
@@ -16,6 +20,10 @@ on:
     paths:
       - 'cougr-site/**'
       - 'docs/**'
+      - 'examples/catalog.toml'
+      - 'examples/**/README.md'
+      - 'examples/**/preview.svg'
+      - 'packages/tokens/tokens.json'
       - 'ARCHITECTURE.md'
       - 'CONTRIBUTING.md'
       - 'CHANGELOG.md'
@@ -52,6 +60,12 @@ jobs:
             git diff --stat -- cougr-site/src
             exit 1
           fi
+
+      # Generate the showcase gallery and detail pages from the example catalog
+      # and each example's README.md. Runs after the sync check so generated
+      # files don't interfere with the sync verification.
+      - name: Generate showcase gallery
+        run: python3 cougr-site/generate-showcase.py
 
       - uses: peaceiris/actions-mdbook@v2
         with:
