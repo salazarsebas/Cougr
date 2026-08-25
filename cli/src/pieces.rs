@@ -98,7 +98,9 @@ fn parse_manifest(source: &str) -> Result<Manifest, String> {
             current_file = true;
             continue;
         }
-        let (key, value) = line.split_once('=').ok_or_else(|| format!("invalid line: {line}"))?;
+        let (key, value) = line
+            .split_once('=')
+            .ok_or_else(|| format!("invalid line: {line}"))?;
         let key = key.trim();
         let piece = manifest.piece.last_mut().ok_or("field has no piece")?;
         if current_file {
@@ -118,7 +120,11 @@ fn parse_manifest(source: &str) -> Result<Manifest, String> {
             }
         }
     }
-    if manifest.piece.iter().any(|piece| piece.name.is_empty() || piece.file.is_empty()) {
+    if manifest
+        .piece
+        .iter()
+        .any(|piece| piece.name.is_empty() || piece.file.is_empty())
+    {
         return Err("every piece needs a name and file".to_string());
     }
     Ok(manifest)
@@ -169,7 +175,10 @@ fn add(name: &str, project: &Path, manifest: &Manifest) -> Result<(), CliError> 
             piece: piece.name.clone(),
             file: file.source.clone(),
         })?;
-        writes.push((project.join(&file.target), String::from_utf8_lossy(&asset.data).into_owned()));
+        writes.push((
+            project.join(&file.target),
+            String::from_utf8_lossy(&asset.data).into_owned(),
+        ));
     }
 
     let lib = fs::read_to_string(&lib_path)
@@ -222,11 +231,12 @@ fn add(name: &str, project: &Path, manifest: &Manifest) -> Result<(), CliError> 
 
     if !dependencies.is_empty() {
         let marker = "[dependencies]\n";
-        let insert_at = cargo.find(marker).map(|index| index + marker.len()).ok_or_else(|| {
-            CliError::InvalidProject {
+        let insert_at = cargo
+            .find(marker)
+            .map(|index| index + marker.len())
+            .ok_or_else(|| CliError::InvalidProject {
                 path: project.to_path_buf(),
-            }
-        })?;
+            })?;
         let dependency_text = dependencies
             .iter()
             .map(|line| format!("{line}\n"))
@@ -268,9 +278,18 @@ mod tests {
     #[test]
     fn lists_v1_pieces() {
         let manifest = manifest().unwrap();
-        assert!(manifest.piece.iter().any(|piece| piece.name == "session-auth"));
-        assert!(manifest.piece.iter().any(|piece| piece.name == "hidden-hand"));
-        assert!(manifest.piece.iter().any(|piece| piece.name == "standards/pausable"));
+        assert!(manifest
+            .piece
+            .iter()
+            .any(|piece| piece.name == "session-auth"));
+        assert!(manifest
+            .piece
+            .iter()
+            .any(|piece| piece.name == "hidden-hand"));
+        assert!(manifest
+            .piece
+            .iter()
+            .any(|piece| piece.name == "standards/pausable"));
     }
 
     #[test]

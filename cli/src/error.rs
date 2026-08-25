@@ -114,10 +114,9 @@ impl fmt::Display for CliError {
                 }
                 Ok(())
             }
-            CliError::MissingPieceAsset { piece, file } => write!(
-                f,
-                "piece `{piece}` is missing the embedded file `{file}`"
-            ),
+            CliError::MissingPieceAsset { piece, file } => {
+                write!(f, "piece `{piece}` is missing the embedded file `{file}`")
+            }
         }
     }
 }
