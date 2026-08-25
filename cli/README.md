@@ -43,6 +43,36 @@ same code the framework's own reference projects run.
 Templates are embedded in the binary at compile time, so `cougr new` works
 offline.
 
+## `cougr add`
+
+> **Not yet implemented.** Tracked in a follow-up issue.
+
+Add a `cougr-core` capability (component, system, ZK proof hook, session key, …)
+to an existing project. Returns a non-zero exit code until the implementation lands.
+
+## `cougr check`
+
+```
+cougr check [--path <DIR>] [--example <NAME>] [--verified] [--json] [--full]
+            [--canonical-only] [--output <FILE>]
+```
+
+Runs repository hygiene checks against `examples/`. Auto-detects whether invoked
+from the repo root (checks all examples) or an individual example directory
+(checks that one example).
+
+With `--verified`, runs the full canonical-quality checklist from
+[`EXAMPLE_STANDARD.md`](../examples/EXAMPLE_STANDARD.md) and produces pass/fail
+data suitable for the "Cougr Verified" badge in the showcase.
+
+## `cougr doctor`
+
+> **Not yet implemented.** Tracked in a follow-up issue.
+
+Diagnose the local environment for Cougr development: verifies Rust toolchain
+version, `wasm32v1-none` target, Stellar CLI installation, and other
+prerequisites. Returns a non-zero exit code until the implementation lands.
+
 ## Development
 
 ```bash
