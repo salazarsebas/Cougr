@@ -58,7 +58,7 @@ If you find a security issue:
    - version or commit information
    - suggested mitigation if available
 
-Until a dedicated security contact is published, use the maintainer channels associated with this repository and clearly label the report as a security disclosure.
+Send the report to **security@cougr.dev**. Reports are reviewed by the core maintainers and acknowledged within 72 hours.
 
 ## Supported Versions
 

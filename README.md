@@ -325,6 +325,8 @@ stellar contract build
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — module structure and design rationale
 - [CHANGELOG.md](CHANGELOG.md) — release history
+- [ROADMAP.md](ROADMAP.md) — phased roadmap and current status
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community standards and enforcement
 - [docs/ECS_CORE.md](docs/ECS_CORE.md) — ECS runtime model
 - [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) — ZK proof tiers
 - [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) — session keys and recovery
