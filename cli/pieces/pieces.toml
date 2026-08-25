@@ -1,0 +1,26 @@
+[[piece]]
+name = "session-auth"
+description = "Session policy helpers for scoped, replay-protected game actions."
+wiring = ["pub mod session_auth;"]
+
+[[piece.file]]
+source = "session-auth/session_auth.rs"
+target = "src/session_auth.rs"
+
+[[piece]]
+name = "hidden-hand"
+description = "Hidden-card table configuration and Groth16 deal verification helpers."
+wiring = ["pub mod hidden_hand;"]
+
+[[piece.file]]
+source = "hidden-hand/hidden_hand.rs"
+target = "src/hidden_hand.rs"
+
+[[piece]]
+name = "standards/pausable"
+description = "Emergency pause state backed by Cougr's standards layer."
+wiring = ["pub mod pausable;"]
+
+[[piece.file]]
+source = "standards/pausable.rs"
+target = "src/pausable.rs"

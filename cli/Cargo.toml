@@ -10,7 +10,7 @@ homepage = "https://github.com/salazarsebas/Cougr"
 keywords = ["cli", "soroban", "stellar", "game", "scaffold"]
 categories = ["command-line-utilities", "development-tools", "game-development"]
 rust-version = "1.82.0"
-include = ["src/**", "templates/**", "tests/**", "build.rs", "README.md"]
+include = ["src/**", "templates/**", "pieces/**", "tests/**", "build.rs", "README.md"]
 
 [[bin]]
 name = "cougr"

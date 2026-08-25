@@ -28,6 +28,18 @@ pub enum CliError {
         template: &'static str,
         file: String,
     },
+
+    /// A requested embedded piece does not exist.
+    UnknownPiece { name: String, available: String },
+
+    /// The current directory is not a generated or otherwise valid project.
+    InvalidProject { path: PathBuf },
+
+    /// An add operation would overwrite an existing project file.
+    PieceConflict { piece: String, files: Vec<PathBuf> },
+
+    /// A piece file could not be read from the embedded bundle.
+    MissingPieceAsset { piece: String, file: String },
 }
 
 impl CliError {
@@ -57,6 +69,14 @@ impl CliError {
                  https://github.com/salazarsebas/Cougr/issues"
                     .to_string(),
             ),
+            CliError::UnknownPiece { .. } => {
+                Some("run `cougr add --list` to see available pieces".to_string())
+            }
+            CliError::InvalidProject { .. } | CliError::PieceConflict { .. } => None,
+            CliError::MissingPieceAsset { .. } => Some(
+                "this is a bug in cougr-cli — please report it at https://github.com/salazarsebas/Cougr/issues"
+                    .to_string(),
+            ),
         }
     }
 }
@@ -78,6 +98,25 @@ impl fmt::Display for CliError {
             CliError::MissingTemplateAsset { template, file } => write!(
                 f,
                 "template `{template}` is missing the embedded file `{file}`"
+            ),
+            CliError::UnknownPiece { name, available } => {
+                write!(f, "unknown piece `{name}` (available: {available})")
+            }
+            CliError::InvalidProject { path } => write!(
+                f,
+                "`{}` is not a Cougr project (expected Cargo.toml and src/lib.rs)",
+                path.display()
+            ),
+            CliError::PieceConflict { piece, files } => {
+                write!(f, "cannot add `{piece}` because these files already exist:")?;
+                for file in files {
+                    write!(f, "\n  {} (would be written)", file.display())?;
+                }
+                Ok(())
+            }
+            CliError::MissingPieceAsset { piece, file } => write!(
+                f,
+                "piece `{piece}` is missing the embedded file `{file}`"
             ),
         }
     }
