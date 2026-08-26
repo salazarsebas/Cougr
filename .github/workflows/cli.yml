@@ -1,0 +1,54 @@
+name: CLI CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'cli/**'
+      - '.github/workflows/cli.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: cli-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cli:
+    name: CLI Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "cli -> target"
+
+      - name: Check formatting
+        working-directory: ./cli
+        run: cargo fmt --check
+
+      - name: Run clippy
+        working-directory: ./cli
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        working-directory: ./cli
+        run: cargo test
+
+      - name: Build CLI
+        working-directory: ./cli
+        run: cargo build
