@@ -201,10 +201,39 @@ def strip_title(readme):
     return re.sub(r"^#\s+.+\n*", "", readme, count=1, flags=re.MULTILINE)
 
 
+def validate_preview_path(name, filename):
+    """Validate that *filename* is a safe relative path inside the example dir.
+
+    Rejects absolute paths, paths containing ``..`` segments, and any path
+    whose resolved real location falls outside ``EXAMPLES_DIR/<name>``. This
+    prevents path-traversal via catalog.toml ``screenshot``/``preview`` fields,
+    which are contributor-editable.
+    """
+    if not filename:
+        return False
+
+    # Reject absolute paths — os.path.join would discard the example dir.
+    if os.path.isabs(filename):
+        return False
+
+    # Reject parent-directory traversals.
+    parts = filename.replace("\\", "/").split("/")
+    if ".." in parts:
+        return False
+
+    # Final guard: resolve the real path and confirm it's under the example dir.
+    example_root = os.path.realpath(os.path.join(EXAMPLES_DIR, name))
+    resolved = os.path.realpath(os.path.join(EXAMPLES_DIR, name, filename))
+    if not resolved.startswith(example_root + os.sep) and resolved != example_root:
+        return False
+
+    return True
+
+
 def check_preview(name, entry):
     """Return the filename of the preview image if one exists, else *None*."""
     screenshot = entry.get("screenshot")
-    if screenshot:
+    if screenshot and validate_preview_path(name, screenshot):
         if os.path.exists(os.path.join(EXAMPLES_DIR, name, screenshot)):
             return screenshot
 
@@ -829,6 +858,9 @@ def copy_previews(examples):
         if not preview:
             continue
         name = e["metadata"]["name"]
+        if not validate_preview_path(name, preview):
+            print(f"Warning: rejecting unsafe preview path for '{name}': {preview}")
+            continue
         src = os.path.join(EXAMPLES_DIR, name, preview)
         if os.path.exists(src):
             ext = os.path.splitext(preview)[1] or ".svg"
