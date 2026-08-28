@@ -561,6 +561,11 @@ impl CorsConfig {
 
     /// Evaluate a preflight (OPTIONS) request against this policy.
     ///
+    /// Re-runs [`CorsConfig::validate`] on every call and returns
+    /// [`PreflightDecision::denied`] when the policy is unsafe or malformed,
+    /// including after runtime mutations that introduce invalid combinations
+    /// (for example, credentials together with a wildcard origin).
+    ///
     /// Safelisted request headers ([`SAFELISTED_REQUEST_HEADERS`]) never need
     /// explicit configuration; every other requested header must be listed in
     /// `allowed_headers` for the preflight to pass.
@@ -570,6 +575,9 @@ impl CorsConfig {
         request_method: &str,
         request_headers: &[&str],
     ) -> PreflightDecision {
+        if self.validate().is_err() {
+            return PreflightDecision::denied();
+        }
         if !self.origins.allows(origin) || !self.method_allowed(request_method) {
             return PreflightDecision::denied();
         }
@@ -607,7 +615,13 @@ impl CorsConfig {
 
     /// Value for the `Access-Control-Allow-Origin` response header on an
     /// actual (non-preflight) request, or `None` when the origin is denied.
+    ///
+    /// Re-runs [`CorsConfig::validate`] on every call and returns `None` when
+    /// the policy is unsafe or malformed.
     pub fn response_allow_origin(&self, origin: &str) -> Option<String> {
+        if self.validate().is_err() {
+            return None;
+        }
         if !self.origins.allows(origin) {
             return None;
         }
@@ -976,6 +990,44 @@ mod tests {
         let decision = config.evaluate_preflight("https://anywhere.example", "GET", &[]);
         assert!(decision.allowed);
         assert_eq!(decision.allow_origin.as_deref(), Some("*"));
+    }
+
+    #[test]
+    fn test_evaluate_preflight_denies_invalid_policy_without_prior_validate() {
+        let mut config = CorsConfig::new();
+        config.allow_credentials = true;
+        config.origins.add("*").unwrap();
+
+        let decision = config.evaluate_preflight("https://attacker.example", "GET", &[]);
+        assert!(!decision.allowed);
+        assert_eq!(decision, PreflightDecision::denied());
+    }
+
+    #[test]
+    fn test_response_allow_origin_denies_invalid_policy_without_prior_validate() {
+        let mut config = CorsConfig::new();
+        config.allow_credentials = true;
+        config.origins.add("*").unwrap();
+
+        assert_eq!(
+            config.response_allow_origin("https://attacker.example"),
+            None
+        );
+    }
+
+    #[test]
+    fn test_evaluate_preflight_denies_after_runtime_mutation_to_invalid_policy() {
+        let mut config = CorsConfig::new();
+        config.allow_credentials = true;
+        config.origins.add("https://app.example").unwrap();
+        config.validate().unwrap();
+
+        let decision = config.evaluate_preflight("https://app.example", "GET", &[]);
+        assert!(decision.allowed);
+
+        config.origins.add("*").unwrap();
+        let decision = config.evaluate_preflight("https://attacker.example", "GET", &[]);
+        assert_eq!(decision, PreflightDecision::denied());
     }
 
     #[test]

@@ -122,6 +122,41 @@ fn preflight_denies_disallowed_requests_without_headers() {
 }
 
 #[test]
+fn evaluate_methods_deny_unvalidated_unsafe_policy() {
+    let mut config = CorsConfig::new();
+    config.allow_credentials = true;
+    config.origins.add("*").unwrap();
+
+    let decision = config.evaluate_preflight("https://attacker.example", "GET", &[]);
+    assert_eq!(decision, PreflightDecision::denied());
+    assert_eq!(
+        config.response_allow_origin("https://attacker.example"),
+        None
+    );
+}
+
+#[test]
+fn evaluate_methods_deny_after_runtime_mutation_breaks_validation() {
+    let mut config = base_config();
+    config.allow_credentials = true;
+    config.validate().unwrap();
+
+    assert!(
+        config
+            .evaluate_preflight("https://app.cougr.test", "GET", &[])
+            .allowed
+    );
+
+    config.allowed_methods.push("*".to_string());
+    assert_eq!(config.validate(), Err(CorsError::CredentialsWithWildcard));
+    assert_eq!(
+        config.evaluate_preflight("https://app.cougr.test", "GET", &[]),
+        PreflightDecision::denied()
+    );
+    assert_eq!(config.response_allow_origin("https://app.cougr.test"), None);
+}
+
+#[test]
 fn wildcard_origin_policy_reflects_credentials_mode() {
     let mut config = CorsConfig::new();
     config.origins.add("*").unwrap();
