@@ -4,6 +4,13 @@
 
 ### Added
 
+- **`cougr_core::cors`** — CORS configuration validation and dynamic origin
+  allowlist for HTTP gateways in front of a game contract: `CorsConfig`
+  validates origins, methods, header names, and credential/wildcard
+  combinations; `OriginAllowlist` supports runtime add/remove of exact,
+  single-label wildcard subdomain (`https://*.example.com`), and global `*`
+  entries with case/default-port-normalized matching; preflight evaluation
+  returns ready-to-emit response headers
 - **`cougr-cli`** — new workspace member publishing the `cougr` binary
 - **`cougr new <name> [--template <name>]`** — scaffolds a Soroban game contract crate
   following the canonical `lib.rs` / `components.rs` / `systems.rs` layout, with a
