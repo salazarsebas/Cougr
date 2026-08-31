@@ -230,6 +230,32 @@ def validate_preview_path(name, filename):
     return True
 
 
+SAFE_NAME = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+def _is_under(root, path):
+    """Return True if *path* resolves inside *root* (symlink-aware)."""
+    root = os.path.realpath(root)
+    path = os.path.realpath(path)
+    try:
+        return os.path.commonpath([root, path]) == root
+    except ValueError:
+        return False
+
+
+def validate_example_name(name):
+    """Validate a catalog ``name`` before using it as a filesystem path.
+
+    Restricts names to ``[a-zA-Z0-9_-]+`` and requires the resolved example
+    directory to stay under ``EXAMPLES_DIR``. Catalog ``name`` values are
+    contributor-editable and otherwise feed both reads and generated writes.
+    """
+    if not name or not SAFE_NAME.fullmatch(name):
+        return False
+    example_dir = os.path.join(EXAMPLES_DIR, name)
+    return _is_under(EXAMPLES_DIR, example_dir)
+
+
 def check_preview(name, entry):
     """Return the filename of the preview image if one exists, else *None*."""
     screenshot = entry.get("screenshot")
@@ -941,6 +967,9 @@ def main():
     examples = []
     for key, meta in sorted(catalog.items()):
         name = meta.get("name", key)
+        if not validate_example_name(name):
+            print(f"Warning: rejecting unsafe example name '{name}', skipping.")
+            continue
         example_dir = os.path.join(EXAMPLES_DIR, name)
 
         if not os.path.isdir(example_dir):
@@ -952,11 +981,13 @@ def main():
             print(f"Warning: no README.md for '{name}', skipping.")
             continue
 
+        safe_meta = dict(meta)
+        safe_meta["name"] = name
         examples.append({
-            "metadata": meta,
+            "metadata": safe_meta,
             "title": extract_title(readme),
             "description": extract_description(readme),
-            "preview": check_preview(name, meta),
+            "preview": check_preview(name, safe_meta),
             "readme_content": readme,
         })
 
@@ -982,10 +1013,16 @@ def main():
     print(f"  + {os.path.relpath(gallery_path, SITE_DIR)}")
 
     # Detail pages
+    os.makedirs(SHOWCASE_SRC, exist_ok=True)
+    showcase_root = os.path.realpath(SHOWCASE_SRC)
     for e in examples:
         detail_md = generate_detail_page(e)
         name = e["metadata"]["name"]
         detail_path = os.path.join(SHOWCASE_SRC, f"{name}.md")
+        resolved = os.path.realpath(detail_path)
+        if not _is_under(showcase_root, resolved) and resolved != showcase_root:
+            print(f"Warning: rejecting unsafe detail path for '{name}', skipping.")
+            continue
         with open(detail_path, "w", encoding="utf-8") as f:
             f.write(detail_md)
         print(f"  + {os.path.relpath(detail_path, SITE_DIR)}")
