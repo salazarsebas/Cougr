@@ -15,6 +15,7 @@ mod commands;
 mod context;
 mod error;
 mod name;
+mod pieces;
 mod template;
 mod verify;
 
@@ -105,6 +106,16 @@ enum Command {
         #[arg(long, value_name = "DIR")]
         path: Option<std::path::PathBuf>,
     },
+
+    /// Add an embedded capability to the current Cougr project.
+    Add {
+        /// Piece name, such as `session-auth` or `standards/pausable`.
+        piece: Option<String>,
+
+        /// List all embedded capabilities.
+        #[arg(long)]
+        list: bool,
+    },
 }
 
 fn main() -> ExitCode {
@@ -123,6 +134,10 @@ fn main() -> ExitCode {
             commands::doctor::run_as_warning();
 
             commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from)
+        }
+
+        Command::Add { piece, list } => {
+            pieces::run(piece.as_deref(), list).map_err(anyhow::Error::from)
         }
 
         Command::Check {

@@ -43,6 +43,21 @@ same code the framework's own reference projects run.
 Templates are embedded in the binary at compile time, so `cougr new` works
 offline.
 
+## `cougr add`
+
+```bash
+cougr add --list
+cougr add session-auth
+cougr add hidden-hand
+cougr add standards/pausable
+```
+
+Adds an embedded capability as editable source to the current project and
+updates `src/lib.rs` automatically. Piece files are never overwritten: a
+second add reports the files that would have been written. Pieces and their
+descriptions are defined in [`pieces/pieces.toml`](pieces/pieces.toml) and are
+embedded in the CLI binary for offline use.
+
 ## Development
 
 ```bash
