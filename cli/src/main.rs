@@ -1,22 +1,19 @@
 //! `cougr` — command-line tooling for the Cougr ECS framework.
 //!
-//! Exposes four commands:
+//! Currently exposes two commands:
 //!
-//! - [`cougr new`]    — scaffold a Soroban game contract wired to `cougr-core`
-//!                      from one of four embedded templates.
-//! - [`cougr add`]    — add a cougr-core capability to an existing project
-//!                      (not yet implemented).
-//! - [`cougr check`]  — run repository hygiene checks against `examples/`, or
-//!                      with `--verified`, the full canonical-quality checklist
-//!                      for the "Cougr Verified" badge.
-//! - [`cougr doctor`] — diagnose the local environment for Cougr development
-//!                      (not yet implemented).
+//! - [`cougr new`] — scaffold a Soroban game contract wired to `cougr-core` from
+//!   one of four embedded templates.
+//! - [`cougr check`] — run repository hygiene checks against `examples/`, or
+//!   with `--verified`, the full canonical-quality checklist for the
+//!   "Cougr Verified" badge.
 
 mod check;
 mod commands;
 mod context;
 mod error;
 mod name;
+mod pieces;
 mod template;
 mod verify;
 
@@ -42,25 +39,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Create a new Cougr game contract crate.
-    New {
-        /// Name of the project. Becomes the crate name and the directory name.
-        name: String,
-
-        /// Starting point for the generated project.
-        #[arg(short, long, value_enum, default_value_t = Template::Starter)]
-        template: Template,
-
-        /// Directory to create the project in. Defaults to the current directory.
-        #[arg(long, value_name = "DIR")]
-        path: Option<std::path::PathBuf>,
-    },
-
-    /// Add a cougr-core capability to an existing project.
-    ///
-    /// This command is a stub — implementation lands in a follow-up issue.
-    Add,
-
     /// Run repository hygiene checks on examples/.
     ///
     /// Auto-detects whether run from repo root (checks all examples)
@@ -99,27 +77,44 @@ enum Command {
         output: Option<String>,
     },
 
-    /// Diagnose the local environment for Cougr development.
-    ///
-    /// This command is a stub — implementation lands in a follow-up issue.
-    Doctor,
+    /// Create a new Cougr game contract crate.
+    New {
+        /// Name of the project. Becomes the crate name and the directory name.
+        name: String,
+
+        /// Starting point for the generated project.
+        #[arg(short, long, value_enum, default_value_t = Template::Starter)]
+        template: Template,
+
+        /// Directory to create the project in. Defaults to the current directory.
+        #[arg(long, value_name = "DIR")]
+        path: Option<std::path::PathBuf>,
+    },
+
+    /// Add an embedded capability to the current Cougr project.
+    Add {
+        /// Piece name, such as `session-auth` or `standards/pausable`.
+        piece: Option<String>,
+
+        /// List all embedded capabilities.
+        #[arg(long)]
+        list: bool,
+    },
 }
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
-    match cli.command {
+    let result: Result<()> = match cli.command {
         Command::New {
             name,
             template,
             path,
-        } => {
-            let result: Result<()> =
-                commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from);
-            handle_result(result)
-        }
+        } => commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from),
 
-        Command::Add => commands::add::run(),
+        Command::Add { piece, list } => {
+            pieces::run(piece.as_deref(), list).map_err(anyhow::Error::from)
+        }
 
         Command::Check {
             path,
@@ -129,32 +124,25 @@ fn main() -> ExitCode {
             full,
             canonical_only,
             output,
-        } => {
-            let result: Result<()> = (|| {
-                let cwd = std::env::current_dir()?;
-                let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
+        } => (|| -> Result<()> {
+            let cwd = std::env::current_dir()?;
+            let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
 
-                if verified {
-                    verify::run(
-                        &ctx,
-                        json || output.is_some(),
-                        full,
-                        canonical_only,
-                        output.as_deref(),
-                    )?;
-                } else {
-                    check::run(&ctx)?;
-                }
-                Ok(())
-            })();
-            handle_result(result)
-        }
+            if verified {
+                verify::run(
+                    &ctx,
+                    json || output.is_some(),
+                    full,
+                    canonical_only,
+                    output.as_deref(),
+                )?;
+            } else {
+                check::run(&ctx)?;
+            }
+            Ok(())
+        })(),
+    };
 
-        Command::Doctor => commands::doctor::run(),
-    }
-}
-
-fn handle_result(result: Result<()>) -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {

@@ -45,33 +45,18 @@ offline.
 
 ## `cougr add`
 
-> **Not yet implemented.** Tracked in a follow-up issue.
-
-Add a `cougr-core` capability (component, system, ZK proof hook, session key, …)
-to an existing project. Returns a non-zero exit code until the implementation lands.
-
-## `cougr check`
-
-```
-cougr check [--path <DIR>] [--example <NAME>] [--verified] [--json] [--full]
-            [--canonical-only] [--output <FILE>]
+```bash
+cougr add --list
+cougr add session-auth
+cougr add hidden-hand
+cougr add standards/pausable
 ```
 
-Runs repository hygiene checks against `examples/`. Auto-detects whether invoked
-from the repo root (checks all examples) or an individual example directory
-(checks that one example).
-
-With `--verified`, runs the full canonical-quality checklist from
-[`EXAMPLE_STANDARD.md`](../examples/EXAMPLE_STANDARD.md) and produces pass/fail
-data suitable for the "Cougr Verified" badge in the showcase.
-
-## `cougr doctor`
-
-> **Not yet implemented.** Tracked in a follow-up issue.
-
-Diagnose the local environment for Cougr development: verifies Rust toolchain
-version, `wasm32v1-none` target, Stellar CLI installation, and other
-prerequisites. Returns a non-zero exit code until the implementation lands.
+Adds an embedded capability as editable source to the current project and
+updates `src/lib.rs` automatically. Piece files are never overwritten: a
+second add reports the files that would have been written. Pieces and their
+descriptions are defined in [`pieces/pieces.toml`](pieces/pieces.toml) and are
+embedded in the CLI binary for offline use.
 
 ## Development
 

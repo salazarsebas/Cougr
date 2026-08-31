@@ -136,6 +136,44 @@ fn an_existing_directory_is_never_overwritten() {
     assert!(!project.join("Cargo.toml").exists());
 }
 
+#[test]
+fn add_list_shows_the_v1_pieces() {
+    let output = cougr(&["add", "--list"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    let listing = String::from_utf8_lossy(&output.stdout);
+    for piece in ["session-auth", "hidden-hand", "standards/pausable"] {
+        assert!(listing.contains(piece), "missing {piece}: {listing}");
+    }
+}
+
+#[test]
+fn add_wires_a_piece_and_refuses_to_overwrite_it() {
+    let dir = tempfile::tempdir().unwrap();
+    let generated = generate("demo", "starter", dir.path());
+    assert!(generated.status.success(), "{}", stderr(&generated));
+    let project = dir.path().join("demo");
+
+    let added = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .arg("add")
+        .arg("session-auth")
+        .current_dir(&project)
+        .output()
+        .unwrap();
+    assert!(added.status.success(), "{}", stderr(&added));
+    assert!(project.join("src/session_auth.rs").is_file());
+    assert!(std::fs::read_to_string(project.join("src/lib.rs"))
+        .unwrap()
+        .contains("pub mod session_auth;"));
+
+    let second = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["add", "session-auth"])
+        .current_dir(&project)
+        .output()
+        .unwrap();
+    assert!(!second.status.success());
+    assert!(stderr(&second).contains("src/session_auth.rs"));
+}
+
 /// The definition-of-done check: every template builds and its tests pass
 /// against the published `cougr-core`.
 ///
