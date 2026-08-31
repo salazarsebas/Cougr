@@ -11,3 +11,15 @@ create-missing = false
 [output.html]
 git-repository-url = "https://github.com/salazarsebas/Cougr"
 edit-url-template = "https://github.com/salazarsebas/Cougr/edit/main/{path}"
+
+[output.linkcheck]
+follow-web-links = false
+# Repo-root paths that are valid on GitHub and in the source docs, but are not
+# pages inside the mdBook tree. Intra-book links still fail the build.
+exclude = [
+    '\.\./examples/',
+    '\.\./src/',
+    '(^|/)docs/(MATURITY_MODEL|THREAT_MODEL|VOICE_GUIDE|PUBLIC_GAPS|API_CONTRACT)',
+    '(^|/)(MATURITY_MODEL|THREAT_MODEL|VOICE_GUIDE|PUBLIC_GAPS)\.md',
+    'ONCHAIN_OFFCHAIN_BOUNDARY',
+]

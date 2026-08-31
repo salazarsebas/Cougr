@@ -21,14 +21,14 @@ Prefer these namespaces in new or updated code:
 
 If you currently do something like:
 
-```rust
+```rust,ignore
 let mut world = SimpleWorld::new(&env);
 let mut scheduler = SimpleScheduler::new();
 ```
 
 prefer:
 
-```rust
+```rust,ignore
 let mut app = cougr_core::app::GameApp::new(&env);
 ```
 
@@ -36,7 +36,7 @@ and register systems through `GameApp`.
 
 When multiple systems belong to the same phase, prefer the declarative path:
 
-```rust
+```rust,ignore
 use cougr_core::app::{named_context_system, named_system, GameApp, ScheduleStage};
 
 let mut app = GameApp::new(&env);
@@ -100,13 +100,13 @@ These are the shared contracts between `SimpleWorld` and `ArchetypeWorld`.
 
 If you currently import from `accounts` directly in application code:
 
-```rust
+```rust,ignore
 use cougr_core::accounts::SessionBuilder;
 ```
 
 prefer:
 
-```rust
+```rust,ignore
 use cougr_core::auth::SessionBuilder;
 ```
 
@@ -116,19 +116,19 @@ The semantics are the same today. The change is about product clarity.
 
 If you rely on stable privacy primitives, prefer:
 
-```rust
+```rust,ignore
 use cougr_core::privacy::stable::...
 ```
 
 instead of:
 
-```rust
+```rust,ignore
 use cougr_core::zk::stable::...
 ```
 
 If you rely on advanced proof tooling, prefer:
 
-```rust
+```rust,ignore
 use cougr_core::privacy::experimental::...
 ```
 
@@ -138,13 +138,13 @@ and treat it as an explicit opt-in to non-frozen APIs.
 
 If you currently import standards directly:
 
-```rust
+```rust,ignore
 use cougr_core::standards::Pausable;
 ```
 
 prefer:
 
-```rust
+```rust,ignore
 use cougr_core::ops::Pausable;
 ```
 
