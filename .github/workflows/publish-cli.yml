@@ -96,3 +96,69 @@ jobs:
       - name: Skip already published version
         if: steps.crates.outputs.published == 'true'
         run: echo "${{ steps.crate.outputs.name }} ${{ steps.crate.outputs.version }} is already published on crates.io"
+
+  release:
+    name: Create GitHub Release
+    needs: publish
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read crate version
+        id: crate
+        working-directory: ./cli
+        run: |
+          version="$(grep -m1 '^version' Cargo.toml | sed 's/.*= *"\(.*\)"/\1/')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=cli-v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release already exists
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.crate.outputs.tag }}" &>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract changelog section
+        if: steps.check.outputs.exists != 'true'
+        id: changelog
+        run: |
+          version="${{ steps.crate.outputs.version }}"
+          notes="$(awk "/^## $version/{found=1; next} found && /^## /{exit} found{print}" CHANGELOG.md)"
+          if [ -z "$notes" ]; then
+            notes="See [CHANGELOG.md](CHANGELOG.md) for details."
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$notes"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Ensure tag exists
+        if: steps.check.outputs.exists != 'true'
+        run: |
+          tag="${{ steps.crate.outputs.tag }}"
+          if ! git rev-parse "$tag" &>/dev/null; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$tag"
+            git push origin "$tag"
+          fi
+
+      - name: Create release
+        if: steps.check.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.crate.outputs.tag }}" \
+            --title "cougr-cli v${{ steps.crate.outputs.version }}" \
+            --notes "${{ steps.changelog.outputs.notes }}" \
+            --generate-notes
