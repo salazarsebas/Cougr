@@ -129,13 +129,7 @@ fn main() -> ExitCode {
             name,
             template,
             path,
-        } => {
-            // Non-fatal environment advisory: warn the developer if the
-            // toolchain looks incomplete before generating the project tree.
-            commands::doctor::run_as_warning();
-
-            commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from)
-        }
+        } => commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from),
 
         Command::Add { piece, list } => {
             pieces::run(piece.as_deref(), list).map_err(anyhow::Error::from)

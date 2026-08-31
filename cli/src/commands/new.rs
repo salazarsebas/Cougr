@@ -25,6 +25,10 @@ pub fn run(raw_name: &str, template: Template, parent: Option<&Path>) -> Result<
         return Err(CliError::TargetExists { path: target });
     }
 
+    // Non-fatal environment advisory: warn before writing the project tree so
+    // usage errors (bad name, target exists) stay free of doctor output.
+    super::doctor::run_as_warning();
+
     let files = template.render(&name)?;
 
     fs::create_dir_all(&target)
