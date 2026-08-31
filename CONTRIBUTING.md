@@ -80,3 +80,7 @@ Changes that touch public Rust APIs should be reviewed against this checklist be
 - root-level re-exports are intentional and minimal
 - examples and integration tests use the sanctioned public path instead of deep internal module paths
 - documentation is updated to match the actual exported API
+
+## Code of Conduct
+
+All contributors are expected to follow the project's [Code of Conduct](CODE_OF_CONDUCT.md). Reports of unacceptable behavior can be sent to the project maintainers through GitHub.
