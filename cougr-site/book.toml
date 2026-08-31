@@ -11,3 +11,4 @@ create-missing = false
 [output.html]
 git-repository-url = "https://github.com/salazarsebas/Cougr"
 edit-url-template = "https://github.com/salazarsebas/Cougr/edit/main/{path}"
+additional-css = ["theme/showcase.css"]
