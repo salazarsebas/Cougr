@@ -12,3 +12,19 @@ create-missing = false
 git-repository-url = "https://github.com/salazarsebas/Cougr"
 edit-url-template = "https://github.com/salazarsebas/Cougr/edit/main/{path}"
 additional-css = ["theme/showcase.css"]
+
+[output.linkcheck]
+optional = true
+follow-web-links = false
+# Repo-root paths that are valid on GitHub and in the source docs, but are not
+# pages inside the mdBook tree. Intra-book links still fail the build.
+exclude = [
+    '\.\./examples/',
+    '\.\./src/',
+    '(^|/)docs/(MATURITY_MODEL|THREAT_MODEL|VOICE_GUIDE|PUBLIC_GAPS|API_CONTRACT)',
+    '(^|/)(MATURITY_MODEL|THREAT_MODEL|VOICE_GUIDE|PUBLIC_GAPS)\.md',
+    'ONCHAIN_OFFCHAIN_BOUNDARY',
+    # Relative `gallery.md` from showcase/README.md is the same chapter as
+    # `showcase/gallery.md` in SUMMARY; mdbook-linkcheck does not treat them as equal.
+    '(^|/)gallery\.md$',
+]

@@ -4,7 +4,7 @@ High-level overview of how Cougr is organized. For usage, see [README.md](README
 
 ## Layers
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │           game::SorobanGame  (contract integration)          │  Contract layer
 ├──────────────────────────────────────────────────────────────┤
@@ -80,7 +80,7 @@ All ZK operations use Stellar Protocol 25 (X-Ray) host functions — the heavy c
 
 Account abstraction layer with pluggable implementations:
 
-```
+```text
 CougrAccount (trait)
 ├── ClassicAccount      — standard Stellar keypair
 └── ContractAccount     — smart contract wallet

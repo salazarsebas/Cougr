@@ -61,7 +61,7 @@ Let's open `src/lib.rs`. First, we clear out the default code and define our gam
 
 We need two components: a `Position` to track where the player is, and `Moves` to track how many steps they have left.
 
-```rust
+```rust,ignore
 #![no_std]
 
 use cougr_core::game::SorobanGame;
@@ -98,7 +98,7 @@ Next, we define our contract. In Cougr, the contract acts as the outer shell tha
 
 Add this to the bottom of `src/lib.rs`:
 
-```rust
+```rust,ignore
 #[contract]
 #[derive(Clone)]
 pub struct MyFirstGame;
@@ -173,7 +173,7 @@ Create a new file `src/test.rs` and add it to your module tree by adding `#[cfg(
 
 In `src/test.rs`:
 
-```rust
+```rust,ignore
 #![cfg(test)]
 
 use super::*;
