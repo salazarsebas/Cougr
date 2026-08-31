@@ -13,6 +13,7 @@ git-repository-url = "https://github.com/salazarsebas/Cougr"
 edit-url-template = "https://github.com/salazarsebas/Cougr/edit/main/{path}"
 
 [output.linkcheck]
+optional = true
 follow-web-links = false
 # Repo-root paths that are valid on GitHub and in the source docs, but are not
 # pages inside the mdBook tree. Intra-book links still fail the build.
