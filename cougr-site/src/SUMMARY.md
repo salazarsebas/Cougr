@@ -36,6 +36,8 @@
     - [0008 Standards Layer Stable](reference/adr/0008-standards-stable.md)
 - [Showcase](showcase/README.md)
   - [Example Gallery](showcase/gallery.md)
+  <!-- showcase-detail-start -->
+  <!-- showcase-detail-end -->
 - [Design](design/README.md)
   - [Branding Guide](design/branding-guide.md)
   - [UI Guidelines](design/ui-guidelines.md)

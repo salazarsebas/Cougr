@@ -37,14 +37,6 @@ jobs:
       - name: Sync docs into cougr-site/src
         run: python3 cougr-site/sync.py
 
-      - name: Generate showcase gallery
-        run: |
-          if [ -f cougr-site/generate-showcase.py ]; then
-            python3 cougr-site/generate-showcase.py
-          else
-            echo "generate-showcase.py not present; skipping"
-          fi
-
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@ee69d230fe19748b7abf22df32acaa93833fad08 # v2.0.0
         with:
@@ -59,9 +51,19 @@ jobs:
           chmod +x "$HOME/.local/bin/mdbook-linkcheck"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
+      # Test committed sources before generating the gallery. Example READMEs
+      # copied into showcase pages are illustrative and fail rustdoc.
       - name: Run mdBook test
         working-directory: ./cougr-site
         run: mdbook test
+
+      - name: Generate showcase gallery
+        run: |
+          if [ -f cougr-site/generate-showcase.py ]; then
+            python3 cougr-site/generate-showcase.py
+          else
+            echo "generate-showcase.py not present; skipping"
+          fi
 
       - name: Run mdBook build
         working-directory: ./cougr-site
