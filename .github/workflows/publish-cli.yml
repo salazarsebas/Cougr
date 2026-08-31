@@ -65,9 +65,13 @@ jobs:
         id: crate
         working-directory: ./cli
         run: |
+          # cli/Cargo.toml is a member of the root workspace, so `cargo metadata`
+          # returns every workspace package, not just this one. Select cougr-cli
+          # explicitly instead of trusting packages[0] (which resolves to the
+          # workspace root package, cougr-core).
           metadata="$(cargo metadata --no-deps --format-version 1)"
-          echo "name=$(echo "$metadata" | jq -r '.packages[0].name')" >> "$GITHUB_OUTPUT"
-          echo "version=$(echo "$metadata" | jq -r '.packages[0].version')" >> "$GITHUB_OUTPUT"
+          echo "name=$(echo "$metadata" | jq -r '.packages[] | select(.name == "cougr-cli") | .name')" >> "$GITHUB_OUTPUT"
+          echo "version=$(echo "$metadata" | jq -r '.packages[] | select(.name == "cougr-cli") | .version')" >> "$GITHUB_OUTPUT"
 
       - name: Check crates.io version
         id: crates
