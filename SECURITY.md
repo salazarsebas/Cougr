@@ -58,7 +58,11 @@ If you find a security issue:
    - version or commit information
    - suggested mitigation if available
 
-Send the report to **security@cougr.dev**. Reports are reviewed by the core maintainers and acknowledged within 72 hours.
+The monitored disclosure channel is GitHub Private Vulnerability Reporting:
+
+https://github.com/salazarsebas/Cougr/security/advisories/new
+
+`security@cougr.dev` is reserved as a future dedicated inbox and is not yet independently staffed. Do not rely on it for acknowledgment SLAs.
 
 ## Supported Versions
 

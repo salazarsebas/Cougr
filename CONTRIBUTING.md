@@ -83,4 +83,4 @@ Changes that touch public Rust APIs should be reviewed against this checklist be
 
 ## Code of Conduct
 
-All contributors are expected to follow the project's [Code of Conduct](CODE_OF_CONDUCT.md). Reports of unacceptable behavior can be sent to security@cougr.dev.
+All contributors are expected to follow the project's [Code of Conduct](CODE_OF_CONDUCT.md). Reports of unacceptable behavior can be sent to the project maintainers through GitHub.
