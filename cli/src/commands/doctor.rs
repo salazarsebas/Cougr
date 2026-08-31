@@ -74,6 +74,10 @@ impl CheckResult {
     fn is_pass(&self) -> bool {
         matches!(self.status, CheckStatus::Pass(_))
     }
+
+    fn is_fail(&self) -> bool {
+        matches!(self.status, CheckStatus::Fail { .. })
+    }
 }
 
 // ── Version parsing ───────────────────────────────────────────────────────────
@@ -186,9 +190,7 @@ fn check_wasm_target() -> CheckResult {
             return CheckResult::warn(
                 "wasm32v1-none",
                 "rustup not found — cannot verify wasm32v1-none target",
-                format!(
-                    "Install rustup (https://rustup.rs) then: rustup target add {WASM_TARGET}"
-                ),
+                format!("Install rustup (https://rustup.rs) then: rustup target add {WASM_TARGET}"),
             );
         }
     };
@@ -307,7 +309,7 @@ pub fn run() -> Result<(), DoctorError> {
     println!("cougr doctor — environment check");
     println!();
 
-    let results = vec![
+    let results = [
         check_cargo(),
         check_rust(),
         check_wasm_target(),
@@ -320,14 +322,14 @@ pub fn run() -> Result<(), DoctorError> {
 
     let total = results.len();
     let passed = results.iter().filter(|r| r.is_pass()).count();
+    let failed = results.iter().filter(|r| r.is_fail()).count();
 
     println!();
 
-    if passed == total {
+    if failed == 0 {
         println!("{passed}/{total} checks passed");
         Ok(())
     } else {
-        let failed = total - passed;
         println!("{passed}/{total} checks passed — {failed} check(s) failed");
         Err(DoctorError(failed))
     }
@@ -338,7 +340,7 @@ pub fn run() -> Result<(), DoctorError> {
 /// This is called from `cougr new` as a non-fatal advisory step.  It never
 /// returns an error: the caller should continue regardless of the outcome.
 pub fn run_as_warning() {
-    let results = vec![
+    let results = [
         check_cargo(),
         check_rust(),
         check_wasm_target(),
@@ -436,6 +438,13 @@ mod tests {
     fn warn_result_is_not_pass() {
         let r = CheckResult::warn("test", "unclear", "try this");
         assert!(!r.is_pass());
+        assert!(!r.is_fail());
+    }
+
+    #[test]
+    fn fail_result_is_fail() {
+        let r = CheckResult::fail("test", "broken", "fix it");
+        assert!(r.is_fail());
     }
 
     // ── check_cargo ──────────────────────────────────────────────────────────
@@ -453,6 +462,9 @@ mod tests {
     fn rust_check_passes_in_ci() {
         // rustc is always available during `cargo test`
         let r = check_rust();
-        assert!(r.is_pass(), "rustc should be available and >= 1.70.0 during tests");
+        assert!(
+            r.is_pass(),
+            "rustc should be available and >= 1.70.0 during tests"
+        );
     }
 }

@@ -1,9 +1,10 @@
 //! `cougr` — command-line tooling for the Cougr ECS framework.
 //!
-//! Currently exposes three commands:
+//! Currently exposes four commands:
 //!
 //! - [`cougr new`] — scaffold a Soroban game contract wired to `cougr-core` from
 //!   one of four embedded templates.
+//! - [`cougr add`] — add an embedded capability to an existing Cougr project.
 //! - [`cougr check`] — run repository hygiene checks against `examples/`, or
 //!   with `--verified`, the full canonical-quality checklist for the
 //!   "Cougr Verified" badge.
