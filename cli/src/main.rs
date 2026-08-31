@@ -1,12 +1,15 @@
 //! `cougr` — command-line tooling for the Cougr ECS framework.
 //!
-//! Currently exposes two commands:
+//! Currently exposes four commands:
 //!
 //! - [`cougr new`] — scaffold a Soroban game contract wired to `cougr-core` from
 //!   one of four embedded templates.
+//! - [`cougr add`] — add an embedded capability to an existing Cougr project.
 //! - [`cougr check`] — run repository hygiene checks against `examples/`, or
 //!   with `--verified`, the full canonical-quality checklist for the
 //!   "Cougr Verified" badge.
+//! - [`cougr doctor`] — validate the local development environment (Rust
+//!   toolchain, `wasm32v1-none` target, Stellar CLI).
 
 mod check;
 mod commands;
@@ -77,6 +80,20 @@ enum Command {
         output: Option<String>,
     },
 
+    /// Check the local development environment for Cougr prerequisites.
+    ///
+    /// Verifies that all tools required to build and deploy a Cougr project
+    /// are installed and meet the minimum versions:
+    ///
+    ///   - cargo (sanity check)
+    ///   - Rust toolchain (>= 1.70.0, from workspace Cargo.toml)
+    ///   - wasm32v1-none target (required for Soroban contracts)
+    ///   - Stellar CLI (>= 21.0.0)
+    ///
+    /// Each failure prints the exact command to fix it. The command exits
+    /// non-zero if any check fails.
+    Doctor,
+
     /// Create a new Cougr game contract crate.
     New {
         /// Name of the project. Becomes the crate name and the directory name.
@@ -106,6 +123,8 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
 
     let result: Result<()> = match cli.command {
+        Command::Doctor => commands::doctor::run().map_err(anyhow::Error::from),
+
         Command::New {
             name,
             template,
