@@ -4,7 +4,7 @@ A single-player exploration game demonstrating **hidden information** using Merk
 
 ## Status
 
-**Transitional** — uses `cougr-core = "1.1.0"` and `privacy::stable` Merkle primitives (`MerkleTree`, `SparseMerkleTree`, `verify_inclusion`, `OnChainMerkleProof`). See [battleship](../battleship/) for the canonical hidden-information reference.
+**Transitional** - uses `cougr-core = "1.1.0"` and `privacy::stable` Merkle primitives (`MerkleTree`, `SparseMerkleTree`, `verify_inclusion`, `OnChainMerkleProof`). See [battleship](../battleship/) for the canonical hidden-information reference.
 
 ## The Hidden Information Pattern
 
@@ -40,7 +40,7 @@ Player:
 
 Use **commit-reveal with Merkle proofs** (this pattern) when you need to hide large state spaces (maps, card decks, board layouts) and reveal them incrementally. Merkle proofs provide O(log n) verification without exposing the full state.
 
-Use **ZK circuits** when the game logic itself must remain private — proving validity of moves without revealing any state. See [hidden_hand](../hidden_hand/) for a canonical ZK circuit example, and [proof_of_hunt](../proof_of_hunt/) for Groth16-based hidden state.
+Use **ZK circuits** when the game logic itself must remain private - proving validity of moves without revealing any state. See [hidden_hand](../hidden_hand/) for a canonical ZK circuit example, and [proof_of_hunt](../proof_of_hunt/) for Groth16-based hidden state.
 
 ## Contract API
 
@@ -54,7 +54,7 @@ Use **ZK circuits** when the game logic itself must remain private — proving v
 ### Migration note (`explore` proof parameter)
 
 `explore` now accepts `cougr_core::privacy::stable::OnChainMerkleProof` instead of `Vec<BytesN<32>>`. Build proofs with `Sha256MerkleProofVerifier::to_on_chain_proof` (or `to_on_chain_proof` helper) before calling the contract.
-| `get_state` | — | Return complete `GameState` |
+| `get_state` | - | Return complete `GameState` |
 | `is_explored` | `x: u32`, `y: u32` | Check if a cell has been revealed |
 
 ### Data Types
@@ -83,23 +83,23 @@ struct ExploredMap {
 ### Committed State
 
 Stored on-chain during initialization:
-- `map_root` — SHA256 Merkle root of the full encoded map
+- `map_root` - SHA256 Merkle root of the full encoded map
 - Map dimensions (`width`, `height`) and `total_treasures`
-- `fog_root` — initial sparse Merkle tree root (all cells unexplored)
+- `fog_root` - initial sparse Merkle tree root (all cells unexplored)
 
 ### Revealed State
 
 Updated during exploration:
-- `explored_map.explored` — sparse map of visited cell indices
-- `player_state` — position, health, score, treasures found
-- `fog_root` — recomputed `SparseMerkleTree` root after each exploration
+- `explored_map.explored` - sparse map of visited cell indices
+- `player_state` - position, health, score, treasures found
+- `fog_root` - recomputed `SparseMerkleTree` root after each exploration
 
 ### Proven State
 
 The `explore` function verifies cell contents via Merkle inclusion:
 1. Reconstructs the leaf hash from `(x, y, cell_value)` using the same encoding as the commit phase
 2. Builds `OnChainMerkleProof` from sibling hashes and path bits
-3. Calls `verify_inclusion(&env, &proof, &map_root.root)` — rejects if proof is invalid
+3. Calls `verify_inclusion(&env, &proof, &map_root.root)` - rejects if proof is invalid
 4. Only if verification passes is the discovery applied and the cell marked explored
 
 ## Cell Encoding
@@ -118,7 +118,7 @@ The off-chain generator hashes each cell and builds a SHA256 Merkle tree using `
 ## Building & Testing
 
 ### Prerequisites
-- Rust 1.70.0+
+- Rust 1.88.0+
 - Stellar CLI 25.0.0+ (optional)
 
 ### Build
@@ -173,8 +173,8 @@ stellar contract deploy \
 
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [Merkle Trees](https://en.wikipedia.org/wiki/Merkle_tree)
-- [battleship — canonical commit-reveal example](../battleship/)
-- [hidden_hand — ZK circuit example](../hidden_hand/)
+- [battleship - canonical commit-reveal example](../battleship/)
+- [hidden_hand - ZK circuit example](../hidden_hand/)
 - [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
 
 ## License

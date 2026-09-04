@@ -3,14 +3,14 @@ name = "cougr-cli"
 version = "1.1.0"
 edition = "2021"
 publish = true
-description = "Command-line tooling for Cougr — scaffold Soroban game contracts wired to cougr-core"
+description = "Command-line tooling for Cougr - scaffold Soroban game contracts wired to cougr-core"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/salazarsebas/Cougr"
 homepage = "https://github.com/salazarsebas/Cougr"
 keywords = ["cli", "soroban", "stellar", "game", "scaffold"]
 categories = ["command-line-utilities", "development-tools", "game-development"]
-rust-version = "1.82.0"
+rust-version = "1.88.0"
 include = ["src/**", "templates/**", "pieces/**", "tests/**", "build.rs", "README.md"]
 
 [[bin]]

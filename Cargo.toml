@@ -19,7 +19,7 @@ repository = "https://github.com/salazarsebas/Cougr"
 homepage = "https://github.com/salazarsebas/Cougr"
 keywords = ["ecs", "game", "soroban", "blockchain", "stellar"]
 categories = ["game-engines", "data-structures", "wasm"]
-rust-version = "1.70.0"
+rust-version = "1.88.0"
 exclude = [
     ".github/**",
     "cli/**",
@@ -40,8 +40,7 @@ hazmat-crypto = ["soroban-sdk/hazmat-crypto"]
 testutils = ["soroban-sdk/testutils"]
 
 [dependencies]
-soroban-sdk = "25.1.0"
-wee_alloc = "0.4.5"
+soroban-sdk = { version = "25.1.0", features = ["alloc"] }
 
 [dev-dependencies]
 cougr-core = { path = ".", features = ["testutils"] }

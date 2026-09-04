@@ -4,7 +4,7 @@ A two-player Rock Paper Scissors game demonstrating the **commit-reveal pattern*
 
 ## Status
 
-**Transitional** — uses `cougr-core = "1.1.0"` with partial migration to `impl_component!` macros. See [battleship](../battleship/) for the canonical hidden-information reference.
+**Transitional** - uses `cougr-core = "1.1.0"` with partial migration to `impl_component!` macros. See [battleship](../battleship/) for the canonical hidden-information reference.
 
 ## What is Commit-Reveal?
 
@@ -41,7 +41,7 @@ REVEAL PHASE (prove choices)
 
 Use **commit-reveal** (this pattern) when you need to hide simple choices that are later revealed and verified by recomputing a hash. It's simple, efficient, and doesn't require external proving systems.
 
-Use **ZK circuits** when the game logic itself must remain private — for example, proving that a move is valid without revealing what the move is. See [hidden_hand](../hidden_hand/) for a canonical ZK circuit-based example using Groth16 proofs.
+Use **ZK circuits** when the game logic itself must remain private - for example, proving that a move is valid without revealing what the move is. See [hidden_hand](../hidden_hand/) for a canonical ZK circuit-based example using Groth16 proofs.
 
 ## Game Flow
 
@@ -105,8 +105,8 @@ After 100 ledgers, the honest player who revealed wins by forfeit.
 | `commit` | `player: Address`, `hash: BytesN<32>` | Submit commitment hash |
 | `reveal` | `player: Address`, `choice: u32`, `salt: BytesN<32>` | Reveal choice (0=Rock, 1=Paper, 2=Scissors) |
 | `claim_timeout` | `player: Address` | Claim win if opponent doesn't reveal after 100 ledgers |
-| `get_state` | — | Get current `MatchState` |
-| `get_score` | — | Get `ScoreBoard` |
+| `get_state` | - | Get current `MatchState` |
+| `get_score` | - | Get `ScoreBoard` |
 
 ### Data Types
 
@@ -133,18 +133,18 @@ struct ScoreBoard {
 ### Committed State
 
 Stored on-chain during the commit phase:
-- `hash_a/b` — SHA256 hash of each player's choice + random salt
-- `has_commit_a/b` — flags tracking which players have committed
-- `commit_ledger` — ledger sequence when both players committed (for timeout calculation)
+- `hash_a/b` - SHA256 hash of each player's choice + random salt
+- `has_commit_a/b` - flags tracking which players have committed
+- `commit_ledger` - ledger sequence when both players committed (for timeout calculation)
 
 Both commitments must be submitted before the game transitions to `Phase::Revealing`.
 
 ### Revealed State
 
 Updated during the reveal phase:
-- `revealed_a/b` — flags tracking which players have revealed
-- `choice_a/b` — actual numeric choices (0, 1, or 2)
-- `scoreboard` — accumulated wins/draws across rounds
+- `revealed_a/b` - flags tracking which players have revealed
+- `choice_a/b` - actual numeric choices (0, 1, or 2)
+- `scoreboard` - accumulated wins/draws across rounds
 
 ### Proven State
 
@@ -166,7 +166,7 @@ impl_component!(PlayerCommitment, "commit", Table, {
 ## Building & Testing
 
 ### Prerequisites
-- Rust 1.70.0+
+- Rust 1.88.0+
 - Stellar CLI 25.0.0+ (optional)
 
 ### Build
@@ -331,8 +331,8 @@ This example is the **entry point** for understanding Cougr's cryptographic prim
 
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [Commit-Reveal Schemes](https://en.wikipedia.org/wiki/Commitment_scheme)
-- [battleship — canonical commit-reveal example](../battleship/)
-- [hidden_hand — ZK circuit example](../hidden_hand/)
+- [battleship - canonical commit-reveal example](../battleship/)
+- [hidden_hand - ZK circuit example](../hidden_hand/)
 - [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
 
 ## License

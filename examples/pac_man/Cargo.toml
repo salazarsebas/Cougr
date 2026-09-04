@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 description = "Pac-Man on-chain game example using Cougr-Core for Stellar/Soroban"
 license = "MIT OR Apache-2.0"
-rust-version = "1.70.0"
+rust-version = "1.88.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

@@ -23,7 +23,7 @@ Following the Cougr-Core ECS pattern:
 
 ### Required Tools
 
-1. **Rust** (1.70.0 or later)
+1. **Rust** (1.88.0 or later)
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    rustup update

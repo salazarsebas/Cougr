@@ -252,7 +252,7 @@ pub fn apply_gravity(world: &mut World, env: &Env) {
 ### Common Issues
 
 **Issue**: `error: failed to compile`
-- **Solution**: Ensure you have the correct Rust version (1.70.0+) and wasm32 target installed
+- **Solution**: Ensure you have the correct Rust version (1.88.0+) and wasm32 target installed
 - Run: `rustup update && rustup target add wasm32v1-none`
 
 **Issue**: `stellar: command not found`

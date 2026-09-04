@@ -9,7 +9,7 @@ A hidden-map treasure discovery game demonstrating **zero-knowledge proof-backed
 
 ## Status
 
-**Transitional** — uses `cougr-core = "1.1.0"` and Stellar-zk style Groth16 verification. See [battleship](../battleship/) for the canonical commit-reveal reference, and [hidden_hand](../hidden_hand/) for the canonical ZK circuits reference.
+**Transitional** - uses `cougr-core = "1.1.0"` and Stellar-zk style Groth16 verification. See [battleship](../battleship/) for the canonical commit-reveal reference, and [hidden_hand](../hidden_hand/) for the canonical ZK circuits reference.
 
 ## Why This Is Stellar-Specific
 
@@ -65,8 +65,8 @@ For each exploration:
 | `init_game` | `player: Address`, `map_commitment: BytesN<32>`, `width: u32`, `height: u32` | Initialize game with committed map |
 | `explore` | `player: Address`, `x: u32`, `y: u32`, `proof: ProofInput` | Explore a cell with ZK proof |
 | `purchase_hint` | `player: Address`, `hint_type: u32` | Buy hint (0) or scan (1) using credits |
-| `get_state` | — | Return `GameState` |
-| `is_finished` | — | Check if game is won or lost |
+| `get_state` | - | Return `GameState` |
+| `is_finished` | - | Check if game is won or lost |
 | `set_verification_key` | `owner: Address`, `vk_bytes: Bytes` | Set Groth16 verification key |
 | `credit_x402_payment` | `owner: Address`, `player: Address`, `units: u32`, `receipt_hash: BytesN<32>` | Credit x402 payment units |
 
@@ -111,7 +111,7 @@ struct GameState {
 ### Committed State
 
 Stored on-chain during initialization:
-- `map_commitment` — Merkle root of the hidden map
+- `map_commitment` - Merkle root of the hidden map
 - Map dimensions (`width`, `height`)
 - Derived `treasure_count = max(1, (width * height) / 8)`
 - Verification key for Groth16 proofs
@@ -119,9 +119,9 @@ Stored on-chain during initialization:
 ### Revealed State
 
 Updated during exploration:
-- `player_state` — position, score, health, discoveries
-- `discovered_cells` — count of explored cells
-- `explored_cell(cell_idx)` — persistent storage for replay prevention
+- `player_state` - position, score, health, discoveries
+- `discovered_cells` - count of explored cells
+- `explored_cell(cell_idx)` - persistent storage for replay prevention
 - Game status (`Active`/`Won`/`Lost`)
 
 ### Proven State
@@ -144,7 +144,7 @@ This maps to an x402 backend flow where a payment gateway verifies and settles p
 ## Building & Testing
 
 ### Prerequisites
-- Rust 1.70.0+
+- Rust 1.88.0+
 - Stellar CLI 25.0.0+ (optional)
 
 ### Build
@@ -179,7 +179,7 @@ cargo test
 - **Public input binding**: Coordinates are bound to proof statement
 
 ### ⚠️ Important
-- **Zero-proof test path**: CI tests use deterministic zero-proof path (`#[cfg(test)]`) — production requires real Groth16 proofs
+- **Zero-proof test path**: CI tests use deterministic zero-proof path (`#[cfg(test)]`) - production requires real Groth16 proofs
 - **Verification key**: Must be set correctly before exploration; invalid VK causes verification failures
 
 ## Deployment
@@ -196,8 +196,8 @@ stellar contract deploy \
 
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [stellar-zk](https://github.com/salazarsebas/stellar-zk)
-- [battleship — canonical commit-reveal example](../battleship/)
-- [hidden_hand — canonical ZK circuit example](../hidden_hand/)
+- [battleship - canonical commit-reveal example](../battleship/)
+- [hidden_hand - canonical ZK circuit example](../hidden_hand/)
 - [Soroban BN254 Documentation](https://developers.stellar.org/docs/build/smart-contracts)
 
 ## License
