@@ -1,0 +1,45 @@
+name: PR Sanity Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: pr-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sanity:
+    name: PR Sanity Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting (entire repository)
+        run: cargo fmt --check
+
+      - name: Reject committed build artifacts
+        run: |
+          if git ls-files | grep -E '(^|/)target/|\.wasm$'; then
+            echo "::error::Committed build artifacts found. Remove target/ directories and *.wasm files before merging."
+            exit 1
+          fi
+
+      - name: Reject merge conflict markers
+        run: |
+          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)( |$)' -- . ':(exclude)*.md'; then
+            echo "::error::Unresolved merge conflict markers found."
+            exit 1
+          fi

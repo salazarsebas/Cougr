@@ -1,0 +1,27 @@
+name: Cargo Deny
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'deny.toml'
+      - '.github/workflows/cargo-deny.yml'
+
+concurrency:
+  group: cargo-deny-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deny:
+    name: Advisories, Licenses, Bans, Sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cargo-deny check
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check

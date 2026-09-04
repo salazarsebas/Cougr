@@ -1,0 +1,46 @@
+# cargo-deny configuration. Run `cargo deny check` locally, or see
+# .github/workflows/cargo-deny.yml for the CI gate.
+# Full reference: https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+all-features = true
+
+[advisories]
+db-urls = ["https://github.com/rustsec/advisory-db"]
+ignore = [
+    # Transitive through soroban-sdk's own dependency tree (ark-ff, wasmi_core).
+    # Not a direct Cougr dependency; no safe upgrade until soroban-sdk moves off it.
+    { id = "RUSTSEC-2024-0436", reason = "unmaintained `paste`, pulled in transitively by soroban-sdk via ark-ff and wasmi_core" },
+    # Yanked `spin` version pulled in transitively by soroban-sdk via soroban-wasmi.
+    { crate = "spin@0.9.8", reason = "transitive via soroban-wasmi, upgrade tracks soroban-sdk releases" },
+    # Transitive through soroban-env-host's arkworks (BLS12-381 / BN254) dependency chain.
+    { id = "RUSTSEC-2024-0388", reason = "unmaintained `derivative`, pulled in transitively by soroban-env-host via ark-ec/ark-ff" },
+]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "MPL-2.0",
+    "CC0-1.0",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+# "allow": cougr-core's own dev-dependency on itself (to enable `testutils` in
+# doctests/integration tests) is a legitimate path self-dependency, not a
+# supply-chain risk.
+wildcards = "allow"
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
