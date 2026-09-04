@@ -5,19 +5,20 @@
 <h1 align="center">Cougr</h1>
 
 <p align="center">
-  <strong>The on-chain game engine for Stellar — ECS, privacy, and account abstraction in one crate</strong>
+  <strong>The on-chain game engine for Stellar - ECS, privacy, and account abstraction in one crate</strong>
 </p>
 
 <p align="center">
   <a href="https://crates.io/crates/cougr-core"><img src="https://img.shields.io/crates/v/cougr-core.svg" alt="crates.io" /></a>
+  <a href="https://github.com/salazarsebas/Cougr/actions/workflows/core.yml"><img src="https://github.com/salazarsebas/Cougr/actions/workflows/core.yml/badge.svg" alt="Core CI" /></a>
   <a href="https://stellar.org"><img src="https://img.shields.io/badge/Stellar-Soroban-blue?logo=stellar" alt="Stellar" /></a>
-  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-1.70%2B-orange?logo=rust" alt="Rust" /></a>
+  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-1.88%2B-orange?logo=rust" alt="Rust" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License" /></a>
 </p>
 
 Cougr is the framework for building on-chain games on Stellar. It gives you an
 Entity Component System (ECS), built-in ZK proof tooling, session keys, and contract
-standards — all compiled to a single `no_std` crate that runs natively on Soroban.
+standards - all compiled to a single `no_std` crate that runs natively on Soroban.
 
 ## Why Cougr on Stellar
 
@@ -35,7 +36,7 @@ standards — all compiled to a single `no_std` crate that runs natively on Soro
 
 Stellar's strengths translate directly to better games:
 - **3–5 second finality** at fractions of a cent per transaction
-- **X-Ray host functions** run Groth16 and BLS12-381 verification on the host, not in WASM — ZK games are cheap
+- **X-Ray host functions** run Groth16 and BLS12-381 verification on the host, not in WASM - ZK games are cheap
 - **Passkey / WebAuthn** auth via `secp256r1` lets players use Face ID rather than seed phrases
 
 ## Installation
@@ -58,11 +59,11 @@ cargo test
 
 `cougr new` generates a contract crate following the canonical
 `lib.rs` / `components.rs` / `systems.rs` layout with a passing `GameHarness`
-test suite. Four templates are available — `starter`, `turn-based`,
-`hidden-info`, and `session-auth` — each derived from a canonical example. See
+test suite. Four templates are available - `starter`, `turn-based`,
+`hidden-info`, and `session-auth` - each derived from a canonical example. See
 [`cli/README.md`](cli/README.md).
 
-## Quick start — your first on-chain game in 30 lines
+## Quick start - your first on-chain game in 30 lines
 
 ```toml
 # Cargo.toml
@@ -82,7 +83,7 @@ use cougr_core::game::SorobanGame;
 use cougr_core::{impl_component_observed, impl_soroban_game};
 use soroban_sdk::{contract, contractimpl, contracttype, Env};
 
-// 1. Define a component — one macro call, no boilerplate
+// 1. Define a component - one macro call, no boilerplate
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct Position { pub x: i32, pub y: i32 }
@@ -90,7 +91,7 @@ impl_component_observed!(Position, "position", Table, { x: i32, y: i32 });
 //  ↑ Emits a (COUGR, set, position) Soroban event on every change
 //    so off-chain clients track state without polling.
 
-// 2. Wire the contract to an ECS world — one macro call
+// 2. Wire the contract to an ECS world - one macro call
 #[contract]
 pub struct MyGame;
 impl_soroban_game!(MyGame, "world");
@@ -130,7 +131,7 @@ stellar contract deploy --wasm target/wasm32-unknown-unknown/release/my_game.was
 
 ## Components: two patterns for every case
 
-**Simple components** — fixed-size primitives, fastest storage, optional event emission:
+**Simple components** - fixed-size primitives, fastest storage, optional event emission:
 
 ```rust
 use cougr_core::{impl_component, impl_component_observed};
@@ -147,14 +148,14 @@ pub struct Health { pub current: u32, pub max: u32 }
 impl_component_observed!(Health, "health", Table, { current: u32, max: u32 });
 ```
 
-**Rich components** — Soroban XDR codec, supports `Address`, `Vec`, `String`, `Option`,
+**Rich components** - Soroban XDR codec, supports `Address`, `Vec`, `String`, `Option`,
 nested structs. Use when a component contains types not expressible as fixed-size bytes:
 
 ```rust
 use cougr_core::impl_rich_component;
 use soroban_sdk::{contracttype, Address, Vec};
 
-// Address field — requires XDR / impl_rich_component!
+// Address field - requires XDR / impl_rich_component!
 #[contracttype] #[derive(Clone, Debug)]
 pub struct Ownership { pub owner: Address, pub co_owners: Vec<Address> }
 impl_rich_component!(Ownership, "ownership");
@@ -194,7 +195,7 @@ world.despawn_entity(dragon);
 `ArchetypeWorld` is available for larger entity counts and batch queries. Both backends
 share the same `ComponentTrait` interface.
 
-## GameApp — plugin-based composition
+## GameApp - plugin-based composition
 
 For complex games, `GameApp` provides stage-based scheduling and plugin registration:
 
@@ -223,7 +224,7 @@ app.run(&env).unwrap();
 
 ## Zero-knowledge and hidden state
 
-Cougr bundles the full ZK toolchain for on-chain games — all verification runs on
+Cougr bundles the full ZK toolchain for on-chain games - all verification runs on
 Stellar's X-Ray host functions at host speed:
 
 ```rust
@@ -247,16 +248,16 @@ Stable ZK primitives: Groth16, BLS12-381, SHA256 Merkle, Poseidon Merkle, Peders
 ```rust
 use cougr_core::auth::*;
 
-// Session keys — players approve a scoped key for a game session,
+// Session keys - players approve a scoped key for a game session,
 // then interact without signing every transaction
 let session = SessionBuilder::new(&env, &player_address)
     .with_scope(&[contract_id])
     .with_expiry(env.ledger().timestamp() + 3600)
     .build();
 
-// Social recovery — guardians can restore access
-// Multi-device — per-device policies with revocation
-// Passkey / WebAuthn — Face ID / Touch ID via secp256r1
+// Social recovery - guardians can restore access
+// Multi-device - per-device policies with revocation
+// Passkey / WebAuthn - Face ID / Touch ID via secp256r1
 ```
 
 ## Contract standards (`ops`)
@@ -294,13 +295,20 @@ pause.pause(&env);
 | Path | Purpose |
 |---|---|
 | `src/` | Core framework |
-| `cli/` | `cougr-cli` — the `cougr` binary and its embedded project templates |
-| `examples/spawn_and_move/` | Canonical starter — spawn + movement with ECS events |
+| `cli/` | `cougr-cli` - the `cougr` binary and its embedded project templates |
+| `examples/spawn_and_move/` | Canonical starter - spawn + movement with ECS events |
 | `examples/tic_tac_toe/` | Turn-based game with rich components and address ownership |
-| `examples/*/` | 20+ standalone game contracts (asteroids, chess, battleship …) |
+| `examples/*/` | 20+ standalone game contracts (asteroids, chess, battleship, ...) |
+| `internal/` | Crates compiled into `cougr-core` via include: ZK circuit builders, session UX, and the test sandbox |
 | `tests/` | Integration, edge-case, and stress coverage |
 | `docs/` | Architecture, API contract, maturity model, threat model |
+| `docs/strategy/` | Product, business, and repository strategy documents |
 | `research/` | ZK and account abstraction design notes |
+| `cougr-site/` | Source for the [documentation site](https://salazarsebas.github.io/Cougr/) (mdBook) and the example showcase gallery |
+| `packages/tokens/` | Design tokens (color, type, spacing) shared by the docs site and the showcase |
+| `tools/preview-gen/` | Generates SVG previews for the showcase from example scenario data |
+| `skills/` | `skills.sh`-compatible AI assistant Skills for building games with `cougr-core` |
+| `scripts/` | Repository hygiene and release tooling |
 
 ## Development
 
@@ -315,7 +323,7 @@ stellar contract build
 
 | Item | Value |
 |---|---|
-| Rust | 1.70+ |
+| Rust | 1.88+ (MSRV enforced in CI) |
 | Edition | 2021 |
 | License | MIT |
 | Primary SDK | `soroban-sdk` 25.1.0 |
@@ -323,13 +331,14 @@ stellar contract build
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — module structure and design rationale
-- [CHANGELOG.md](CHANGELOG.md) — release history
-- [ROADMAP.md](ROADMAP.md) — phased roadmap and current status
-- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community standards and enforcement
-- [docs/ECS_CORE.md](docs/ECS_CORE.md) — ECS runtime model
-- [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) — ZK proof tiers
-- [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) — session keys and recovery
-- [docs/PATTERNS.md](docs/PATTERNS.md) — recommended gameplay patterns
-- [docs/ONCHAIN_OFFCHAIN_BOUNDARY.md](docs/ONCHAIN_OFFCHAIN_BOUNDARY.md) — deciding what belongs on-chain
-- [examples/README.md](examples/README.md) — example catalog and usage guide
+- **[salazarsebas.github.io/Cougr](https://salazarsebas.github.io/Cougr/)** - the full documentation site, including the example showcase gallery
+- [ARCHITECTURE.md](ARCHITECTURE.md) - module structure and design rationale
+- [CHANGELOG.md](CHANGELOG.md) - release history
+- [ROADMAP.md](ROADMAP.md) - phased roadmap and current status
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - community standards and enforcement
+- [docs/ECS_CORE.md](docs/ECS_CORE.md) - ECS runtime model
+- [docs/PRIVACY_MODEL.md](docs/PRIVACY_MODEL.md) - ZK proof tiers
+- [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) - session keys and recovery
+- [docs/PATTERNS.md](docs/PATTERNS.md) - recommended gameplay patterns
+- [docs/ONCHAIN_OFFCHAIN_BOUNDARY.md](docs/ONCHAIN_OFFCHAIN_BOUNDARY.md) - deciding what belongs on-chain
+- [examples/README.md](examples/README.md) - example catalog and usage guide
