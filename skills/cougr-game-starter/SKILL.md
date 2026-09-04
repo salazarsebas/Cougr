@@ -45,15 +45,27 @@ If the user asks for a large game, implement the thinnest coherent slice first a
 
 ## Step 2: Scaffold The Project
 
-Create a clean standalone Rust project. Add `cougr-core`, `soroban-sdk`, and only the dependencies required for the current prototype.
+Scaffold with the `cougr` CLI. Do not hand-write the project layout, `Cargo.toml`, or a starter contract skeleton, `cougr new` already generates a canonical `lib.rs` / `components.rs` / `systems.rs` layout with a passing test suite, and hand-rolling one only reproduces what the CLI does correctly.
 
-Default assumptions:
+```bash
+cargo install cougr-cli
+cougr new <name> --template <template>
+cd <name>
+cargo test
+```
 
-- target Soroban-compatible WASM with `wasm32v1-none`
-- keep the initial crate layout small
-- prefer a single contract crate for prototypes unless there is a clear reason to split modules or workspaces
+Pick the template from the classification in Step 1:
 
-Use [references/bootstrap.md](references/bootstrap.md) for the default structure, dependency guidance, and starter layout.
+| Game shape | Template |
+|---|---|
+| Simple loop, fully public state | `starter` |
+| Turn-based, multiple rounds or phases | `turn-based` |
+| Hidden information, commit-reveal | `hidden-info` |
+| Session keys or account abstraction | `session-auth` |
+
+If no template fits closely, scaffold with `starter` and restructure from there rather than building a project by hand.
+
+Use [references/bootstrap.md](references/bootstrap.md) for guidance beyond what the CLI generates: build target flags, dependency strategy for local development against an unpublished `cougr-core`, and how to extend the generated layout.
 
 ## Step 3: Model The Game In ECS Terms
 
