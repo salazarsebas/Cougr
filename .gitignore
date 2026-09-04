@@ -35,5 +35,3 @@ Thumbs.db
 # Claude plans
 .claude/plans/
 .claude/settings.json
-
-doocs/
