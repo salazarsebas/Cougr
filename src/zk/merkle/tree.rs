@@ -117,9 +117,13 @@ impl MerkleTree {
         let mut idx = leaf_index as usize;
 
         for layer_idx in 0..self.depth as usize {
-            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
+            let sibling_idx = if idx.is_multiple_of(2) {
+                idx + 1
+            } else {
+                idx - 1
+            };
             siblings.push(self.layers[layer_idx][sibling_idx]);
-            path_indices.push(idx % 2 != 0);
+            path_indices.push(!idx.is_multiple_of(2));
             idx /= 2;
         }
 
@@ -233,7 +237,7 @@ impl PoseidonMerkleTree {
             return Err(ZKError::MaxDepthExceeded);
         }
 
-        // Hash each leaf: H(leaf, 0) — domain-separated by zero second input
+        // Hash each leaf: H(leaf, 0) - domain-separated by zero second input
         let zero = soroban_sdk::U256::from_u32(env, 0);
         let mut current_layer: alloc::vec::Vec<soroban_sdk::U256> = alloc::vec::Vec::new();
         for leaf in leaves {
@@ -282,9 +286,13 @@ impl PoseidonMerkleTree {
         let mut idx = leaf_index as usize;
 
         for layer_idx in 0..self.depth as usize {
-            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
+            let sibling_idx = if idx.is_multiple_of(2) {
+                idx + 1
+            } else {
+                idx - 1
+            };
             siblings.push(self.layers[layer_idx][sibling_idx].clone());
-            path_indices.push(idx % 2 != 0);
+            path_indices.push(!idx.is_multiple_of(2));
             idx /= 2;
         }
 

@@ -52,9 +52,9 @@ app.run(&env).unwrap();
 
 extern crate alloc;
 
-// Global allocator for WASM
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+// The `alloc` feature on soroban-sdk registers its own global allocator (a
+// bump-pointer allocator suited to Soroban's run-to-completion invocation
+// model). See soroban_sdk::alloc for details.
 
 // Macros must be declared before modules that use them
 #[macro_use]

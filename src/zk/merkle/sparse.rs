@@ -62,9 +62,21 @@ impl SparseMerkleTree {
         // Recompute path from leaf to root
         let mut idx = leaf_index;
         for level in 0..SMT_DEPTH {
-            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
-            let left_idx = if idx % 2 == 0 { idx } else { sibling_idx };
-            let right_idx = if idx % 2 == 0 { sibling_idx } else { idx };
+            let sibling_idx = if idx.is_multiple_of(2) {
+                idx + 1
+            } else {
+                idx - 1
+            };
+            let left_idx = if idx.is_multiple_of(2) {
+                idx
+            } else {
+                sibling_idx
+            };
+            let right_idx = if idx.is_multiple_of(2) {
+                sibling_idx
+            } else {
+                idx
+            };
 
             let left = self.get_node(level, left_idx);
             let right = self.get_node(level, right_idx);
@@ -94,11 +106,15 @@ impl SparseMerkleTree {
         let mut idx = leaf_index;
 
         for level in 0..SMT_DEPTH {
-            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
+            let sibling_idx = if idx.is_multiple_of(2) {
+                idx + 1
+            } else {
+                idx - 1
+            };
             let sibling = self.get_node(level, sibling_idx);
             siblings.push_back(BytesN::from_array(env, &sibling));
 
-            if idx % 2 != 0 {
+            if !idx.is_multiple_of(2) {
                 path_bits |= 1 << level;
             }
             idx /= 2;
@@ -210,9 +226,21 @@ impl PoseidonSparseMerkleTree {
 
         let mut idx = leaf_index;
         for level in 0..SMT_DEPTH {
-            let sibling_idx = if idx % 2 == 0 { idx + 1 } else { idx - 1 };
-            let left_idx = if idx % 2 == 0 { idx } else { sibling_idx };
-            let right_idx = if idx % 2 == 0 { sibling_idx } else { idx };
+            let sibling_idx = if idx.is_multiple_of(2) {
+                idx + 1
+            } else {
+                idx - 1
+            };
+            let left_idx = if idx.is_multiple_of(2) {
+                idx
+            } else {
+                sibling_idx
+            };
+            let right_idx = if idx.is_multiple_of(2) {
+                sibling_idx
+            } else {
+                idx
+            };
 
             let left = self.get_node(level, left_idx);
             let right = self.get_node(level, right_idx);
