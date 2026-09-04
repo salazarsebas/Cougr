@@ -2,7 +2,7 @@
 //!
 //! The fast tests assert on the generated tree and the CLI's exit codes. The
 //! `#[ignore]`d `generated_projects_pass_cargo_test` compiles all four templates
-//! against the published `cougr-core` — it is the real definition-of-done check,
+//! against the published `cougr-core` - it is the real definition-of-done check,
 //! run in CI and locally with:
 //!
 //! ```bash

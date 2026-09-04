@@ -34,7 +34,7 @@ function App() {
               <div>
                 <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', color: 'var(--accent-red)', marginBottom: '0.75rem' }}>404</h1>
                 <p style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', color: 'var(--noir-muted)' }}>
-                  This page vanished — like the alibi of a guilty man.
+                  This page vanished - like the alibi of a guilty man.
                 </p>
               </div>
             </main>

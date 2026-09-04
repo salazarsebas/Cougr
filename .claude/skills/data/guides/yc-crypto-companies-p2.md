@@ -120,7 +120,7 @@ We enable humans & machines with internet connectivity at a price that they can 
 
 The inspiration for Wifi Dabba came from the founders working together for the last decade in the mobile application industry and realising the biggest reason for user churn being access to cheap and affordable internet access. From having worked on ground onboarding users and facing poor connectivity issues all the time, we took it on ourselves to fix the internet access problem for the common citizen.
 
-At Wifi Dabba (YC W17), we are building a low cost, scalable & distributed Wi-Fi infrastructure to connect next billion users online. We do this by deploying a grid of lasers (Free Space Optics) over the cities & town and bring cheap and fast internet for everyone. We enable anyone to buy 1 gig of data access at a time at a price they can afford. Sachetization of internet access is the foundation to rebuilding internet for all. We do this by leveraging crypto and blockchain to truly make internet infrastructure ownership distributed — our vision is to be connectivity layer for the Web3 world.
+At Wifi Dabba (YC W17), we are building a low cost, scalable & distributed Wi-Fi infrastructure to connect next billion users online. We do this by deploying a grid of lasers (Free Space Optics) over the cities & town and bring cheap and fast internet for everyone. We enable anyone to buy 1 gig of data access at a time at a price they can afford. Sachetization of internet access is the foundation to rebuilding internet for all. We do this by leveraging crypto and blockchain to truly make internet infrastructure ownership distributed - our vision is to be connectivity layer for the Web3 world.
 
 ## Democracy Earth
 
@@ -372,7 +372,7 @@ Striga is building infrastructure for digital assets and financial services as a
 
 **Tags:** crypto-web3, fintech
 
-Dharma is the only Ethereum wallet capable of seamlessly moving money between any US bank account and decentralized exchanges like Uniswap. The net result is a product that looks & feels like Coinbase on steroids — Download an App. Plug in your bank. Invest in the exponentially growing universe of tokens & yield opportunities in DeFi with a tap.
+Dharma is the only Ethereum wallet capable of seamlessly moving money between any US bank account and decentralized exchanges like Uniswap. The net result is a product that looks & feels like Coinbase on steroids - Download an App. Plug in your bank. Invest in the exponentially growing universe of tokens & yield opportunities in DeFi with a tap.
 
 ## Request Network
 

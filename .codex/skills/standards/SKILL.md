@@ -126,10 +126,10 @@ Use the CAP preamble status fields as the source of truth for implementation rea
 
 This guide catalogs the major projects, protocols, and tools in the Stellar ecosystem. Use this as a reference when building on Stellar to find relevant integrations, examples, and community projects.
 
-> **Canonical directories** — For the most up-to-date project lists, check:
-> - [Stellar Ecosystem](https://stellar.org/ecosystem) — Official directory (searchable by country, asset, category)
-> - [SCF Projects](https://communityfund.stellar.org/projects) — Funded projects with status tracking
-> - [Stellar on DefiLlama](https://defillama.com/chain/stellar) — Live DeFi TVL data
+> **Canonical directories** - For the most up-to-date project lists, check:
+> - [Stellar Ecosystem](https://stellar.org/ecosystem) - Official directory (searchable by country, asset, category)
+> - [SCF Projects](https://communityfund.stellar.org/projects) - Funded projects with status tracking
+> - [Stellar on DefiLlama](https://defillama.com/chain/stellar) - Live DeFi TVL data
 >
 > Treat project metrics/status as volatile. Validate latest activity and production readiness before taking dependencies.
 
@@ -329,17 +329,17 @@ Framework for building custom security detectors for Soroban.
 - **Extensible**: Load external detector libraries, CI/CD ready
 
 #### Certora Sunbeam Prover
-Formal verification for Soroban — first WASM platform supported by Certora.
+Formal verification for Soroban - first WASM platform supported by Certora.
 - **Docs**: https://docs.certora.com/en/latest/docs/sunbeam/index.html
-- **Spec Language**: CVLR (Rust macros) — https://github.com/Certora/cvlr
+- **Spec Language**: CVLR (Rust macros) - https://github.com/Certora/cvlr
 - **Reports**: [Blend V1 verification](https://www.certora.com/reports/blend-smart-contract-verification-report)
 - **Verifies at**: WASM bytecode level, eliminating compiler trust assumptions
 
-#### Runtime Verification — Komet
+#### Runtime Verification - Komet
 Formal verification and testing tool designed for Soroban (SCF-funded).
 - **Docs**: https://docs.runtimeverification.com/komet
 - **Repo**: https://github.com/runtimeverification/komet
-- **Spec Language**: Rust — property-based tests written in the same language as Soroban contracts
+- **Spec Language**: Rust - property-based tests written in the same language as Soroban contracts
 - **Operates at**: WASM bytecode level via [KWasm semantics](https://github.com/runtimeverification/wasm-semantics) (eliminates compiler trust assumptions)
 - **Features**: Fuzzing, testing, formal verification
 - **Reports**: https://github.com/runtimeverification/publications
@@ -843,15 +843,15 @@ Builders and contributors actively shaping the Stellar/Soroban ecosystem:
 | Leigh McCulloch | [leighmcculloch](https://github.com/leighmcculloch) | [@___leigh___](https://x.com/___leigh___) | SDF core engineer, Stellar CLI, Soroban SDK |
 | James Bachini | [jamesbachini](https://github.com/jamesbachini) | [@james_bachini](https://x.com/james_bachini) | SDF Dev in Residence, Soroban Playground, tutorials |
 | Elliot Voris | [ElliotFriend](https://github.com/ElliotFriend) | [@ElliotFriend](https://x.com/ElliotFriend) | SDF DevRel, community education |
-| Carsten Jacobsen | [carstenjacobsen](https://github.com/carstenjacobsen) | — | SDF, weekly dev meetings, Soroban examples |
+| Carsten Jacobsen | [carstenjacobsen](https://github.com/carstenjacobsen) | - | SDF, weekly dev meetings, Soroban examples |
 | Esteban Iglesias | [esteblock](https://github.com/esteblock) | [@esteblock_dev](https://x.com/esteblock_dev) | PaltaLabs, Soroswap, DeFindex |
 | Markus Paulson-Luna | [markuspluna](https://github.com/markuspluna) | [@script3official](https://x.com/script3official) | Script3, Blend Protocol |
-| Alexander Mootz | [mootz12](https://github.com/mootz12) | — | Script3, Blend contracts |
+| Alexander Mootz | [mootz12](https://github.com/mootz12) | - | Script3, Blend contracts |
 | Tommaso | [heytdep](https://github.com/heytdep) | [@heytdep](https://x.com/heytdep) | Xycloo Labs, Mercury indexer, ZephyrVM |
 | OrbitLens | [orbitlens](https://github.com/orbitlens) | [@orbitlens](https://x.com/orbitlens) | Reflector oracle, StellarExpert, Albedo |
 | Frederic Rezeau | [FredericRezeau](https://github.com/FredericRezeau) | [@FredericRezeau](https://x.com/FredericRezeau) | Litemint, soroban-kit, gaming |
 | Jun Luo (Overcat) | [overcat](https://github.com/overcat) | [@overcat_me](https://x.com/overcat_me) | Lightsail Network, Quasar RPC, Java/Python SDKs, Ledger app |
-| Jay Geng | [jayz22](https://github.com/jayz22) | — | SDF, Soroban SDK, confidential tokens |
+| Jay Geng | [jayz22](https://github.com/jayz22) | - | SDF, Soroban SDK, confidential tokens |
 | Chad Ostrowski | [chadoh](https://github.com/chadoh) | [@chadoh](https://x.com/chadoh) | Aha Labs CEO, Scaffold Stellar, Soroban CLI |
 | Willem Wyndham | [willemneal](https://github.com/willemneal) | [@willemneal](https://x.com/willemneal) | Aha Labs co-founder, Scaffold Stellar, JS contract client |
 

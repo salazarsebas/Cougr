@@ -4,51 +4,51 @@
 
 ### Added
 
-- **`cougr_core::cors`** — CORS configuration validation and dynamic origin
+- **`cougr_core::cors`** - CORS configuration validation and dynamic origin
   allowlist for HTTP gateways in front of a game contract: `CorsConfig`
   validates origins, methods, header names, and credential/wildcard
   combinations; `OriginAllowlist` supports runtime add/remove of exact,
   single-label wildcard subdomain (`https://*.example.com`), and global `*`
   entries with case/default-port-normalized matching; preflight evaluation
   returns ready-to-emit response headers
-- **`cougr-cli`** — new workspace member publishing the `cougr` binary
-- **`cougr new <name> [--template <name>]`** — scaffolds a Soroban game contract crate
+- **`cougr-cli`** - new workspace member publishing the `cougr` binary
+- **`cougr new <name> [--template <name>]`** - scaffolds a Soroban game contract crate
   following the canonical `lib.rs` / `components.rs` / `systems.rs` layout, with a
   passing `test::GameHarness` suite and a dependency on the published `cougr-core`
   release rather than a path dependency
 - **Four embedded templates**, each derived from a canonical example and compiled into
   the binary so `cougr new` works offline: `starter` (`spawn_and_move`), `turn-based`
   (`tic_tac_toe`), `hidden-info` (`hidden_hand`), `session-auth` (`session_arena`)
-- **CLI CI workflow** — lints and tests `cougr-cli`, then generates each template and
+- **CLI CI workflow** - lints and tests `cougr-cli`, then generates each template and
   runs `cargo fmt`, `clippy`, `cargo test`, and a `wasm32v1-none` release build against it
 
 ## 1.1.0
 
 ### Added
 
-- **`game::SorobanGame` trait** — standard `load_world` / `save_world` contract pattern;
+- **`game::SorobanGame` trait** - standard `load_world` / `save_world` contract pattern;
   implement once with `impl_soroban_game!(Contract, "key")`, use in every entrypoint
-- **`impl_soroban_game!` macro** — wires `SorobanGame` to any `#[contract]` struct
-- **`SimpleWorld::load_from_instance`** — load world from Soroban instance storage,
+- **`impl_soroban_game!` macro** - wires `SorobanGame` to any `#[contract]` struct
+- **`SimpleWorld::load_from_instance`** - load world from Soroban instance storage,
   returning a fresh empty world on first call
-- **`SimpleWorld::save_to_instance`** — persist world to Soroban instance storage
-- **`SimpleWorld::set_rich_observed`** — store a rich component and emit a
+- **`SimpleWorld::save_to_instance`** - persist world to Soroban instance storage
+- **`SimpleWorld::set_rich_observed`** - store a rich component and emit a
   `RichComponentChangedEvent` for off-chain indexers
-- **`SimpleWorld::remove_rich_observed`** — remove a rich component and emit a `del` event
-- **`RichComponentChangedEvent`** — new Soroban event type with topics
+- **`SimpleWorld::remove_rich_observed`** - remove a rich component and emit a `del` event
+- **`RichComponentChangedEvent`** - new Soroban event type with topics
   `("COUGR", "rich", component_type)` for rich component change notifications
-- **`spawn_and_move` example** — canonical Cougr starter game demonstrating the complete
+- **`spawn_and_move` example** - canonical Cougr starter game demonstrating the complete
   idiomatic pattern: `impl_component_observed!` + `SorobanGame` + typed ECS access
-- **`SorobanGame` re-exported from `prelude`** — import from `cougr_core::prelude::*`
-- **`cougr_core::circuits`** — four pre-built ZK game builders (hidden cards, fog of war,
+- **`SorobanGame` re-exported from `prelude`** - import from `cougr_core::prelude::*`
+- **`cougr_core::circuits`** - four pre-built ZK game builders (hidden cards, fog of war,
   fair dice, sealed bid) with pipeline-embedded verification keys
-- **`cougr_core::session`** — `SessionManager`, `SessionStatus`, and `ActiveSession` (Beta)
-- **`cougr_core::test`** — `GameHarness`, `Scenario`, and `ReplayLog` sandbox behind the
+- **`cougr_core::session`** - `SessionManager`, `SessionStatus`, and `ActiveSession` (Beta)
+- **`cougr_core::test`** - `GameHarness`, `Scenario`, and `ReplayLog` sandbox behind the
   `testutils` feature
-- **Circom pipeline** — `internal/cougr-core-circuits` with CI workflow and on-chain Groth16
+- **Circom pipeline** - `internal/cougr-core-circuits` with CI workflow and on-chain Groth16
   proof verification using real VKs
-- **ZK examples** — `hidden_hand`, `fog_explorer`, `dice_duel`, and `blind_auction`
-- **Workspace subcrates** — `internal/cougr-core-{circuits,session,test}` per ADR 0007
+- **ZK examples** - `hidden_hand`, `fog_explorer`, `dice_duel`, and `blind_auction`
+- **Workspace subcrates** - `internal/cougr-core-{circuits,session,test}` per ADR 0007
 
 ### Changed
 

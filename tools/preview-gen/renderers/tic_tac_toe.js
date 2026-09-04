@@ -2,8 +2,8 @@
  * Tic-tac-toe SVG renderer.
  *
  * Input state shape (from examples/tic_tac_toe/src/lib.rs :: GameState):
- *   cells:      number[9]   — 0=empty, 1=X, 2=O  (row-major, index 0=top-left)
- *   status:     number      — 0=in progress, 1=X wins, 2=O wins, 3=draw
+ *   cells:      number[9] - 0=empty, 1=X, 2=O  (row-major, index 0=top-left)
+ *   status:     number - 0=in progress, 1=X wins, 2=O wins, 3=draw
  *   is_x_turn:  boolean
  *   move_count: number
  *

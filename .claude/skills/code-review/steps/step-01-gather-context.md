@@ -10,14 +10,14 @@ story_key: '' # set at runtime when discovered from sprint status
 ## RULES
 
 - YOU MUST ALWAYS SPEAK OUTPUT in your Agent communication style with the config `{communication_language}`
-- The prompt that triggered this workflow IS the intent — not a hint.
+- The prompt that triggered this workflow IS the intent - not a hint.
 - Do not modify any files. This step is read-only.
 
 ## INSTRUCTIONS
 
-1. **Find the review target.** The conversation context before this skill was triggered IS your starting point — not a blank slate. Check in this order — stop as soon as the review target is identified:
+1. **Find the review target.** The conversation context before this skill was triggered IS your starting point - not a blank slate. Check in this order - stop as soon as the review target is identified:
 
-   **Tier 1 — Explicit argument.**
+   **Tier 1 - Explicit argument.**
    Did the user pass a PR, commit SHA, branch, spec file, or diff source this message?
    - PR reference → resolve to branch/commit via `gh pr view`. If resolution fails, ask for a SHA or branch.
    - Commit or branch → use directly.
@@ -27,22 +27,22 @@ story_key: '' # set at runtime when discovered from sprint status
      - "uncommitted" / "working tree" / "all changes" → Uncommitted changes (staged + unstaged)
      - "branch diff" / "vs main" / "against main" / "compared to <branch>" → Branch diff (extract base branch if mentioned)
      - "commit range" / "last N commits" / "<from-sha>..<to-sha>" → Specific commit range
-     - "this diff" / "provided diff" / "paste" → User-provided diff (do not match bare "diff" — it appears in other modes)
+     - "this diff" / "provided diff" / "paste" → User-provided diff (do not match bare "diff" - it appears in other modes)
    - When multiple keywords match, prefer the most specific (e.g., "branch diff" over bare "diff").
 
-   **Tier 2 — Recent conversation.**
+   **Tier 2 - Recent conversation.**
    Do the last few messages reveal what the user wants to be reviewed? Look for spec paths, commit refs, branches, PRs, or descriptions of a change. Apply the same diff-mode keyword scan and routing as Tier 1.
 
-   **Tier 3 — Sprint tracking.**
+   **Tier 3 - Sprint tracking.**
    Look for a sprint status file (`*sprint-status*`) in `{implementation_artifacts}` or `{planning_artifacts}`. If found, scan for stories with status `review`:
    - **Exactly one `review` story:** Set `{story_key}` to the story's key (e.g., `1-2-user-auth`). Suggest it: "I found story <story-id> in `review` status. Would you like to review its changes? [Y] Yes / [N] No, let me choose". If confirmed, use the story context to determine the diff source (branch name derived from story slug, or uncommitted changes). If declined, clear `{story_key}` and fall through.
    - **Multiple `review` stories:** Present them as numbered options alongside a manual choice option. Wait for user selection. If a story is selected, set `{story_key}` and use its context to determine the diff source. If manual choice is selected, clear `{story_key}` and fall through.
    - **None:** Fall through.
 
-   **Tier 4 — Current git state.**
-   If version control is unavailable, skip to Tier 5. Otherwise, check the current branch and HEAD. If the branch is not `main` (or the default branch), confirm: "I see HEAD is `<short-sha>` on `<branch>` — do you want to review this branch's changes?" If confirmed, treat as a branch diff against `main`. If declined, fall through.
+   **Tier 4 - Current git state.**
+   If version control is unavailable, skip to Tier 5. Otherwise, check the current branch and HEAD. If the branch is not `main` (or the default branch), confirm: "I see HEAD is `<short-sha>` on `<branch>` - do you want to review this branch's changes?" If confirmed, treat as a branch diff against `main`. If declined, fall through.
 
-   **Tier 5 — Ask.**
+   **Tier 5 - Ask.**
    Fall through to instruction 2.
 
    Never ask extra questions beyond what the cascade prescribes. If a tier above already identified the target, skip the remaining tiers and proceed to instruction 3 (construct diff).

@@ -43,7 +43,7 @@ pub struct BoardComponent {
     pub cells: Vec<i32>,
 }
 
-/// **TurnComponent** — whose turn it is and how many moves have been played.
+/// **TurnComponent** - whose turn it is and how many moves have been played.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct TurnComponent {
@@ -52,7 +52,7 @@ pub struct TurnComponent {
     pub move_number: u32,
 }
 
-/// **GameStatusComponent** — overall game lifecycle.
+/// **GameStatusComponent** - overall game lifecycle.
 #[contracttype]
 #[derive(Clone, Debug, PartialEq)]
 pub struct GameStatusComponent {
@@ -189,7 +189,7 @@ pub(crate) struct ChainCapture {
     pub col: u32,
 }
 
-// Internal: SmallVec4 — tiny fixed-capacity stack-allocated collection
+// Internal: SmallVec4 - tiny fixed-capacity stack-allocated collection
 #[derive(Copy, Clone)]
 pub(crate) struct SmallVec4<T: Copy + Default> {
     data: [T; 4],

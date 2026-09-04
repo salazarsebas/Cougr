@@ -31,12 +31,12 @@ that cannot ask for a signature on every turn.
 ## Architecture overview
 
 ```
-lib.rs         contract entrypoints — auth, then gameplay state
+lib.rs         contract entrypoints - auth, then gameplay state
   ├─ components.rs   Score component, player → entity storage key
   └─ systems.rs      session policy: allowed action, budget, lifetime, intent window
 ```
 
-`systems.rs` is where a session's powers are defined — one allowed action, a
+`systems.rs` is where a session's powers are defined - one allowed action, a
 hard operation budget, an expiry, and a short intent window. Widening what a
 session key can do is a visible edit to that file, not a change buried in an
 entrypoint.
@@ -45,9 +45,9 @@ entrypoint.
 
 | Storage | Contents | Why |
 | --- | --- | --- |
-| Instance — session keys | Managed by `SessionManager` / `SessionStorage` | Scope, nonce, and expiry per key |
-| Instance — `(player, Address)` | The player's ECS entity ID | Direct address → entity lookup, no scan |
-| Instance — `world` | `SimpleWorld` with one `Score` per player | Gameplay state stays in the ECS |
+| Instance - session keys | Managed by `SessionManager` / `SessionStorage` | Scope, nonce, and expiry per key |
+| Instance - `(player, Address)` | The player's ECS entity ID | Direct address → entity lookup, no scan |
+| Instance - `world` | `SimpleWorld` with one `Score` per player | Gameplay state stays in the ECS |
 
 ## Main gameplay flow
 
@@ -55,7 +55,7 @@ entrypoint.
    key is minted, scoped to the `tap` action with a budget of 10 operations.
 2. The client stores the returned `key_id` and calls `tap` for each move. Each
    call builds a signed intent, the kernel checks scope, nonce, and expiry, and
-   the tap counter increases — no wallet prompt.
+   the tap counter increases - no wallet prompt.
 3. When `session_state` reports `needs_renewal`, the client calls
    `renew_session`, which re-prompts the owner once and keeps the same key ID.
 4. If a session lapses before renewal, `fallback_tap` authorizes the same move
@@ -65,7 +65,7 @@ entrypoint.
 
 | API | Why |
 | --- | --- |
-| `session::SessionManager` | Whole lifecycle — approve, execute, renew, fallback — in one facade |
+| `session::SessionManager` | Whole lifecycle - approve, execute, renew, fallback - in one facade |
 | `accounts::SessionBuilder` | Declarative scope: allowed action, budget, expiry |
 | `accounts::SignedIntent` / `ReplayProtection` | Nonce-protected intents for the fallback path |
 | `session::ActiveSession` | Client-facing view of expiry and remaining budget |
@@ -94,7 +94,7 @@ what you deploy with `stellar contract deploy`.
 
 * Sessions are scoped to a single action. A real game scopes several, and should
   keep the budget proportional to how long a session lives.
-* There is no `revoke` entrypoint. `SessionManager::revoke` exists — wire it up
+* There is no `revoke` entrypoint. `SessionManager::revoke` exists - wire it up
   before letting players sign in from shared devices.
 * `fallback_tap` silently falls back. Production clients should surface that the
   session lapsed so the player knows to renew.

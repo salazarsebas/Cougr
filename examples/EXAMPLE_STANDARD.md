@@ -13,12 +13,12 @@ Examples are the primary onboarding surface for external developers building gam
 Every example must declare `cougr-core` using the published crate on crates.io, **not** a local path dependency.
 
 ```toml
-# Correct — external release
+# Correct - external release
 [dependencies]
 cougr-core = "1.1"
 soroban-sdk = "25.1.0"
 
-# Wrong for published examples — breaks for external users
+# Wrong for published examples - breaks for external users
 [dependencies]
 cougr-core = { path = "../../" }
 
@@ -45,7 +45,7 @@ Some canonical examples depend on APIs that have not yet been published to crate
 Add a comment above the dependency line explaining the exception:
 
 ```toml
-# path dep — pending cougr-core 1.x publication of circuits::*
+# path dep - pending cougr-core 1.x publication of circuits::*
 cougr-core = { path = "../../" }
 
 ```
@@ -169,10 +169,10 @@ Current canonical examples (aligned with the 1.1.0 release):
 | `spawn_and_move` | Starter | Complete idiomatic Cougr pattern: `SorobanGame` + `impl_component_observed!` + typed ECS |
 | `tic_tac_toe` | Rich components | Turn-based game with `impl_rich_component!` for `Address` and `Vec` fields |
 | `session_arena` | Session UX | `session::SessionManager`, session lifecycle, and multi-round state (Beta) |
-| `hidden_hand` | ZK circuits | `circuits::hidden_cards` — hidden-card ZK proof flow (Experimental) |
-| `fog_explorer` | ZK circuits | `circuits::fog_of_war` — fog-of-war exploration with Merkle proofs (Experimental) |
-| `dice_duel` | ZK circuits | `circuits::fair_dice` — fair dice roll with on-chain verification (Experimental) |
-| `blind_auction` | ZK circuits | `circuits::sealed_bid` — sealed-bid auction with commit-reveal ZK (Experimental) |
+| `hidden_hand` | ZK circuits | `circuits::hidden_cards` - hidden-card ZK proof flow (Experimental) |
+| `fog_explorer` | ZK circuits | `circuits::fog_of_war` - fog-of-war exploration with Merkle proofs (Experimental) |
+| `dice_duel` | ZK circuits | `circuits::fair_dice` - fair dice roll with on-chain verification (Experimental) |
+| `blind_auction` | ZK circuits | `circuits::sealed_bid` - sealed-bid auction with commit-reveal ZK (Experimental) |
 | `snake` | Arcade (GameApp) | Arcade loop, `GameApp` tick model, basic ECS |
 | `battleship` | Hidden information | Commit-reveal and selective state disclosure using `privacy::stable` Merkle primitives |
 | `guild_arena` | Authentication & recovery | Account abstraction, social recovery, multi-device authorization |
@@ -253,7 +253,7 @@ cd tools/preview-gen
 node generate.js <example-name>
 ```
 
-The generator reads a state JSON from `tools/preview-gen/states/<example-name>.json`. That state must be derived from a specific, named test assertion in the example's `src/test.rs` — not invented. See [tools/preview-gen/README.md](../tools/preview-gen/README.md) for the full contributor workflow.
+The generator reads a state JSON from `tools/preview-gen/states/<example-name>.json`. That state must be derived from a specific, named test assertion in the example's `src/test.rs` - not invented. See [tools/preview-gen/README.md](../tools/preview-gen/README.md) for the full contributor workflow.
 
 ### Real-time / physics arcade games
 
@@ -276,10 +276,10 @@ See the [Quality Checklist](#quality-checklist) below for the corresponding chec
 Copy this checklist into a follow-up cleanup issue for each example:
 
 ```markdown
-## Example quality checklist — `<example-name>`
+## Example quality checklist - `<example-name>`
 
 ### Dependencies
-- [ ] Uses published `cougr-core` version, not a path dependency — **or** carries an annotated path dependency exception per §1.1
+- [ ] Uses published `cougr-core` version, not a path dependency - **or** carries an annotated path dependency exception per §1.1
 
 ### Build validation
 - [ ] `cargo test` passes
@@ -319,7 +319,7 @@ Copy this checklist into a follow-up cleanup issue for each example:
 ### Preview image
 - [ ] `preview.svg` present in the example directory
 - [ ] State data is traceable to a named test assertion in `src/test.rs` (see `_source` field in the corresponding `states/*.json`)
-- [ ] Generated via `tools/preview-gen/` — not hand-drawn or manually edited
+- [ ] Generated via `tools/preview-gen/` - not hand-drawn or manually edited
 - [ ] For real-time/arcade games: category fallback used rather than a faked screenshot
 
 ### Classification

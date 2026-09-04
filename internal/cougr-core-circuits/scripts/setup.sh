@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Trusted setup for test keys (development only — not for production).
+# Trusted setup for test keys (development only - not for production).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -25,7 +25,7 @@ fi
 for circuit in hidden_cards fog_of_war fair_dice sealed_bid; do
   r1cs="$ARTIFACTS/${circuit}.r1cs"
   if [[ ! -f "$r1cs" ]]; then
-    echo "missing $r1cs — run compile.sh first" >&2
+    echo "missing $r1cs - run compile.sh first" >&2
     exit 1
   fi
   echo "setup $circuit (test pot12)..."

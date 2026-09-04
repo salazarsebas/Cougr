@@ -124,7 +124,7 @@ You're about to experience brainstorming in a completely new way. These unexpect
 [Details] - Tell me more about any specific technique
 [Back] - Return to approach selection
 
-**HALT — wait for user selection before proceeding.**
+**HALT - wait for user selection before proceeding.**
 
 ### 5. Handle User Response
 

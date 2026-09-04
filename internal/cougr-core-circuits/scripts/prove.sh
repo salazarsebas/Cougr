@@ -31,7 +31,7 @@ prove_one() {
     exit 1
   fi
   if [[ ! -f "$zkey" ]]; then
-    echo "missing zkey $zkey — run setup.sh first" >&2
+    echo "missing zkey $zkey - run setup.sh first" >&2
     exit 1
   fi
 

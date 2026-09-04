@@ -1,4 +1,4 @@
-//! hidden_hand — canonical Cougr ZK circuits example.
+//! hidden_hand - canonical Cougr ZK circuits example.
 //!
 //! Demonstrates `cougr_core::circuits::hidden_cards` for private card deals.
 

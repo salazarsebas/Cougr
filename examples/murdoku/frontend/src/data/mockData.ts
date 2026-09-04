@@ -60,7 +60,7 @@ export const MOCK_PUZZLES: Puzzle[] = [
     id: 'puzzle-001',
     title: 'The Blackwood Manor Affair',
     description:
-      'A stormy night. A locked room. Four suspects, four rooms — only the grid holds the truth.',
+      'A stormy night. A locked room. Four suspects, four rooms - only the grid holds the truth.',
     gridSize: 4,
     difficulty: 'Easy',
     suspects: suspects4x4,
@@ -73,7 +73,7 @@ export const MOCK_PUZZLES: Puzzle[] = [
     id: 'puzzle-002',
     title: 'The Velvet Club Incident',
     description:
-      'Five members. Five private rooms. The ledger was stolen at midnight — but who moved where?',
+      'Five members. Five private rooms. The ledger was stolen at midnight - but who moved where?',
     gridSize: 5,
     difficulty: 'Medium',
     suspects: suspects5x5,
@@ -92,7 +92,7 @@ export const MOCK_PUZZLES: Puzzle[] = [
     id: 'puzzle-003',
     title: 'Death Aboard the Meridian Express',
     description:
-      'The train never stopped. The suspects never left. Every clue points somewhere — and nowhere.',
+      'The train never stopped. The suspects never left. Every clue points somewhere - and nowhere.',
     gridSize: 5,
     difficulty: 'Expert',
     suspects: suspects5x5,

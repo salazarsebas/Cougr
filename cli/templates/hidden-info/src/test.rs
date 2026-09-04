@@ -3,7 +3,7 @@
 //! These run through `cougr_core::test::GameHarness`, the sandbox the canonical
 //! examples use. The proof and commitments come from
 //! `cougr_core::circuits::test_fixtures`, which ships the artifacts produced by
-//! the Circom pipeline — the fixture hand belongs to seat `2` of a 52-card,
+//! the Circom pipeline - the fixture hand belongs to seat `2` of a 52-card,
 //! 5-card-hand table, so the tests seat three players before proving.
 
 use crate::components::TableConfig;

@@ -9,25 +9,25 @@ description: Map the competitive landscape for a Stellar project idea. Use when 
 
 If the user hasn't described their idea, ask: "What are you building, in one sentence?"
 
-Then ask: "Any specific category to compare against? — Financial Protocols, Applications, Developer Tooling, Infrastructure & Services, Payments, Education & Community, or other."
+Then ask: "Any specific category to compare against? - Financial Protocols, Applications, Developer Tooling, Infrastructure & Services, Payments, Education & Community, or other."
 
 ### 2. Search the ecosystem DB
 
-Read `~/.claude/skills/data/lumenloop/projects.json`. If missing, fetch from `https://raw.githubusercontent.com/lumenloop/stellar-ecosystem-db/main/` (the YAML files in `projects/` — convert on the fly if needed).
+Read `~/.claude/skills/data/lumenloop/projects.json`. If missing, fetch from `https://raw.githubusercontent.com/lumenloop/stellar-ecosystem-db/main/` (the YAML files in `projects/` - convert on the fly if needed).
 
 Filter by:
 
 - `attributes.category` matching the user's stated category (case-insensitive partial match)
-- Description keyword overlap with the user's idea — extract 3-5 keywords from the idea, score each project by how many keywords appear in its description
+- Description keyword overlap with the user's idea - extract 3-5 keywords from the idea, score each project by how many keywords appear in its description
 
 Return top 10-15 matches ranked by relevance score.
 
 ### 2.5 Mine Electric Capital for what LumenLoop doesn't show
 
-`~/.claude/skills/data/electric-capital/stellar-repos.json` has ~9000 repos tagged as Stellar — a much wider net than LumenLoop's curated 728. Use it to surface what LumenLoop misses:
+`~/.claude/skills/data/electric-capital/stellar-repos.json` has ~9000 repos tagged as Stellar - a much wider net than LumenLoop's curated 728. Use it to surface what LumenLoop misses:
 
 - **Emerging players**: GitHub orgs with 2+ Stellar repos that aren't in LumenLoop yet (proto-projects, soon-to-launch)
-- **Dormant competitors**: repos whose names match the user's keywords but show no recent activity (these were attempts that didn't ship — useful signal about why the category might be hard)
+- **Dormant competitors**: repos whose names match the user's keywords but show no recent activity (these were attempts that didn't ship - useful signal about why the category might be hard)
 - **Cluster detection**: if 5+ different orgs are working on the user's exact keyword (e.g., "perps", "vault", "wallet"), the space has more friction than LumenLoop suggests
 
 Filter out noise:
@@ -48,7 +48,7 @@ Present as a markdown table, sorted by SCF funding desc, then dev activity desc:
 | Project | Category | SCF rounds + total | GitHub activity | One-line description | Overlap with user's idea |
 |---------|----------|----------------------|-----------------|----------------------|--------------------------|
 
-Use `scf.awarded_total` from the project entry. If null, mark as "—" (community-listed but not SCF-funded).
+Use `scf.awarded_total` from the project entry. If null, mark as " - " (community-listed but not SCF-funded).
 
 ### 5. Differentiation guidance
 
@@ -62,7 +62,7 @@ Close with: "Want me to route you to `validate-stellar-idea` to stress-test agai
 
 ## Constraints
 
-- Only count SCF-funded projects toward "saturation" — unfunded community-listed projects are weaker competitive signal
+- Only count SCF-funded projects toward "saturation" - unfunded community-listed projects are weaker competitive signal
 - If user's category isn't recognized, ask for clarification rather than guessing
-- If `projects.json` returns 0 matches, the category may be genuinely open — surface that as a *finding*, not a failure
+- If `projects.json` returns 0 matches, the category may be genuinely open - surface that as a *finding*, not a failure
 - Do not invent project names. If the DB doesn't have something, say so honestly

@@ -2,12 +2,12 @@
  * Checkers SVG renderer.
  *
  * Input state shape (from examples/checkers/src/components.rs :: BoardComponent):
- *   cells:          number[64]  — row-major 8×8
+ *   cells:          number[64] - row-major 8×8
  *                   0=empty, 1=P1 man, -1=P2 man, 2=P1 king, -2=P2 king
- *   current_player: number      — 1 or 2
+ *   current_player: number - 1 or 2
  *   move_number:    number
  *   status:         "Active" | "Finished"
- *   winner:         number      — 0=none, 1=P1, 2=P2
+ *   winner:         number - 0=none, 1=P1, 2=P2
  *
  * Board layout:
  *   P1 starts on rows 0–2 (top), plays on dark squares (row+col odd).
@@ -68,7 +68,7 @@ function renderPiece(x, y, value) {
   // Inner ring highlight
   out += `<circle cx="${cx}" cy="${cy}" r="${r*0.6}" fill="none" stroke="${COLORS.crown}" stroke-width="1.5" opacity="0.35"/>`;
 
-  // King indicator — a cream disc in the center, legible on either side's color
+  // King indicator - a cream disc in the center, legible on either side's color
   if (isKing) {
     out += `<circle cx="${cx}" cy="${cy}" r="${r*0.34}" fill="${COLORS.crown}"/>`;
   }

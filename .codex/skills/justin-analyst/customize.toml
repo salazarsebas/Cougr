@@ -28,7 +28,7 @@ activation_steps_append = []
 
 # Persistent facts the agent keeps in mind for the whole session (org rules,
 # domain constants, user preferences). Distinct from the runtime memory
-# sidecar — these are static context loaded on activation. Overrides append.
+# sidecar - these are static context loaded on activation. Overrides append.
 #
 # Each entry is either:
 #   - a literal sentence, e.g. "Our org is AWS-only -- do not propose GCP or Azure."
@@ -81,7 +81,7 @@ skill = "product-brief"
 
 [[agent.menu]]
 code = "WB"
-description = "Working Backwards PRFAQ challenge — forge and stress-test product concepts"
+description = "Working Backwards PRFAQ challenge - forge and stress-test product concepts"
 skill = "prfaq"
 
 [[agent.menu]]

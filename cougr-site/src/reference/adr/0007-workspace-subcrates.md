@@ -27,9 +27,9 @@ crates.io packages, so download metrics stay unified under `cougr-core`.
    - missing files in the published tarball
 
 4. Public API:
-   - `cougr_core::circuits` — always available
-   - `cougr_core::session` — always available
-   - `cougr_core::test` — `testutils` feature only
+   - `cougr_core::circuits` - always available
+   - `cougr_core::session` - always available
+   - `cougr_core::test` - `testutils` feature only
 
 5. The test sandbox uses `no_std` + `alloc`, not `std`. It runs in Soroban
    `testutils` environments the same way contract tests do today.

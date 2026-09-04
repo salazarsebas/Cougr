@@ -1,7 +1,7 @@
 //! ECS components for {{crate_name}}.
 //!
 //! `Board` and `Players` hold `Vec` and `Address` fields, which need an XDR
-//! codec — that is exactly what `impl_rich_component!` provides, replacing the
+//! codec - that is exactly what `impl_rich_component!` provides, replacing the
 //! hand-written serialize/deserialize pairs an older Soroban contract would
 //! carry. `TurnState` is all fixed-size scalars, so the cheaper
 //! `impl_component!` is enough.

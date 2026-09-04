@@ -1,4 +1,4 @@
-// tic_tac_toe — modernized using:
+// tic_tac_toe - modernized using:
 //   - impl_rich_component! for Address-bearing components (no manual serialize)
 //   - impl_component!      for fixed-size turn state (zero-cost, typed)
 //   - SorobanGame          for clean load/save without repeating the key

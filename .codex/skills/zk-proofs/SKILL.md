@@ -7,7 +7,7 @@ argument-hint: "[zk task]"
 
 # Zero-Knowledge Proofs & Privacy
 
-Privacy patterns and ZK verification on Stellar/Soroban. Capability is protocol- and SDK-version dependent — always verify CAP status, network version, and `soroban-sdk` host-function support before relying on a primitive.
+Privacy patterns and ZK verification on Stellar/Soroban. Capability is protocol- and SDK-version dependent - always verify CAP status, network version, and `soroban-sdk` host-function support before relying on a primitive.
 
 ## When to use this skill
 - Implementing a Groth16 (or other SNARK) verifier as a Soroban contract
@@ -16,7 +16,7 @@ Privacy patterns and ZK verification on Stellar/Soroban. Capability is protocol-
 - Integrating Noir or RISC Zero proofs
 - Building privacy pools, confidential tokens, or Merkle-tree-backed commitments
 
-## Status-sensitive — always verify
+## Status-sensitive - always verify
 1. CAP status (`Accepted`/`Implemented` vs draft)
 2. Target network software + protocol version
 3. `soroban-sdk` release support for the target host functions

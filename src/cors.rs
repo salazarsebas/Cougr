@@ -224,7 +224,7 @@ fn split_host_port(authority: &str) -> Result<(&str, Option<&str>), CorsError> {
             let host = &authority[..index];
             let port = &authority[index + 1..];
             if host.contains(':') {
-                // Bare (unbracketed) IPv6 literal — reject as a host error.
+                // Bare (unbracketed) IPv6 literal - reject as a host error.
                 return Err(CorsError::InvalidHost(authority.to_string()));
             }
             if host.is_empty() || port.is_empty() {

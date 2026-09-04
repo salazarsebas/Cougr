@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# enforce_hygiene.sh — Enforce repository hygiene standards across examples/
+# enforce_hygiene.sh - Enforce repository hygiene standards across examples/
 #
 # Issue: #225
 # Run from repository root.

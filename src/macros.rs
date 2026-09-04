@@ -231,7 +231,7 @@ macro_rules! __cougr_deserialize_field {
 /// # Supported field types
 /// `i32` (4 bytes), `u32` (4 bytes), `i64` (8 bytes), `u64` (8 bytes),
 /// `i128` (16 bytes), `u128` (16 bytes), `u8` (1 byte), `bool` (1 byte),
-/// `bytes32` (32 bytes — use for `BytesN<32>` fields)
+/// `bytes32` (32 bytes - use for `BytesN<32>` fields)
 ///
 /// # Note
 /// The symbol name must be at most 9 characters (Soroban `symbol_short!` limit).

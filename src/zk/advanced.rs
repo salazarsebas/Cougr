@@ -77,7 +77,7 @@ pub fn apply_fog_of_war_transition(
 
 /// Experimental circuit contract for fog-of-war exploration proofs.
 ///
-/// Prefer [`crate::circuits::fog_of_war`] for new integrations — it returns a
+/// Prefer [`crate::circuits::fog_of_war`] for new integrations - it returns a
 /// [`crate::circuits::GameCircuitSpec`] with the same verification path.
 pub struct FogOfWarCircuit {
     pub vk: VerificationKey,

@@ -65,7 +65,7 @@ Based on session analysis, provide appropriate options:
 [2] Start New Session - Begin brainstorming on a new topic
 [3] Extend Session - Add more techniques or explore new angles"
 
-**HALT — wait for user selection before proceeding.**
+**HALT - wait for user selection before proceeding.**
 
 **If Session In Progress:**
 "Let's continue where we left off!

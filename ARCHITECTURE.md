@@ -41,14 +41,14 @@ Both support typed access (`get_typed<T>`, `set_typed<T>`) and raw access (`get_
 
 Supporting systems:
 
-- **Query cache** (`src/query/`) — version-tagged, invalidates on world mutation
-- **Hooks** (`src/hooks.rs`) — callbacks on component add/remove
-- **Observers** (`src/observers.rs`) — event-driven reactions
-- **Commands** (`src/commands.rs`) — deferred mutations during system execution
-- **Scheduler** (`src/scheduler/`) — stage-based, dependency-aware system ordering
-- **Change tracker** (`src/change_tracker.rs`) — per-component dirty flags
-- **Plugins** (`src/plugin/`) — modular game logic bundles
-- **Incremental storage** (`src/incremental/`) — only persist dirty entities
+- **Query cache** (`src/query/`) - version-tagged, invalidates on world mutation
+- **Hooks** (`src/hooks.rs`) - callbacks on component add/remove
+- **Observers** (`src/observers.rs`) - event-driven reactions
+- **Commands** (`src/commands.rs`) - deferred mutations during system execution
+- **Scheduler** (`src/scheduler/`) - stage-based, dependency-aware system ordering
+- **Change tracker** (`src/change_tracker.rs`) - per-component dirty flags
+- **Plugins** (`src/plugin/`) - modular game logic bundles
+- **Incremental storage** (`src/incremental/`) - only persist dirty entities
 
 ### Component definition
 
@@ -60,21 +60,21 @@ Three macros cover every component case:
 | `impl_component_observed!` | Same as above, plus structured Soroban events on every `set` |
 | `impl_rich_component!` | Complex types via XDR codec: `Address`, `Vec`, `String`, `Option`, nested structs |
 
-`impl_rich_component!` requires `#[contracttype]` on the struct. The XDR serialisation is handled entirely by the Soroban SDK — no manual `serialize`/`deserialize` implementation is needed.
+`impl_rich_component!` requires `#[contracttype]` on the struct. The XDR serialisation is handled entirely by the Soroban SDK - no manual `serialize`/`deserialize` implementation is needed.
 
 Rich components are stored in Soroban instance storage (not the ECS `Map`) but share the same entity ID space.
 
 ## ZK Proofs (`src/zk/`)
 
-All ZK operations use Stellar Protocol 25 (X-Ray) host functions — the heavy crypto runs on the host, not in WASM.
+All ZK operations use Stellar Protocol 25 (X-Ray) host functions - the heavy crypto runs on the host, not in WASM.
 
-- **Groth16** (`groth16.rs`) — proof verification via BN254 pairing
-- **BLS12-381** (`bls12_381.rs`) — G1 add/mul/MSM, pairing checks
-- **Poseidon2** (`crypto.rs`) — ZK-friendly hashing, behind `hazmat-crypto` feature
-- **Merkle trees** (`merkle/`) — SHA256 and Poseidon variants, sparse trees, on-chain proofs
-- **Pedersen** (`commitment.rs`) — commitment scheme for hidden state
-- **Game circuits** (`circuits.rs`, `traits.rs`) — `GameCircuit` trait + pre-built circuits (Movement, Combat, Inventory, TurnSequence) + `CustomCircuitBuilder`
-- **ECS integration** (`components.rs`, `systems.rs`) — `CommitReveal`, `HiddenState`, `ProofSubmission` components with verification systems
+- **Groth16** (`groth16.rs`) - proof verification via BN254 pairing
+- **BLS12-381** (`bls12_381.rs`) - G1 add/mul/MSM, pairing checks
+- **Poseidon2** (`crypto.rs`) - ZK-friendly hashing, behind `hazmat-crypto` feature
+- **Merkle trees** (`merkle/`) - SHA256 and Poseidon variants, sparse trees, on-chain proofs
+- **Pedersen** (`commitment.rs`) - commitment scheme for hidden state
+- **Game circuits** (`circuits.rs`, `traits.rs`) - `GameCircuit` trait + pre-built circuits (Movement, Combat, Inventory, TurnSequence) + `CustomCircuitBuilder`
+- **ECS integration** (`components.rs`, `systems.rs`) - `CommitReveal`, `HiddenState`, `ProofSubmission` components with verification systems
 
 ## Accounts (`src/accounts/`)
 
@@ -82,12 +82,12 @@ Account abstraction layer with pluggable implementations:
 
 ```text
 CougrAccount (trait)
-├── ClassicAccount      — standard Stellar keypair
-└── ContractAccount     — smart contract wallet
-     ├── SessionStorage — persistent session keys
-     ├── RecoveryStorage — guardian-based recovery
-     ├── DeviceStorage  — multi-device key management
-     └── Secp256r1Storage — WebAuthn/Passkey keys
+├── ClassicAccount - standard Stellar keypair
+└── ContractAccount - smart contract wallet
+     ├── SessionStorage - persistent session keys
+     ├── RecoveryStorage - guardian-based recovery
+     ├── DeviceStorage - multi-device key management
+     └── Secp256r1Storage - WebAuthn/Passkey keys
 ```
 
 Key traits: `CougrAccount`, `SessionKeyProvider`, `RecoveryProvider`, `MultiDeviceProvider`.
@@ -124,7 +124,7 @@ Circuit builders: `hidden_cards`, `fog_of_war`, `fair_dice`, `sealed_bid` →
 `GameCircuitSpec`. Examples: `hidden_hand`, `fog_explorer`, `dice_duel`,
 `blind_auction`. See [ADR 0006](docs/adr/0006-game-circuit-suite.md).
 
-The test sandbox uses `no_std` + `alloc` with Soroban `testutils` — not `std`.
+The test sandbox uses `no_std` + `alloc` with Soroban `testutils` - not `std`.
 Enable with `cougr-core` feature `testutils`. Modules: `GameHarness`, `Scenario`,
 `WorldFixture`, `ReplayLog`, `SnapshotAssert`. See [ADR 0004](docs/adr/0004-sandbox-design.md) and [ADR 0007](docs/adr/0007-workspace-subcrates.md).
 

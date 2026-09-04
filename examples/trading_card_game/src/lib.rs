@@ -190,7 +190,7 @@ impl TradingCardGame {
             panic_with_error!(&env, GameError::BatchEmpty);
         }
 
-        // Execute each action atomically — any panic reverts all storage writes.
+        // Execute each action atomically - any panic reverts all storage writes.
         let mut executed = 0u32;
         for i in 0..actions.len() {
             let action = actions.get(i).unwrap();

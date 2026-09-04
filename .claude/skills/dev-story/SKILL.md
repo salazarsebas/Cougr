@@ -31,9 +31,9 @@ Run: `python3 {project-root}/.stellar-build/scripts/resolve_customization.py --s
 
 **If the script fails**, resolve the `workflow` block yourself by reading these three files in base → team → user order and applying the same structural merge rules as the resolver:
 
-1. `{skill-root}/customize.toml` — defaults
-2. `{project-root}/.stellar-build/custom/{skill-name}.toml` — team overrides
-3. `{project-root}/.stellar-build/custom/{skill-name}.user.toml` — personal overrides
+1. `{skill-root}/customize.toml` - defaults
+2. `{project-root}/.stellar-build/custom/{skill-name}.toml` - team overrides
+3. `{project-root}/.stellar-build/custom/{skill-name}.user.toml` - personal overrides
 
 Any missing file is skipped. Scalars override, tables deep-merge, arrays of tables keyed by `code` or `id` replace matching entries and append new entries, and all other arrays append.
 
@@ -43,7 +43,7 @@ Execute each entry in `{workflow.activation_steps_prepend}` in order before proc
 
 ### Step 3: Load Persistent Facts
 
-Treat every entry in `{workflow.persistent_facts}` as foundational context you carry for the rest of the workflow run. Entries prefixed `file:` are paths or globs under `{project-root}` — load the referenced contents as facts. All other entries are facts verbatim.
+Treat every entry in `{workflow.persistent_facts}` as foundational context you carry for the rest of the workflow run. Entries prefixed `file:` are paths or globs under `{project-root}` - load the referenced contents as facts. All other entries are facts verbatim.
 
 ### Step 4: Load Config
 
@@ -479,7 +479,7 @@ Activation is complete. Begin the workflow below.
       <action>Suggest checking {sprint_status} to see project progress</action>
     </check>
     <action>Remain flexible - allow user to choose their own path or ask for other assistance</action>
-  <action>Run: `python3 {project-root}/.stellar-build/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` — if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
+  <action>Run: `python3 {project-root}/.stellar-build/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` - if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>
   </step>
 
 </workflow>

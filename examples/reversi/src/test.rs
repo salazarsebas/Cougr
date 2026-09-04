@@ -110,7 +110,7 @@ fn test_legal_move_diagonal_flip() {
     let (p1, p2, client) = setup(&env);
     client.init_game(&p1, &p2);
     client.submit_move(&p1, &3u32, &2u32); // Black plays (3,2)
-    client.submit_move(&p2, &2u32, &2u32); // White plays (2,2) — diagonal flip
+    client.submit_move(&p2, &2u32, &2u32); // White plays (2,2) - diagonal flip
     let board = client.get_board();
     assert_eq!(board.cells.get(2 * 8 + 2), Some(WHITE)); // placed
     assert_eq!(board.cells.get(3 * 8 + 3), Some(WHITE)); // flipped diagonally
@@ -177,11 +177,11 @@ fn test_multi_move_sequence_stays_active() {
     let (p1, p2, client) = setup(&env);
     client.init_game(&p1, &p2);
 
-    // Black at (3,2) — horizontal flip
+    // Black at (3,2) - horizontal flip
     client.submit_move(&p1, &3u32, &2u32);
-    // White at (2,2) — diagonal flip
+    // White at (2,2) - diagonal flip
     client.submit_move(&p2, &2u32, &2u32);
-    // Black at (2,3) — vertical flip
+    // Black at (2,3) - vertical flip
     client.submit_move(&p1, &2u32, &3u32);
 
     let state = client.get_state();

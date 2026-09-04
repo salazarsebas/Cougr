@@ -2,7 +2,7 @@
 // Run `bun run pipeline` to refresh after circuit or fixture changes.
 
 //! Pipeline verification keys for `cougr_core::circuits`.
-//! Development-only — never ship CI-generated VKs to production mainnet.
+//! Development-only - never ship CI-generated VKs to production mainnet.
 
 // ── hidden_cards ──
 pub const HIDDEN_CARDS_VK_ALPHA: [u8; 64] = [

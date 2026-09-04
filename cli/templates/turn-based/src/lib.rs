@@ -1,4 +1,4 @@
-//! {{crate_name}} — a Cougr game contract generated from the `{{template_id}}` template.
+//! {{crate_name}} - a Cougr game contract generated from the `{{template_id}}` template.
 //!
 //! Two players alternate placing marks on a 3×3 board until one of them lines
 //! up three or the board fills. It is the reference shape for any turn-based
@@ -6,10 +6,10 @@
 //! validated before they are written.
 //!
 //! Demonstrates:
-//!   - `impl_rich_component!` — components holding `Address` and `Vec` fields
-//!   - `impl_component!`      — fixed-size turn state
-//!   - `SorobanGame`          — standard world load/save
-//!   - `impl_soroban_game!`   — wires the trait to a `#[contract]` struct
+//!   - `impl_rich_component!` - components holding `Address` and `Vec` fields
+//!   - `impl_component!` - fixed-size turn state
+//!   - `SorobanGame` - standard world load/save
+//!   - `impl_soroban_game!` - wires the trait to a `#[contract]` struct
 
 #![no_std]
 

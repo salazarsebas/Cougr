@@ -1,4 +1,4 @@
-# Reversi Match Log — Testnet
+# Reversi Match Log - Testnet
 
 - **Contract:** `CAQCSRHZZ4O3LN3LEQVF3JQ3H7UI7XPR65WWSCWKUWDKITSEFVRHF2OW`
 - **Network:** Testnet
@@ -108,7 +108,7 @@ Opening board: Black=(3,4),(4,3) / White=(3,3),(4,4)
 | 56 | White | 0 | 2 | 31 / 29 |
 | 57 | Black | 0 | 3 | 39 / 22 |
 | 58 | White | 1 | 1 | 36 / 26 |
-| — | *Black passed* (no legal moves) | — | — | — |
+| - | *Black passed* (no legal moves) | - | - | - |
 | 59 | White | 7 | 0 | 34 / 29 |
 | 60 | Black | 7 | 1 | **36 / 28** |
 

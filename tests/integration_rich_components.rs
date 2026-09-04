@@ -1,4 +1,4 @@
-//! Integration tests for Phase A — Rich Component Types.
+//! Integration tests for Phase A - Rich Component Types.
 //!
 //! Validates `RichComponentTrait`, `impl_rich_component!`, and the
 //! `set_rich` / `get_rich` / `remove_rich` methods on `SimpleWorld`.
@@ -303,7 +303,7 @@ fn test_option_none_stored_correctly() {
 #[test]
 fn test_long_component_name_no_9_char_limit() {
     // impl_rich_component! uses Symbol::new (no 9-char limit).
-    // "player_profile" is 14 chars — would panic in symbol_short!
+    // "player_profile" is 14 chars - would panic in symbol_short!
     let env = Env::default();
     let sym = PlayerProfile::component_type(&env);
     assert_eq!(sym, soroban_sdk::Symbol::new(&env, "player_profile"));

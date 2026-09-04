@@ -514,7 +514,7 @@ export function PlayPage({ walletConnected }: PlayPageProps) {
                 textAlign: 'center',
               }}
             >
-              ✓ Case solved — all suspects correctly placed.
+              ✓ Case solved - all suspects correctly placed.
             </p>
           )}
           <PuzzleGrid

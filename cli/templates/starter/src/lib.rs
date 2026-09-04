@@ -1,14 +1,14 @@
-//! {{crate_name}} — a Cougr game contract generated from the `{{template_id}}` template.
+//! {{crate_name}} - a Cougr game contract generated from the `{{template_id}}` template.
 //!
 //! A player calls `spawn` to enter the world and receives an entity ID, then
 //! calls `move_entity` to walk one step in one of four directions. Every
 //! position change emits an indexed Soroban event.
 //!
 //! Demonstrates:
-//!   - `impl_component_observed!` — ECS component plus indexer-friendly events
-//!   - `impl_component!`          — private ECS component, no events
-//!   - `SorobanGame`              — standard world load/save
-//!   - `impl_soroban_game!`       — wires the trait to a `#[contract]` struct
+//!   - `impl_component_observed!` - ECS component plus indexer-friendly events
+//!   - `impl_component!` - private ECS component, no events
+//!   - `SorobanGame` - standard world load/save
+//!   - `impl_soroban_game!` - wires the trait to a `#[contract]` struct
 
 #![no_std]
 

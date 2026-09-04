@@ -36,7 +36,7 @@ for url in "${URLS[@]}"; do
   fi
 done
 
-echo "download failed — generating local test ptau power=${POWER} with snarkjs (dev only)..." >&2
+echo "download failed - generating local test ptau power=${POWER} with snarkjs (dev only)..." >&2
 PTAU_0="$KEYS/pot${POWER}_0000.ptau"
 PTAU_1="$KEYS/pot${POWER}_0001.ptau"
 snarkjs powersoftau new bn128 "$POWER" "$PTAU_0" -v

@@ -1,6 +1,6 @@
 //! On-chain game testing sandbox (harness, scenarios, fixtures, replay).
 //!
-//! Available with the `testutils` feature. Uses `no_std` + `alloc` — not `std`.
+//! Available with the `testutils` feature. Uses `no_std` + `alloc` - not `std`.
 
 mod fixture;
 mod harness;
@@ -16,5 +16,5 @@ pub use replay::{ReplayCheckpoint, ReplayLog};
 pub use scenario::{Scenario, TurnIndex};
 pub use snapshot::SnapshotAssert;
 
-/// Bootstrap marker — bumped when sandbox API changes.
+/// Bootstrap marker - bumped when sandbox API changes.
 pub const MODULE_VERSION: &str = "0.1.0-sandbox";

@@ -3,7 +3,7 @@ use soroban_sdk::{BytesN, Env, Vec};
 use super::types::{G1Point, G2Point, Groth16Proof, Scalar, VerificationKey};
 
 /// Create a mock G1 point filled with zeros (not a valid curve point).
-/// For testing only — do not use in production.
+/// For testing only - do not use in production.
 pub fn mock_g1_point(env: &Env) -> G1Point {
     G1Point {
         bytes: BytesN::from_array(env, &[0u8; 64]),

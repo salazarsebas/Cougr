@@ -6,9 +6,9 @@
  * category card with an icon, game name, and category badge.
  *
  * Input:
- *   game:     string  — game slug, e.g. "snake"
- *   category: string  — e.g. "Arcade"
- *   icon:     string  — emoji icon
+ *   game:     string - game slug, e.g. "snake"
+ *   category: string - e.g. "Arcade"
+ *   icon:     string - emoji icon
  *
  * Produces a 400×300 SVG.
  */
@@ -77,7 +77,7 @@ export function render({ game, category, icon }) {
 
   <!-- "No board preview" note -->
   <text x="${W/2}" y="${H - 44}" text-anchor="middle" font-size="11" fill="${textMuted}">
-    Real-time game — no static board state
+    Real-time game - no static board state
   </text>
 
   <!-- Cougr watermark -->

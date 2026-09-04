@@ -3,7 +3,7 @@
 //! A hidden-information game keeps the interesting state *off* chain: the deck
 //! order and every player's hand stay with their owners. What the contract
 //! stores is the public shape of the table, who is sitting at it, and how many
-//! deals each seat has proven — everything a proof is checked against, and
+//! deals each seat has proven - everything a proof is checked against, and
 //! nothing that would leak a hand.
 
 use cougr_core::impl_component;

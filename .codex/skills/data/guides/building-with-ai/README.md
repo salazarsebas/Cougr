@@ -17,7 +17,7 @@ AI-powered tools are increasingly available to help developers build on Stellar 
 
 ## Available Tools
 
-### Stella — Official Stellar AI Assistant
+### Stella - Official Stellar AI Assistant
 
 The official AI assistant for Stellar developer questions, maintained by the Stellar Development Foundation.
 
@@ -25,7 +25,7 @@ The official AI assistant for Stellar developer questions, maintained by the Ste
 - **Direct link:** [developers.stellar.org/docs/tools/developer-tools/ai-bot](https://developers.stellar.org/docs/tools/developer-tools/ai-bot)
 - **Discord:** `#stella-help` channel on [Stellar Dev Discord](https://discord.gg/stellardev)
 
-### llms.txt — Machine-Readable Stellar Docs
+### llms.txt - Machine-Readable Stellar Docs
 
 A structured digest of the Stellar documentation formatted for feeding directly into LLMs. Covers Build, Learn, Tokens, Data, Tools, Networks, and Validators sections.
 
@@ -61,9 +61,9 @@ Claude Code plugin providing three skills for secure Stellar contract developmen
 ```
 
 **Skills included:**
-- `setup-stellar-contracts` — scaffold an audited Soroban contract project
-- `upgrade-stellar-contracts` — migrate and upgrade existing contracts safely
-- `develop-secure-contracts` — guided secure development workflow
+- `setup-stellar-contracts` - scaffold an audited Soroban contract project
+- `upgrade-stellar-contracts` - migrate and upgrade existing contracts safely
+- `develop-secure-contracts` - guided secure development workflow
 
 Also auto-installs the OpenZeppelin MCP server for AI-assisted contract generation.
 
@@ -74,7 +74,7 @@ Also auto-installs the OpenZeppelin MCP server for AI-assisted contract generati
 An MCP server running on Cloudflare Workers that exposes Stellar wallet, token, and contract tools directly to Claude and other AI clients.
 
 - **Repository:** [kalepail/stellar-mcp-server](https://github.com/kalepail/stellar-mcp-server)
-- **Use:** Give your AI agent live access to Stellar network operations — no manual SDK wiring needed.
+- **Use:** Give your AI agent live access to Stellar network operations - no manual SDK wiring needed.
 
 ### XDR MCP (leighmcculloch)
 
@@ -83,7 +83,7 @@ An MCP server that decodes and encodes Stellar XDR to and from JSON for AI agent
 - **Repository:** [stellar-experimental/mcp-stellar-xdr](https://github.com/stellar-experimental/mcp-stellar-xdr)
 - **Use:** Let AI agents read and construct raw Stellar transactions and envelopes without manual XDR parsing.
 
-### x402 — HTTP Payments for AI Agents
+### x402 - HTTP Payments for AI Agents
 
 Repurposes the HTTP 402 Payment Required status into a real payment mechanism powered by Soroban auth entry signing. AI agents can autonomously pay for API calls without human intervention.
 
@@ -134,7 +134,7 @@ npx skills add https://github.com/stellar/stellar-dev-skill
 
 > **Note:** This skill is AI-generated and currently under manual review. Contributions and PRs are welcome.
 
-### Hack+ Alebrije CDMX 2026 — AI Guide (Mexico)
+### Hack+ Alebrije CDMX 2026 - AI Guide (Mexico)
 
 A developer guide assembled for the Mexico City hackathon, covering free AI setup, regional anchor integrations, and Soroban gotchas.
 
@@ -146,16 +146,16 @@ Primarily Mexico-focused (Etherfuse MXN rails, SPEI, peso corridors) but the AI 
 ## Resources
 
 **Stellar-native AI tools:**
-- [Stella — Official AI Bot](https://developers.stellar.org/docs/tools/developer-tools/ai-bot)
-- [llms.txt — Machine-Readable Stellar Docs](https://developers.stellar.org/llms.txt)
+- [Stella - Official AI Bot](https://developers.stellar.org/docs/tools/developer-tools/ai-bot)
+- [llms.txt - Machine-Readable Stellar Docs](https://developers.stellar.org/llms.txt)
 - [Stellar Dev Skill](https://github.com/stellar/stellar-dev-skill)
 - [OpenZeppelin Skills (Claude Code)](https://github.com/OpenZeppelin/openzeppelin-skills)
 - [Stellar MCP Server](https://github.com/kalepail/stellar-mcp-server)
 - [XDR MCP](https://github.com/stellar-experimental/mcp-stellar-xdr)
-- [x402 — HTTP Payments for AI Agents](https://developers.stellar.org/docs/build/apps/x402)
+- [x402 - HTTP Payments for AI Agents](https://developers.stellar.org/docs/build/apps/x402)
 - [OpenZeppelin MCP Server](https://mcp.openzeppelin.com/)
 - [OpenZeppelin Contract Wizard](https://wizard.openzeppelin.com/stellar)
-- [AI Guide — Mexico / Hack+ Alebrije CDMX 2026](./mexico-hackathon.md)
+- [AI Guide - Mexico / Hack+ Alebrije CDMX 2026](./mexico-hackathon.md)
 
 **General:**
 - [Stellar Developer Docs](https://developers.stellar.org/)

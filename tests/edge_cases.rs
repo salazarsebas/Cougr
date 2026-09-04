@@ -209,7 +209,7 @@ fn test_observer_for_unregistered_component() {
         |_event: &ComponentEvent, _world: &SimpleWorld, _env: &Env| {},
     );
 
-    // Add "pos" — observer should NOT fire (and not panic)
+    // Add "pos" - observer should NOT fire (and not panic)
     let e = observed.spawn_entity();
     observed.add_component(e, symbol_short!("pos"), Bytes::from_array(&env, &[1]), &env);
 
@@ -224,7 +224,7 @@ fn test_remove_nonexistent_component_observed() {
 
     let e = observed.spawn_entity();
 
-    // Remove component that doesn't exist — should return false, not panic
+    // Remove component that doesn't exist - should return false, not panic
     let removed = observed.remove_component(e, &symbol_short!("pos"), &env);
     assert!(!removed);
 }

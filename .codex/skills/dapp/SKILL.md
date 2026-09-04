@@ -42,7 +42,7 @@ Client-side development with `@stellar/stellar-sdk`, wallet connection, signing,
 
 ## Recommended Dependencies
 
-> **Requires Node.js 20+** — the Stellar SDK dropped Node 18 support.
+> **Requires Node.js 20+** - the Stellar SDK dropped Node 18 support.
 
 ```bash
 npm install @stellar/stellar-sdk @stellar/freighter-api

@@ -1,4 +1,4 @@
-//! Integration tests for Phase B — ECS-Aware Events.
+//! Integration tests for Phase B - ECS-Aware Events.
 //!
 //! Validates `ObservableComponentTrait`, `impl_component_observed!`, and the
 //! `set_typed_observed` / `remove_component_observed` methods on `SimpleWorld`.
@@ -122,13 +122,13 @@ fn test_plain_set_typed_does_not_emit_events() {
     assert_eq!(
         env.events().all().events().len(),
         before,
-        "set_typed must not emit events — use set_typed_observed for that"
+        "set_typed must not emit events - use set_typed_observed for that"
     );
 }
 
 #[test]
 fn test_observed_component_also_satisfies_component_trait() {
-    // ObservableComponentTrait extends ComponentTrait — confirm ECS operations work.
+    // ObservableComponentTrait extends ComponentTrait - confirm ECS operations work.
     let env = Env::default();
     let mut world = SimpleWorld::new(&env);
     let entity = world.spawn_entity();

@@ -9,10 +9,10 @@
 
 `session_arena` is the minimal reference implementation of cougr-core session UX. It strips away game mechanics so you can focus on:
 
-1. **Approve** — owner signs once to create a scoped session key
-2. **Play** — many `tap` calls without wallet prompts
-3. **Renew** — extend session before expiry (owner re-approves)
-4. **Fallback** — continue playing via direct owner auth when the session expires
+1. **Approve** - owner signs once to create a scoped session key
+2. **Play** - many `tap` calls without wallet prompts
+3. **Renew** - extend session before expiry (owner re-approves)
+4. **Fallback** - continue playing via direct owner auth when the session expires
 
 ## Session lifecycle
 
@@ -39,14 +39,14 @@
 
 ## Cougr APIs used
 
-- `SessionBuilder` — declare allowed actions, max operations, and expiry
-- `SessionManager::approve` — create scoped session after owner auth
-- `SessionManager::execute_action` — gasless gameplay via session key
-- `SessionManager::status` — poll remaining ops and renewal hints
-- `SessionManager::renew` — extend absolute `expires_at` timestamp
-- `SessionManager::fallback_execute` — session-first with direct-auth fallback
-- `SessionStorage` — load session keys by owner and key ID
-- `MockSession` (testutils) — helper for unit tests
+- `SessionBuilder` - declare allowed actions, max operations, and expiry
+- `SessionManager::approve` - create scoped session after owner auth
+- `SessionManager::execute_action` - gasless gameplay via session key
+- `SessionManager::status` - poll remaining ops and renewal hints
+- `SessionManager::renew` - extend absolute `expires_at` timestamp
+- `SessionManager::fallback_execute` - session-first with direct-auth fallback
+- `SessionStorage` - load session keys by owner and key ID
+- `MockSession` (testutils) - helper for unit tests
 
 ## Build and test
 

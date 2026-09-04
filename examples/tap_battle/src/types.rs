@@ -14,7 +14,7 @@ use soroban_sdk::{contracttype, Address, BytesN};
 // ECS Components
 // ============================================================================
 
-/// Passkey identity component — stores a registered secp256r1 public key.
+/// Passkey identity component - stores a registered secp256r1 public key.
 /// This is the on-chain representation of a player's WebAuthn/Passkey credential.
 #[contracttype]
 #[derive(Clone, Debug)]
@@ -25,7 +25,7 @@ pub struct PasskeyIdentity {
     pub registered_at: u64,
 }
 
-/// Tap counter component — tracks a player's tapping activity within a round.
+/// Tap counter component - tracks a player's tapping activity within a round.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct TapCounter {
@@ -70,7 +70,7 @@ pub enum PowerUpKind {
     Burst = 2,
 }
 
-/// Power-up component — represents a charged ability.
+/// Power-up component - represents a charged ability.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct PowerUp {
@@ -87,7 +87,7 @@ impl PowerUp {
     }
 }
 
-/// Round state component — tracks a competitive match between two players.
+/// Round state component - tracks a competitive match between two players.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct RoundState {
@@ -107,7 +107,7 @@ pub struct RoundState {
     pub finished: bool,
 }
 
-/// Player profile component — persistent stats across rounds.
+/// Player profile component - persistent stats across rounds.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct PlayerProfile {

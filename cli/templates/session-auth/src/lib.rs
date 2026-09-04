@@ -1,4 +1,4 @@
-//! {{crate_name}} — a Cougr game contract generated from the `{{template_id}}` template.
+//! {{crate_name}} - a Cougr game contract generated from the `{{template_id}}` template.
 //!
 //! Approve once, then play. The owner signs a single wallet prompt to create a
 //! scoped session key; every move after that is authorized by the session
@@ -9,9 +9,9 @@
 //! `fallback_tap` once the session is stale.
 //!
 //! Demonstrates:
-//!   - `session::SessionManager` — session lifecycle (approve, renew, execute)
-//!   - `accounts::SessionBuilder` — scoping a key to one action and a budget
-//!   - `SorobanGame` — standard world load/save for the gameplay state
+//!   - `session::SessionManager` - session lifecycle (approve, renew, execute)
+//!   - `accounts::SessionBuilder` - scoping a key to one action and a budget
+//!   - `SorobanGame` - standard world load/save for the gameplay state
 
 #![no_std]
 
@@ -65,7 +65,7 @@ impl {{ContractName}} {
         ActiveSession::from_status(&status, key.scope.expires_at)
     }
 
-    /// Play a turn, authorized by the session key — no wallet prompt.
+    /// Play a turn, authorized by the session key - no wallet prompt.
     ///
     /// Panics if the session is missing, expired, revoked, or out of budget.
     /// Use [`fallback_tap`](Self::fallback_tap) when a client should keep

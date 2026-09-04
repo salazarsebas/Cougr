@@ -1,4 +1,4 @@
-//! Tap Battle — On-Chain Mobile-First Competitive Tapping Game
+//! Tap Battle - On-Chain Mobile-First Competitive Tapping Game
 //!
 //! This smart contract implements a competitive tapping game on the Stellar
 //! blockchain using cougr-core's ECS framework and passkey authentication.
@@ -6,7 +6,7 @@
 //! # Mobile-First Authentication Flow
 //! This example demonstrates the complete passkey → session → gameplay flow:
 //! 1. **Registration**: Player registers a passkey (secp256r1 public key)
-//!    → No seed phrases, no mnemonics — just Face ID / Touch ID
+//!    → No seed phrases, no mnemonics - just Face ID / Touch ID
 //! 2. **Authentication + Session**: Player authenticates via passkey
 //!    → `verify_secp256r1()` validates the biometric signature
 //!    → `SessionManager` creates a gameplay session scoped to `tap` + `use_power_up`

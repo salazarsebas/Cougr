@@ -190,7 +190,7 @@ fn print_human_summary(results: &[ExampleResult]) {
         for c in &r.criteria {
             if !c.pass {
                 println!(
-                    "      ✗  {} — {}",
+                    "      ✗  {} - {}",
                     c.label,
                     c.detail.as_deref().unwrap_or("")
                 );
@@ -218,7 +218,7 @@ fn print_human_summary(results: &[ExampleResult]) {
 // Root-level hygiene (tracked artifacts, root .gitignore)
 // ---------------------------------------------------------------------------
 
-/// Returns root-level criteria (same for every example — global, not per-example).
+/// Returns root-level criteria (same for every example - global, not per-example).
 fn check_root_hygiene(repo_root: &Path) -> Vec<Criterion> {
     let mut criteria = Vec::new();
 
@@ -427,7 +427,7 @@ fn check_dependencies(dir: &Path, criteria: &mut Vec<Criterion>) {
 
 fn has_path_dep_annotation(contents: &str) -> bool {
     let annotation_re =
-        Regex::new(r"(?m)^#\s*path dep\s*[—\-]\s*pending cougr-core").expect("valid regex");
+        Regex::new(r"(?m)^#\s*path dep\s*[ - \-]\s*pending cougr-core").expect("valid regex");
     annotation_re.is_match(contents)
 }
 

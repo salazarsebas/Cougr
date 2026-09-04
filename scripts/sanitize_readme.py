@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-sanitize_readme.py — Remove marketing sections and deployment artifacts from example READMEs.
+sanitize_readme.py - Remove marketing sections and deployment artifacts from example READMEs.
 
 Issue: #225
 Usage: python3 scripts/sanitize_readme.py examples/<example>/README.md

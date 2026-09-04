@@ -9,7 +9,7 @@ description: Surface current and recent Stellar Community Fund (SCF) round activ
 
 Fetch `https://communityfund.stellar.org/awards`. The currently open round has status "Submission". Extract its rec ID from the round's link (`/awards/<rec-id>`).
 
-The site is a client-rendered React app — plain `curl` returns mostly empty HTML. Use the **WebFetch tool** (Claude Code built-in) which handles client-rendered pages via its parsing layer:
+The site is a client-rendered React app - plain `curl` returns mostly empty HTML. Use the **WebFetch tool** (Claude Code built-in) which handles client-rendered pages via its parsing layer:
 
 ```
 WebFetch(
@@ -18,11 +18,11 @@ WebFetch(
 )
 ```
 
-If WebFetch isn't available in the runtime, fall back to a headless-browser fetch (e.g., `playwright` or `puppeteer` via `uvx`) — `curl` alone won't get rendered content for this site.
+If WebFetch isn't available in the runtime, fall back to a headless-browser fetch (e.g., `playwright` or `puppeteer` via `uvx`) - `curl` alone won't get rendered content for this site.
 
 ### 2. Get the round's submissions
 
-Fetch `https://communityfund.stellar.org/awards/<round-rec-id>`. Parse the submissions list — each entry has: project name, requested amount, status.
+Fetch `https://communityfund.stellar.org/awards/<round-rec-id>`. Parse the submissions list - each entry has: project name, requested amount, status.
 
 If a "See All" link is present, follow it for the full list (not just the first 11 visible on the round page).
 
@@ -52,7 +52,7 @@ This often reveals more than the LumenLoop check alone, because LumenLoop only c
 Format as:
 
 ```
-## SCF Round #<N> — <STATUS>
+## SCF Round #<N> - <STATUS>
 Deadline: <DATE> (<X days remaining>)
 
 ### Top facts
@@ -75,8 +75,8 @@ Deadline: <DATE> (<X days remaining>)
 ### 5.5 Optional: thesis-alignment flagging
 
 For each active submission, optionally cross-reference with:
-- `~/.claude/skills/data/ideas/a16z-big-ideas-2025.json` — does this submission ride an a16z 2025 thesis (RWA, agentic payments, prediction markets, etc.)?
-- `~/.claude/skills/data/ideas/yc-requests-for-startups.json` — does YC explicitly want something in this category?
+- `~/.claude/skills/data/ideas/a16z-big-ideas-2025.json` - does this submission ride an a16z 2025 thesis (RWA, agentic payments, prediction markets, etc.)?
+- `~/.claude/skills/data/ideas/yc-requests-for-startups.json` - does YC explicitly want something in this category?
 
 Submissions that hit BOTH Stellar ecosystem-fit AND broader investor thesis are 2x more likely to win the round. Flag them as "thesis-aligned" in the summary table.
 
@@ -93,8 +93,8 @@ If user is researching:
 
 ## Constraints
 
-- Be polite to communityfund.stellar.org — sequential fetches or low concurrency (5 max)
+- Be polite to communityfund.stellar.org - sequential fetches or low concurrency (5 max)
 - Cache fetched data in `~/.stellar/cache/scf-round/<rec-id>.json` for the session
 - If the site is down or returns non-200, report cleanly and suggest the user visit communityfund.stellar.org directly. Do not fabricate data.
-- If dates aren't visible on the page, say "deadline not extractable from page" — don't speculate
+- If dates aren't visible on the page, say "deadline not extractable from page" - don't speculate
 - The active-round detection assumes exactly one round has status "Submission" at a time. If multiple or none, surface that as a finding

@@ -9,7 +9,7 @@
 //!
 //! # Public Inputs Format
 //!
-//! - `public_inputs[0]`: The solution commitment (`BytesN<32>`) — the Poseidon2
+//! - `public_inputs[0]`: The solution commitment (`BytesN<32>`) - the Poseidon2
 //!   hash of the flat solution vector concatenated with a 32-byte salt chosen by
 //!   the puzzle creator.
 //! - `public_inputs[1..]`: Additional public inputs as required by the circuit

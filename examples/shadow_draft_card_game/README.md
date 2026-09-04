@@ -2,9 +2,9 @@
 
 A Soroban smart-contract example demonstrating:
 
-- **Hidden-hand draft gameplay** — players commit to a card choice via a SHA-256 hash before either reveal is visible, preventing last-second strategy adaptation.
-- **`stellar-zk` proof-backed card validation** — when a verification key is registered, each card play must include a Groth16 proof that the chosen card is a member of the active allowed set, validated on-chain without revealing the card ID until both players have committed.
-- **DAO-governed format rules** — any player can propose banning or unbanning a card from the active season format; proposals execute immediately (modelling a passed governance vote).
+- **Hidden-hand draft gameplay** - players commit to a card choice via a SHA-256 hash before either reveal is visible, preventing last-second strategy adaptation.
+- **`stellar-zk` proof-backed card validation** - when a verification key is registered, each card play must include a Groth16 proof that the chosen card is a member of the active allowed set, validated on-chain without revealing the card ID until both players have committed.
+- **DAO-governed format rules** - any player can propose banning or unbanning a card from the active season format; proposals execute immediately (modelling a passed governance vote).
 
 ## Architecture
 

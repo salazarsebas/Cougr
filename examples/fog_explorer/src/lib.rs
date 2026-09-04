@@ -1,4 +1,4 @@
-//! fog_explorer — canonical Cougr ZK circuits example for fog-of-war exploration.
+//! fog_explorer - canonical Cougr ZK circuits example for fog-of-war exploration.
 
 #![no_std]
 

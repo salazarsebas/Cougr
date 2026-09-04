@@ -250,7 +250,7 @@ impl CheckersContract {
             );
             env.storage().persistent().remove(&symbol_short!("CHAIN"));
         } else {
-            // Multi-hop in progress — hold the turn, record the chain square.
+            // Multi-hop in progress - hold the turn, record the chain square.
             env.storage()
                 .persistent()
                 .set(&symbol_short!("CHAIN"), next_chain.as_ref().unwrap());

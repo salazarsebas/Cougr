@@ -1,7 +1,7 @@
 //! Error type for the CLI.
 //!
 //! Every variant carries enough context to print an actionable message: what
-//! went wrong, and — through [`CliError::hint`] — what the user can do about
+//! went wrong, and - through [`CliError::hint`] - what the user can do about
 //! it. Nothing in the command path is allowed to panic on user input.
 
 use std::fmt;
@@ -65,7 +65,7 @@ impl CliError {
             )),
             CliError::Io { .. } => None,
             CliError::MissingTemplateAsset { .. } => Some(
-                "this is a bug in cougr-cli — please report it at \
+                "this is a bug in cougr-cli - please report it at \
                  https://github.com/salazarsebas/Cougr/issues"
                     .to_string(),
             ),
@@ -74,7 +74,7 @@ impl CliError {
             }
             CliError::InvalidProject { .. } | CliError::PieceConflict { .. } => None,
             CliError::MissingPieceAsset { .. } => Some(
-                "this is a bug in cougr-cli — please report it at https://github.com/salazarsebas/Cougr/issues"
+                "this is a bug in cougr-cli - please report it at https://github.com/salazarsebas/Cougr/issues"
                     .to_string(),
             ),
         }

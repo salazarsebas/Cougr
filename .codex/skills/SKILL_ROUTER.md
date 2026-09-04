@@ -1,12 +1,12 @@
-# Skill Router — stellar.new
+# Skill Router - stellar.new
 
-> **For AI agents**: If the user's request doesn't match the active skill, find the right one below and switch with: "This looks like a [phase] task — switching to `[skill-name]`."
+> **For AI agents**: If the user's request doesn't match the active skill, find the right one below and switch with: "This looks like a [phase] task - switching to `[skill-name]`."
 
 42 skills organized by the Stellar development journey: idea → planning → solutioning → implementation → review → launch.
 
 ---
 
-## Idea phase — what to build
+## Idea phase - what to build
 
 | Trigger phrases | Skill |
 |-----------------|-------|
@@ -17,7 +17,7 @@
 | "talk to Justin", "business analyst", "market research", "competitive analysis", "requirements elicitation" | `justin-analyst` |
 | "push me to think deeper", "refine this output", "improve this", "elicit more details" | `advanced-elicitation` |
 
-## Planning phase — turning idea into spec
+## Planning phase - turning idea into spec
 
 | Trigger phrases | Skill |
 |-----------------|-------|
@@ -28,7 +28,7 @@
 | "product brief", "create a brief", "summarize the product" | `product-brief` |
 | "UX design", "create UX patterns", "design specifications" | `create-ux-design` |
 
-## Solutioning phase — architecture + breakdown
+## Solutioning phase - architecture + breakdown
 
 | Trigger phrases | Skill |
 |-----------------|-------|
@@ -43,7 +43,7 @@
 | "ZK proofs", "zero-knowledge", "BLS12-381", "BN254", "Poseidon" | `zk-proofs` |
 | "SEPs", "CAPs", "Stellar standards", "protocol proposals" | `standards` |
 
-## Implementation phase — building
+## Implementation phase - building
 
 | Trigger phrases | Skill |
 |-----------------|-------|
@@ -52,14 +52,14 @@
 | "investigate", "debug", "find the bug", "forensic analysis" | `investigate` |
 | "party mode", "multi-agent discussion", "let's all chime in", "bring everyone in" | `party-mode` |
 
-## Review phase — quality before shipping
+## Review phase - quality before shipping
 
 | Trigger phrases | Skill |
 |-----------------|-------|
 | "code review", "review my code", "adversarial review", "audit my code" | `code-review` |
 | "edge cases", "find edge cases", "boundary conditions", "what could break" | `review-edge-case-hunter` |
 
-## Launch phase — to mainnet + SCF grant
+## Launch phase - to mainnet + SCF grant
 
 | Trigger phrases | Skill |
 |-----------------|-------|
@@ -75,7 +75,7 @@
 | "tranche report", "milestone deliverable report", "SCF tranche submission" | `scf-tranche-reporter` |
 | "fetch external doc", "get Google Doc", "retrieve IPFS doc", "Notion doc" | `fetch-external-doc` |
 
-## Meta — discovery and help
+## Meta - discovery and help
 
 | Trigger phrases | Skill |
 |-----------------|-------|
@@ -89,7 +89,7 @@
 
 1. Read the user's request
 2. Match against the trigger phrases above
-3. If the active skill doesn't match, tell the user: "This looks like a [phase] task — switching to `[skill-name]`."
+3. If the active skill doesn't match, tell the user: "This looks like a [phase] task - switching to `[skill-name]`."
 4. Load that skill's `SKILL.md` and follow its instructions
 5. When the user shifts intent mid-conversation, re-check the router and switch again
 

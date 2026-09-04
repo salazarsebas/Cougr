@@ -1,4 +1,4 @@
-//! session_arena — canonical Cougr session UX example.
+//! session_arena - canonical Cougr session UX example.
 //!
 //! Flow: `approve_session` once → `tap` many times without wallet prompts →
 //! `renew_session` before expiry → `fallback_tap` when session is stale.

@@ -162,7 +162,7 @@ fn test_vote_counting_and_threshold() {
     };
     let proposal_id = client.submit_proposal(&admin, &input);
 
-    // Both members vote yes — 2/2 = 100% > 51%
+    // Both members vote yes - 2/2 = 100% > 51%
     client.vote(&admin, &proposal_id, &true);
     client.vote(&member, &proposal_id, &true);
 
@@ -298,7 +298,7 @@ fn test_execute_unapproved() {
     };
     let proposal_id = client.submit_proposal(&admin, &input);
 
-    // Don't vote — proposal is still Active
+    // Don't vote - proposal is still Active
     client.execute_proposal(&proposal_id);
 }
 
@@ -419,7 +419,7 @@ fn test_double_reveal_prevention() {
     // First reveal succeeds
     client.reveal_strategy(&admin, &guild_id, &reveal);
 
-    // Second reveal should panic — nullifier already consumed
+    // Second reveal should panic - nullifier already consumed
     let reveal2 = StrategyReveal {
         action_type: 1,
         target_guild_id: 1,
@@ -486,7 +486,7 @@ fn test_battle_resolution() {
     );
 
     // Guild B has no defense (defense_strength = 0)
-    // Resolve battle — attacker wins (10 > 0)
+    // Resolve battle - attacker wins (10 > 0)
     let treasury_before_b = client.get_guild(&guild_b).treasury;
     let treasury_before_a = client.get_guild(&guild_a).treasury;
 

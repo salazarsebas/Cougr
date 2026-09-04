@@ -8,7 +8,7 @@ This contract implements a simplified version of the classic Bomberman game wher
 - Initialize a game with a grid
 - Spawn and move players around the grid
 - Place bombs that have individually configurable blast power
-- Trigger **chain reactions** — a bomb overlapped by an explosion detonates instantly in the same tick
+- Trigger **chain reactions** - a bomb overlapped by an explosion detonates instantly in the same tick
 - Pick up **power-ups** that improve stats (blast radius, bomb capacity, movement speed)
 - Handle collisions and scoring
 - Check for game-over conditions
@@ -74,9 +74,9 @@ Three power-up types are supported and modelled as first-class ECS entities:
 
 | Type | Effect |
 |---|---|
-| `Capacity` | `bomb_capacity += 1` — player may place one more active bomb |
-| `Power` | `bomb_power += 1` — new bombs have a larger blast radius |
-| `Speed` | `speed += 1` — reserved for future movement throttling |
+| `Capacity` | `bomb_capacity += 1` - player may place one more active bomb |
+| `Power` | `bomb_power += 1` - new bombs have a larger blast radius |
+| `Speed` | `speed += 1` - reserved for future movement throttling |
 
 Power-ups are spawned at game start (deterministic grid positions) and when a
 bomb destroys a destructible block (~25% chance via `(x+y)%4==0`).
@@ -87,10 +87,10 @@ the entity from the world (**PickupSystem**).
 
 The **ChainReactionSystem** runs inside `update_tick`:
 1. Bombs whose timer hits `0` are placed in a `detonation_queue`.
-2. Each bomb is detonated in order — explosions are spawned immediately.
+2. Each bomb is detonated in order - explosions are spawned immediately.
 3. After each detonation, every remaining live bomb is checked for overlap
    with a fresh explosion cell.  A hit bomb is removed and pushed to the back
-   of the queue, so it detonates in the same tick — forming a cascade.
+   of the queue, so it detonates in the same tick - forming a cascade.
 4. The process repeats until the queue is empty.
 
 ### Systems at a Glance

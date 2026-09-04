@@ -1,4 +1,4 @@
-// spawn_and_move — canonical Cougr "hello world" game.
+// spawn_and_move - canonical Cougr "hello world" game.
 //
 // A player calls `spawn` to enter the world and receives an entity ID.
 // They then call `move_entity` to walk in one of four directions.
@@ -6,10 +6,10 @@
 // clients can track movement in real time.
 //
 // Demonstrates:
-//   - impl_component_observed! — ECS component + indexer-friendly events
-//   - impl_component!          — private ECS component (no events)
-//   - SorobanGame              — standard load/save boilerplate
-//   - impl_soroban_game!       — wires the trait to a Soroban contract
+//   - impl_component_observed! - ECS component + indexer-friendly events
+//   - impl_component! - private ECS component (no events)
+//   - SorobanGame - standard load/save boilerplate
+//   - impl_soroban_game! - wires the trait to a Soroban contract
 
 #![no_std]
 

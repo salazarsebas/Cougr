@@ -1,15 +1,15 @@
-//! {{crate_name}} — a Cougr game contract generated from the `{{template_id}}` template.
+//! {{crate_name}} - a Cougr game contract generated from the `{{template_id}}` template.
 //!
-//! Players take a seat at a table, then prove — without revealing a single card
-//! — that the hand they hold was really dealt from the committed deck. The
+//! Players take a seat at a table, then prove - without revealing a single card
+//! - that the hand they hold was really dealt from the committed deck. The
 //! contract never learns the hand: it checks a Groth16 proof against the public
 //! commitments and counts the deals that verified.
 //!
 //! Demonstrates:
-//!   - `circuits::hidden_cards` — pre-built hidden-card circuit spec
-//!   - `zk::Groth16Proof`       — proof submitted as a contract argument
-//!   - `SorobanGame`            — standard world load/save
-//!   - `impl_soroban_game!`     — wires the trait to a `#[contract]` struct
+//!   - `circuits::hidden_cards` - pre-built hidden-card circuit spec
+//!   - `zk::Groth16Proof` - proof submitted as a contract argument
+//!   - `SorobanGame` - standard world load/save
+//!   - `impl_soroban_game!` - wires the trait to a `#[contract]` struct
 
 #![no_std]
 
@@ -93,7 +93,7 @@ impl {{ContractName}} {
 
     /// Verify that `player`'s hand was dealt from the committed deck.
     ///
-    /// Returns `false` for a proof that does not check out — only a missing
+    /// Returns `false` for a proof that does not check out - only a missing
     /// table or an unseated player is treated as a caller error.
     pub fn verify_deal(
         env: Env,

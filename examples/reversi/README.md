@@ -9,7 +9,7 @@ An on-chain Reversi (Othello) game built with the [Cougr](../../README.md) ECS f
 
 This example demonstrates a turn-based, perfect-information board game where every move
 mutates shared board state and can trigger automatic turn-skipping. It showcases Cougr's
-`ComponentTrait` pattern for typed, byte-serializable game state — components are plain
+`ComponentTrait` pattern for typed, byte-serializable game state - components are plain
 Rust structs annotated with `#[contracttype]` that implement `ComponentTrait` directly,
 rather than being scanned through `SimpleWorld`/`SimpleQueryBuilder`. This is a lighter-weight
 integration suited to a single fixed-shape game state (one board, two players) with no
@@ -19,15 +19,15 @@ dynamic entity population.
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `init_game` | `player_one: Address`, `player_two: Address` | — | Initializes an 8×8 board with the standard opening position; `player_one` plays Black and moves first. Panics if already initialized. |
-| `submit_move` | `player: Address`, `row: u32`, `col: u32` | — | Validates and applies a move (requires `player.require_auth()`), flips bracketed opponent pieces, recomputes score, and advances turn/pass state. Panics on illegal move, wrong turn, or finished game. |
-| `get_state` | — | `GameState` | Current player, pass-count state, and active/finished status. |
-| `get_board` | — | `BoardState` | Raw 64-cell board array (row-major, 0=empty/1=black/2=white), plus width/height. |
-| `get_score` | — | `ScoreState` | Black/white piece counts and winner (0=ongoing, 1=black, 2=white, 3=draw). |
+| `init_game` | `player_one: Address`, `player_two: Address` | - | Initializes an 8×8 board with the standard opening position; `player_one` plays Black and moves first. Panics if already initialized. |
+| `submit_move` | `player: Address`, `row: u32`, `col: u32` | - | Validates and applies a move (requires `player.require_auth()`), flips bracketed opponent pieces, recomputes score, and advances turn/pass state. Panics on illegal move, wrong turn, or finished game. |
+| `get_state` | - | `GameState` | Current player, pass-count state, and active/finished status. |
+| `get_board` | - | `BoardState` | Raw 64-cell board array (row-major, 0=empty/1=black/2=white), plus width/height. |
+| `get_score` | - | `ScoreState` | Black/white piece counts and winner (0=ongoing, 1=black, 2=white, 3=draw). |
 
 ## Architecture overview
 
-There is no `GameApp` tick loop — `submit_move` runs all systems synchronously in a fixed
+There is no `GameApp` tick loop - `submit_move` runs all systems synchronously in a fixed
 pipeline on each invocation:
 
 ```
@@ -47,7 +47,7 @@ and is the only place that touches contract storage.
 
 The entire game lives under one instance-storage key (`WORLD_KEY`, `symbol_short!("WORLD")`)
 as a single `ECSWorldState` struct bundling the board, turn, status, score, and both player
-addresses. Instance storage is used — not persistent or temporary — because there is exactly
+addresses. Instance storage is used - not persistent or temporary - because there is exactly
 one game per contract instance and the state must survive for the lifetime of that instance
 with no per-entry TTL management.
 
@@ -58,7 +58,7 @@ with no per-entry TTL management.
 2. Black calls `submit_move(player, row, col)`. The contract checks turn order and move
    legality (the move must bracket at least one opponent piece in a straight line).
 3. On a legal move: the piece is placed, bracketed opponent pieces flip, score is
-   recomputed, and turn passes to White — unless White has no legal move, in which case
+   recomputed, and turn passes to White - unless White has no legal move, in which case
    Black continues and `pass_count` is set to 1.
 4. Players alternate `submit_move` calls. If neither player has a legal move
    (`pass_count` reaches 2) or the board fills, `EndConditionSystem` sets status to finished.
@@ -66,7 +66,7 @@ with no per-entry TTL management.
 
 ## Cougr APIs used
 
-- `cougr_core::component::ComponentTrait` — gives each component (`BoardComponent`,
+- `cougr_core::component::ComponentTrait` - gives each component (`BoardComponent`,
   `TurnComponent`, `GameStatusComponent`, `ScoreComponent`) a `component_type()` symbol and
   byte-level `serialize`/`deserialize`, chosen here because the game has a single fixed set
   of components per instance rather than a dynamic entity population that would benefit from
@@ -81,7 +81,7 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked directly
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` - game logic is invoked directly
   from contract entrypoints rather than through a tick-based scheduler, since a turn-based
   game with one decision point per call does not need staged scheduling.
 - No timeout/forfeit mechanism for an unresponsive player.

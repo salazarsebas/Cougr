@@ -128,7 +128,7 @@ If all validations pass:
 **Present Final Menu:**
 **All validations complete!** [C] Complete Workflow
 
-HALT — wait for user input before proceeding.
+HALT - wait for user input before proceeding.
 
 When C is selected, the workflow is complete and the epics.md is ready for development.
 

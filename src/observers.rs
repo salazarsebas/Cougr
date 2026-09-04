@@ -227,7 +227,7 @@ mod tests {
     use core::sync::atomic::{AtomicU32, Ordering};
     use soroban_sdk::symbol_short;
 
-    // Each test gets its own counter — no sharing, no races, no locks.
+    // Each test gets its own counter - no sharing, no races, no locks.
     static COUNT_ADD: AtomicU32 = AtomicU32::new(0);
     static COUNT_REMOVE: AtomicU32 = AtomicU32::new(0);
     static COUNT_WRONG_TYPE: AtomicU32 = AtomicU32::new(0);
@@ -313,7 +313,7 @@ mod tests {
 
         let e1 = observed.spawn_entity();
         let data = Bytes::from_array(&env, &[1]);
-        // Add "pos" — observer is for "vel", so it must not fire
+        // Add "pos" - observer is for "vel", so it must not fire
         observed.add_component(e1, symbol_short!("pos"), data, &env);
 
         assert_eq!(COUNT_WRONG_TYPE.load(Ordering::Relaxed), before);

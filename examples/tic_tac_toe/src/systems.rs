@@ -17,7 +17,7 @@ const LINES: [[u32; 3]; 8] = [
 ///
 /// Returns `0` if the game is still in progress, `1` if X has won, `2` if O
 /// has won, or `3` if the board is full with no winner (draw). Does not
-/// touch storage — callers are responsible for persisting the result.
+/// touch storage - callers are responsible for persisting the result.
 pub fn detect_winner(cells: &Vec<u32>, move_count: u32) -> u32 {
     for line in LINES.iter() {
         let a = cells.get(line[0]).unwrap_or(0);

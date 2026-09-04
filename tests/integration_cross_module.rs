@@ -292,7 +292,7 @@ fn test_scheduler_with_command_queue_pattern() {
     let mut scheduler = SimpleScheduler::new();
     scheduler.add_system("spawner", spawner_system);
 
-    // Run 3 ticks — each spawns one entity
+    // Run 3 ticks - each spawns one entity
     scheduler.run_all(&mut world, &env).unwrap();
     scheduler.run_all(&mut world, &env).unwrap();
     scheduler.run_all(&mut world, &env).unwrap();

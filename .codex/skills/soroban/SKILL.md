@@ -7,7 +7,7 @@ argument-hint: "[contract task]"
 
 # Soroban Smart Contracts
 
-End-to-end guide for building Soroban contracts: writing them, testing them, securing them, and shipping advanced architectures. This skill bundles five concerns that live and die together — the contract code, the tests, the security posture, the design patterns, and the gotchas.
+End-to-end guide for building Soroban contracts: writing them, testing them, securing them, and shipping advanced architectures. This skill bundles five concerns that live and die together - the contract code, the tests, the security posture, the design patterns, and the gotchas.
 
 ## When to use this skill
 - Writing a Soroban contract in Rust
@@ -46,8 +46,8 @@ Use Soroban when you need:
 ## Alternative Languages
 
 Rust is the primary and recommended language for Soroban contracts. Community-maintained alternatives exist but are not recommended for production:
-- **AssemblyScript**: [`as-soroban-sdk`](https://github.com/Soneso/as-soroban-sdk) by Soneso — allows TypeScript-like syntax, officially listed on Stellar docs, but may lag behind the latest protocol version
-- **Solidity**: [Hyperledger Solang](https://github.com/hyperledger-solang/solang) — SDF-funded, compiles Solidity to Soroban WASM, currently **pre-alpha** ([docs](https://developers.stellar.org/docs/learn/migrate/evm/solidity-support-via-solang))
+- **AssemblyScript**: [`as-soroban-sdk`](https://github.com/Soneso/as-soroban-sdk) by Soneso - allows TypeScript-like syntax, officially listed on Stellar docs, but may lag behind the latest protocol version
+- **Solidity**: [Hyperledger Solang](https://github.com/hyperledger-solang/solang) - SDF-funded, compiles Solidity to Soroban WASM, currently **pre-alpha** ([docs](https://developers.stellar.org/docs/learn/migrate/evm/solidity-support-via-solang))
 
 ## Architecture Overview
 
@@ -1197,7 +1197,7 @@ fuzz_target!(|input: (u64, i128)| {
     // Initialize
     client.initialize(&user);
 
-    // Fuzz deposit — should never panic unexpectedly
+    // Fuzz deposit - should never panic unexpectedly
     let _ = client.try_deposit(&user, &amount);
 });
 ```
@@ -1256,7 +1256,7 @@ mod prop_tests {
 
 ## Differential Testing with Test Snapshots
 
-Soroban automatically writes JSON snapshots at the end of every test to `test_snapshots/`, capturing events and final ledger state. Commit these to source control — diffs reveal unintended behavioral changes.
+Soroban automatically writes JSON snapshots at the end of every test to `test_snapshots/`, capturing events and final ledger state. Commit these to source control - diffs reveal unintended behavioral changes.
 
 ### Comparing Against Deployed Contracts
 
@@ -1323,7 +1323,7 @@ fn test_against_mainnet_state() {
 
 ## Mutation Testing
 
-Use `cargo-mutants` to verify test quality — modifies source code and checks that tests catch the changes.
+Use `cargo-mutants` to verify test quality - modifies source code and checks that tests catch the changes.
 
 ```bash
 cargo install --locked cargo-mutants
@@ -1332,7 +1332,7 @@ cargo mutants
 
 **Output interpretation**:
 - **CAUGHT**: Tests detected the mutation (good coverage)
-- **MISSED**: Tests passed despite mutation (test gap — review `mutants.out/diff/`)
+- **MISSED**: Tests passed despite mutation (test gap - review `mutants.out/diff/`)
 
 - **Docs**: [Mutation Testing](https://developers.stellar.org/docs/build/guides/testing/mutation-testing)
 
@@ -1769,19 +1769,19 @@ if (clawbackEnabled) {
 
 ## Bug Bounty Programs
 
-### Immunefi — Stellar Core (up to $250K)
+### Immunefi - Stellar Core (up to $250K)
 - **URL**: https://immunefi.com/bug-bounty/stellar/
 - **Scope**: stellar-core, rs-soroban-sdk, rs-soroban-env, soroban-tools (CLI + RPC), js-soroban-client, rs-stellar-xdr, wasmi fork
 - **Rewards**: Critical $50K–$250K, High $10K–$50K, Medium $5K, Low $1K
 - **Payment**: USD-denominated, paid in XLM. KYC required.
 - **Rules**: PoC required. Test on local forks only (no mainnet/testnet).
 
-### Immunefi — OpenZeppelin on Stellar (up to $25K)
+### Immunefi - OpenZeppelin on Stellar (up to $25K)
 - **URL**: https://immunefi.com/bug-bounty/openzeppelin-stellar/
 - **Scope**: OpenZeppelin Stellar Contracts library
 - **Max payout**: $25K per bug, $250K total program cap
 
-### HackerOne — Web Applications
+### HackerOne - Web Applications
 - **URL**: https://stellar.org/grants-and-funding/bug-bounty
 - **Scope**: SDF web applications, production servers, domains
 - **Disclosure**: 90-day remediation window before public disclosure
@@ -1834,18 +1834,18 @@ Framework for building custom security detectors for Soroban.
 ### Formal Verification
 
 #### Certora Sunbeam Prover
-Purpose-built formal verification for Soroban — first WASM platform supported by Certora.
+Purpose-built formal verification for Soroban - first WASM platform supported by Certora.
 - **Docs**: https://docs.certora.com/en/latest/docs/sunbeam/index.html
-- **Spec language**: CVLR (Certora Verification Language for Rust) — Rust macros (`cvlr_assert!`, `cvlr_assume!`, `cvlr_satisfy!`)
+- **Spec language**: CVLR (Certora Verification Language for Rust) - Rust macros (`cvlr_assert!`, `cvlr_assume!`, `cvlr_satisfy!`)
 - **Operates at**: WASM bytecode level (eliminates compiler trust assumptions)
 - **Reports**: https://github.com/Certora/SecurityReports
 - **Example**: [Blend V1 verification report](https://www.certora.com/reports/blend-smart-contract-verification-report)
 
-#### Runtime Verification — Komet
+#### Runtime Verification - Komet
 Formal verification and testing tool built specifically for Soroban (SCF-funded).
 - **Docs**: https://docs.runtimeverification.com/komet
 - **Repo**: https://github.com/runtimeverification/komet
-- **Spec language**: Rust — property-based tests written in the same language as Soroban contracts
+- **Spec language**: Rust - property-based tests written in the same language as Soroban contracts
 - **Operates at**: WASM bytecode level via [KWasm semantics](https://github.com/runtimeverification/wasm-semantics) (eliminates compiler trust assumptions)
 - **Features**: Fuzzing, testing, formal verification
 - **Reports**: [RV publications](https://github.com/runtimeverification/publications)

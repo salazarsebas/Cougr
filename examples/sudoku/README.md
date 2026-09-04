@@ -17,15 +17,15 @@ state (board, fixed-cell mask, status, move counter) is its own component with m
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `init_game` | `puzzle: Vec<u32>` | — | Seeds an empty 9×9 board from an 81-cell array (0=empty, 1–9=given). Cells with a non-zero starting value become fixed. Panics if already initialized, the length isn't 81, or a value exceeds 9. |
-| `submit_value` | `row: u32`, `col: u32`, `value: u32` | — | Validates and places `value` at `(row, col)`. Panics if the puzzle is solved, the cell is fixed/out-of-bounds, the value is outside 1–9, or the placement violates a row/column/block constraint. |
-| `get_state` | — | `GameState` | Current status (0=playing, 1=solved) and move count. |
+| `init_game` | `puzzle: Vec<u32>` | - | Seeds an empty 9×9 board from an 81-cell array (0=empty, 1–9=given). Cells with a non-zero starting value become fixed. Panics if already initialized, the length isn't 81, or a value exceeds 9. |
+| `submit_value` | `row: u32`, `col: u32`, `value: u32` | - | Validates and places `value` at `(row, col)`. Panics if the puzzle is solved, the cell is fixed/out-of-bounds, the value is outside 1–9, or the placement violates a row/column/block constraint. |
+| `get_state` | - | `GameState` | Current status (0=playing, 1=solved) and move count. |
 | `get_cell` | `row: u32`, `col: u32` | `CellState` | Current value at the cell and whether it is a fixed given. |
-| `is_solved` | — | `bool` | Whether the puzzle is fully and correctly filled. |
+| `is_solved` | - | `bool` | Whether the puzzle is fully and correctly filled. |
 
 ## Architecture overview
 
-`submit_value` runs a fixed validation/update pipeline synchronously on each call — there is
+`submit_value` runs a fixed validation/update pipeline synchronously on each call - there is
 no `GameApp` tick loop:
 
 ```
@@ -65,7 +65,7 @@ add TTL bookkeeping this single-instance puzzle doesn't need.
 
 ## Cougr APIs used
 
-- `cougr_core::component::ComponentTrait` — gives each component
+- `cougr_core::component::ComponentTrait` - gives each component
   (`BoardComponent`, `FixedCellsComponent`, `GameStatusComponent`, `MoveCountComponent`) a
   `component_type()` symbol and explicit byte `serialize`/`deserialize`, chosen because the
   puzzle has one fixed-shape 81-cell grid rather than a dynamic entity population that would
@@ -80,7 +80,7 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — validation runs directly from
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` - validation runs directly from
   contract entrypoints since a single-player puzzle with one decision point per call has no
   need for staged scheduling.
 - `init_game` accepts any caller and does not verify the supplied puzzle has a unique

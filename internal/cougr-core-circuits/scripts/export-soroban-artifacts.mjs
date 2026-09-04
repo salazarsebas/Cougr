@@ -104,7 +104,7 @@ const vkHeader = [
   "// Run `bun run pipeline` to refresh after circuit or fixture changes.",
   "",
   "//! Pipeline verification keys for `cougr_core::circuits`.",
-  "//! Development-only — never ship CI-generated VKs to production mainnet.",
+  "//! Development-only - never ship CI-generated VKs to production mainnet.",
   "",
 ];
 
@@ -125,11 +125,11 @@ for (const circuit of CIRCUITS) {
   const publicPath = join(WORK, circuit, "public.json");
 
   if (!existsSync(vkPath)) {
-    console.error(`missing ${vkPath} — run setup/export-vk first`);
+    console.error(`missing ${vkPath} - run setup/export-vk first`);
     process.exit(1);
   }
   if (!existsSync(proofPath) || !existsSync(publicPath)) {
-    console.error(`missing proof/public for ${circuit} — run prove.sh first`);
+    console.error(`missing proof/public for ${circuit} - run prove.sh first`);
     process.exit(1);
   }
 

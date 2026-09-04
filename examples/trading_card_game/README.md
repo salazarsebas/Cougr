@@ -10,7 +10,7 @@ In a trading card game a single turn consists of multiple sequential actions: pl
 - The opponent could observe and exploit that intermediate state.
 - A wallet approval prompt between every action would create terrible UX.
 
-`BatchBuilder` solves all three problems. The entire turn — every `PlayCreature`, `CastSpell`, and `DeclareAttack` — is composed into a single batch. Because a Soroban contract invocation is atomic by design, **any panic inside `submit_turn` reverts every storage write made during that call**. Either the whole turn succeeds, or nothing changes.
+`BatchBuilder` solves all three problems. The entire turn - every `PlayCreature`, `CastSpell`, and `DeclareAttack` - is composed into a single batch. Because a Soroban contract invocation is atomic by design, **any panic inside `submit_turn` reverts every storage write made during that call**. Either the whole turn succeeds, or nothing changes.
 
 ### How it works
 
@@ -35,7 +35,7 @@ submit_turn(player, actions)
   └─ Advance turn
 ```
 
-If, say, the second action in the batch runs out of mana, the contract panics, and **all** state changes (including the first action that succeeded) are discarded — the player's hand, field, stats, and mana are exactly as they were before the call.
+If, say, the second action in the batch runs out of mana, the contract panics, and **all** state changes (including the first action that succeeded) are discarded - the player's hand, field, stats, and mana are exactly as they were before the call.
 
 ## Session Keys
 
@@ -45,7 +45,7 @@ Each player calls `start_session` at the beginning of the match. This builds a `
 - Caps the session at 200 operations.
 - Expires after a 2-hour TTL (7 200 ledger seconds).
 
-`submit_turn` validates the session before executing any actions. If the session has expired, the entire call is rejected — no stale turns can sneak in after a match is effectively abandoned.
+`submit_turn` validates the session before executing any actions. If the session has expired, the entire call is rejected - no stale turns can sneak in after a match is effectively abandoned.
 
 ## Game Flow
 
@@ -88,8 +88,8 @@ Each player calls `start_session` at the beginning of the match. This builds a `
 | 6  | Creature| 4    | 4     | 4         | Mid-range            |
 | 7  | Creature| 5    | 5     | 5         | Threat               |
 | 8  | Creature| 6    | 6     | 6         | Late-game bomb       |
-| 9  | Spell   | 2    | 3     | —         | 3 direct damage      |
-| 10 | Spell   | 4    | 5     | —         | 5 direct damage      |
+| 9  | Spell   | 2    | 3     | - | 3 direct damage      |
+| 10 | Spell   | 4    | 5     | - | 5 direct damage      |
 
 ## ECS Components
 

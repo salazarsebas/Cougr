@@ -16,4 +16,4 @@
 - Batch operations with `BatchExecutor`
 - How these standards compose with the ECS world
 
-Check back soon — or [watch the repository](https://github.com/salazarsebas/Cougr).
+Check back soon - or [watch the repository](https://github.com/salazarsebas/Cougr).

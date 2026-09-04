@@ -4,7 +4,7 @@
 
 This guide captures the small set of enforced terminology and voice rules that Cougr documentation follows. New documentation, examples, marketing copy, and showcase text must conform to these rules.
 
-These rules are derived from actual usage in Cougr's strongest existing documentation — they codify what the project already does implicitly, not invented conventions.
+These rules are derived from actual usage in Cougr's strongest existing documentation - they codify what the project already does implicitly, not invented conventions.
 
 ---
 
@@ -27,7 +27,7 @@ These rules are derived from actual usage in Cougr's strongest existing document
 | **plugin** | "addon", "module", "extension" | Plugins are the composable bundle mechanism in `GameApp`. |
 | **canonical example** | "main example", "primary example", "core example" | Examples are classified as canonical (maintained reference) or transitional (older patterns). "Canonical" is the precise term. |
 | **transitional example** | "legacy example", "old example" | "Transitional" precisely indicates the example preserves an older pattern for compatibility, not that it is abandoned. |
-| **curated surface** | "stable API", "public API" (when referring to the 1.0 contract) | The curated surface is the *defended* subset of public APIs — not every public symbol is curated. Prefer "curated surface" to avoid overpromising. |
+| **curated surface** | "stable API", "public API" (when referring to the 1.0 contract) | The curated surface is the *defended* subset of public APIs - not every public symbol is curated. Prefer "curated surface" to avoid overpromising. |
 
 ---
 
@@ -35,7 +35,7 @@ These rules are derived from actual usage in Cougr's strongest existing document
 
 ### 1. Honest-by-default
 
-State gaps plainly rather than marketing around them. If a feature is Beta, say "Beta" — not "stable with some evolution expected." If a verification path is Experimental, say "Experimental" — not "advanced but reliable." This is Cougr's strongest differentiator as a documentation culture.
+State gaps plainly rather than marketing around them. If a feature is Beta, say "Beta" - not "stable with some evolution expected." If a verification path is Experimental, say "Experimental" - not "advanced but reliable." This is Cougr's strongest differentiator as a documentation culture.
 
 ### 2. Precise over playful
 
@@ -82,6 +82,6 @@ This voice guide was cross-checked against the source-of-truth documents before 
 ## Required Reference
 
 All documentation contributors must read:
-- [MATURITY_MODEL.md](MATURITY_MODEL.md) — the three maturity tier definitions (Stable, Beta, Experimental)
-- [GLOSSARY.md](GLOSSARY.md) — full term definitions
-- This voice guide — terminology and voice rules above
+- [MATURITY_MODEL.md](MATURITY_MODEL.md) - the three maturity tier definitions (Stable, Beta, Experimental)
+- [GLOSSARY.md](GLOSSARY.md) - full term definitions
+- This voice guide - terminology and voice rules above

@@ -12,7 +12,7 @@ use soroban_sdk::{Address, Env};
 use crate::types::*;
 
 // ============================================================================
-// ProposalSystem — Guild creation and proposal management
+// ProposalSystem - Guild creation and proposal management
 // ============================================================================
 
 /// Initialize a new guild with a shared treasury.
@@ -156,7 +156,7 @@ pub fn submit_proposal(env: &Env, proposer: &Address, input: &ProposalInput) -> 
 }
 
 // ============================================================================
-// VotingSystem — Vote casting and threshold evaluation
+// VotingSystem - Vote casting and threshold evaluation
 // ============================================================================
 
 /// Cast a vote on a proposal.
@@ -232,7 +232,7 @@ pub fn vote(env: &Env, voter: &Address, proposal_id: u32, support: bool) {
 }
 
 // ============================================================================
-// TreasuryExecutionSystem — Execute approved proposals
+// TreasuryExecutionSystem - Execute approved proposals
 // ============================================================================
 
 /// Execute an approved proposal, applying treasury changes.
@@ -297,7 +297,7 @@ pub fn execute_proposal(env: &Env, proposal_id: u32) {
             guild.attack_strength += UPGRADE_BONUS;
         }
         ProposalAction::Allocate => {
-            // Generic allocation — treasury already deducted
+            // Generic allocation - treasury already deducted
         }
     }
 

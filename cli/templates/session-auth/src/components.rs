@@ -1,7 +1,6 @@
 //! ECS components and storage keys for {{crate_name}}.
 //!
-//! The gameplay state a session protects is deliberately tiny — a tap counter —
-//! so the interesting part stays visible: who is allowed to act, for how long,
+//! The gameplay state a session protects is deliberately tiny - a tap counter - //! so the interesting part stays visible: who is allowed to act, for how long,
 //! and how many times.
 
 use cougr_core::impl_component;

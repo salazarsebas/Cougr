@@ -5,10 +5,10 @@ The **Reference** section contains low-level documentation for Cougr's modules, 
 | Document | Description |
 |---|---|
 | [ECS Core](ECS_CORE.md) | The core ECS primitives: Entity, Component, Query, System, Scheduler |
-| [Account Kernel](ACCOUNT_KERNEL.md) | Account abstraction layer — session keys, recovery, passkeys |
+| [Account Kernel](ACCOUNT_KERNEL.md) | Account abstraction layer - session keys, recovery, passkeys |
 | [Standards Layer](STANDARDS_LAYER.md) | Reusable contract standards: AccessControl, Pausable, Ownable, etc. |
 | [Privacy Model](PRIVACY_MODEL.md) | ZK proofs, Pedersen commitments, hidden state |
-| [Feature Flags](FEATURE_FLAGS.md) | `hazmat-crypto`, `testutils`, `debug` — what each enables |
+| [Feature Flags](FEATURE_FLAGS.md) | `hazmat-crypto`, `testutils`, `debug` - what each enables |
 | [Performance Guide](PERFORMANCE.md) | Resource cost intuition, benchmarks, optimization patterns |
 | [API Contract](API_CONTRACT.md) | Public API guarantees and stability promises |
 | [Compatibility Promises](COMPATIBILITY_PROMISES.md) | What Cougr will and won't break between releases |

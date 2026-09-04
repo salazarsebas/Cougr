@@ -80,7 +80,7 @@ Organize by USER VALUE, not technical layers:
 - Epic 1: File Upload (modifies model, controller, web form, web API)
 - Epic 2: File Status (modifies model, controller, web form, web API)
 - Epic 3: File Access permissions (modifies model, controller, web form, web API)
-- All three epics touch the same files — consolidate into one epic with ordered stories
+- All three epics touch the same files - consolidate into one epic with ordered stories
 
 **✅ CORRECT Alternative:**
 

@@ -10,7 +10,7 @@
 
 ## What this guide will cover
 
-Developers coming from traditional game development or web backends often hit the same wall: *what logic actually needs to be on-chain, and what doesn't?* Getting this wrong is expensive — literally, in gas fees.
+Developers coming from traditional game development or web backends often hit the same wall: *what logic actually needs to be on-chain, and what doesn't?* Getting this wrong is expensive - literally, in gas fees.
 
 This guide will answer:
 
@@ -19,4 +19,4 @@ This guide will answer:
 - Patterns for off-chain movement with on-chain settlement
 - Resource cost intuition: what makes a transaction cheap vs. expensive
 
-Check back soon — or [watch the repository](https://github.com/salazarsebas/Cougr) to be notified when this page goes live.
+Check back soon - or [watch the repository](https://github.com/salazarsebas/Cougr) to be notified when this page goes live.

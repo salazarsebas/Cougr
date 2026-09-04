@@ -413,10 +413,10 @@ fn test_powerup_pickup() {
     with_contract(&env, || {
         BombermanContract::init_game(env.clone());
 
-        // Spawn player at (1,1) — guaranteed empty corner
+        // Spawn player at (1,1) - guaranteed empty corner
         BombermanContract::spawn_player(env.clone(), 1, 1, 1);
 
-        // Manually inject a Capacity power-up at (1,3) — an open walkable cell.
+        // Manually inject a Capacity power-up at (1,3) - an open walkable cell.
         // We access the world directly to plant the entity.
         let mut world: SimpleWorld = env.storage().instance().get(&DataKey::World).unwrap();
         let pu = PowerUpComponent::new(1, 3, PowerUpType::Capacity);
@@ -492,7 +492,7 @@ fn test_chain_reaction_explosions() {
         // Player 1 places bomb at (1, 1)
         BombermanContract::place_bomb(env.clone(), 1);
 
-        // Player 2 places bomb at (3, 1) — within reach of bomb-1's power=1
+        // Player 2 places bomb at (3, 1) - within reach of bomb-1's power=1
         // We need bomb-1's explosion to chain into bomb-2.
         // Manually boost player-1's power so explosion reaches (3,1).
         {

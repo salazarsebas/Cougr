@@ -8,7 +8,7 @@ An on-chain Minesweeper game built with the [Cougr](../../README.md) ECS framewo
 ## Purpose and pattern
 
 This example demonstrates a single-player reveal-and-deduce puzzle over a fixed, deterministic
-mine layout — no player input or randomness influences where mines are placed, which keeps the
+mine layout - no player input or randomness influences where mines are placed, which keeps the
 board auditable and reproducible across deployments. It showcases Cougr's `ComponentTrait`
 pattern for typed, byte-serializable game state: the board, the (hidden) mine layout, and the
 game status are each their own component with manual `serialize`/`deserialize`, demonstrating
@@ -18,17 +18,17 @@ explicit byte-layout control for a fixed-size 9×9 grid.
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `init_game` | — | `GameState` | Initializes a 9×9 board with mines placed at fixed, deterministic positions. Overwrites any existing game. |
+| `init_game` | - | `GameState` | Initializes a 9×9 board with mines placed at fixed, deterministic positions. Overwrites any existing game. |
 | `reveal_cell` | `row: u32`, `col: u32` | `RevealResult` | Reveals the cell at `(row, col)`. Returns `success`, `is_mine`, `adjacent_mines`, and a status `message` symbol (`ok`, `invalid`, `revealed`, `boom`, or `over`). |
-| `get_state` | — | `GameState` | Current status, revealed-cell count, and remaining safe cells. |
+| `get_state` | - | `GameState` | Current status, revealed-cell count, and remaining safe cells. |
 | `get_visible_cell` | `row: u32`, `col: u32` | `VisibleCellState` | Whether the cell is revealed, whether it's a mine (only meaningful once revealed), and its adjacent-mine count. |
-| `is_finished` | — | `bool` | Whether the game has reached `Won` or `Lost`. |
-| `get_board` | — | `Vec<u32>` | Raw 81-cell board array (row-major); each entry is `0`–`8` for a revealed count, `9` for hidden, or `10` for a revealed mine. |
-| `reset_game` | — | `GameState` | Re-initializes the game (equivalent to calling `init_game` again). |
+| `is_finished` | - | `bool` | Whether the game has reached `Won` or `Lost`. |
+| `get_board` | - | `Vec<u32>` | Raw 81-cell board array (row-major); each entry is `0`–`8` for a revealed count, `9` for hidden, or `10` for a revealed mine. |
+| `reset_game` | - | `GameState` | Re-initializes the game (equivalent to calling `init_game` again). |
 
 ## Architecture overview
 
-There is no `GameApp` tick loop — `reveal_cell` runs all logic synchronously in a fixed
+There is no `GameApp` tick loop - `reveal_cell` runs all logic synchronously in a fixed
 pipeline on each invocation:
 
 ```
@@ -53,7 +53,7 @@ touches contract storage.
 
 The entire game lives under one instance-storage key (`WORLD_KEY`, `symbol_short!("WORLD")`)
 as a single `ECSWorldState` struct bundling the board, the mine layout, and the game status.
-Instance storage is used — not persistent or temporary — because there is exactly one game per
+Instance storage is used - not persistent or temporary - because there is exactly one game per
 contract instance and the state must survive for the lifetime of that instance with no
 per-entry TTL management.
 
@@ -73,7 +73,7 @@ per-entry TTL management.
 
 ## Cougr APIs used
 
-- `cougr_core::component::ComponentTrait` — gives each component (`BoardComponent`,
+- `cougr_core::component::ComponentTrait` - gives each component (`BoardComponent`,
   `MineLayoutComponent`, `GameStateComponent`) a `component_type()` symbol and explicit byte
   `serialize`/`deserialize`, chosen because the game has one fixed-shape 81-cell grid rather
   than a dynamic entity population that would benefit from `SimpleWorld`/`SimpleQueryBuilder`
@@ -83,7 +83,7 @@ per-entry TTL management.
   `SimpleQueryBuilder` are unnecessary because the game has exactly three fixed components and
   never scans entities by type; `auth`, `privacy::stable`/`experimental`, and `ops` standards
   are unused because this example has no multi-party authorization, hidden-information
-  disclosure, or pausability/ownership requirements — the entire board state is openly
+  disclosure, or pausability/ownership requirements - the entire board state is openly
   readable via `get_board` and `get_visible_cell`.
 
 ## Build and test commands
@@ -95,13 +95,13 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — reveal logic is invoked directly
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` - reveal logic is invoked directly
   from contract entrypoints since a single-player puzzle with one decision point per call has
   no need for staged scheduling.
 - Mine placement is fixed and deterministic rather than randomized per game; this keeps the
   layout auditable but means every new game (or `reset_game` call) has mines in the same
   positions.
-- No flagging system — the contract only supports revealing cells, not marking suspected
+- No flagging system - the contract only supports revealing cells, not marking suspected
   mines.
 - No multi-player or wagering support; any caller can call any entrypoint for the single
   shared game instance.

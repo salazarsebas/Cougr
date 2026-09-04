@@ -161,7 +161,7 @@ impl MyFirstGame {
 }
 ```
 
-This pattern—**Load World -> Query/Modify -> Save World**—is the backbone of every Cougr contract entry point.
+This pattern - **Load World -> Query/Modify -> Save World** - is the backbone of every Cougr contract entry point.
 
 ---
 

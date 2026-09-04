@@ -74,7 +74,7 @@ fn test_commit_reveal_timeout_removes_component() {
     let cr_sym = Symbol::new(&env, COMMIT_REVEAL_TYPE);
 
     // Commit with deadline = 0 (already expired at ledger time 0 since now > deadline
-    // requires now > 0 to expire at 0 — but default ledger time = 0, so now = 0.
+    // requires now > 0 to expire at 0 - but default ledger time = 0, so now = 0.
     // We need deadline < now. Let's set deadline to 0, with current time = 0 → 0 > 0 = false.
     // So the commit won't be removed. We should set deadline such that it will expire.)
 
@@ -244,7 +244,7 @@ fn test_multiple_commit_reveals_different_entities() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Phase C — ZK Accessible
+// Phase C - ZK Accessible
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[test]
