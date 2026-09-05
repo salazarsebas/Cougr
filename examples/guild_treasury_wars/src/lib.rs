@@ -1,4 +1,4 @@
-//! Guild Treasury Wars — DAO-Governed Factions with stellar-zk Commitments
+//! Guild Treasury Wars - DAO-Governed Factions with stellar-zk Commitments
 //!
 //! This smart contract implements a guild-based strategy game on the Stellar
 //! blockchain using cougr-core's ECS framework. Guilds manage shared treasuries,

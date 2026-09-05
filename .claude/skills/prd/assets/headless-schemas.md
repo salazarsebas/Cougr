@@ -4,11 +4,11 @@ Every headless run ends with one of these payloads. Omit keys for artifacts not 
 
 ## Common fields
 
-- `status` — `"complete"`, `"blocked"`, or `"partial"`
-- `intent` — `"create"`, `"update"`, or `"validate"` (matches the detected intent)
-- `reason` — required when `status` is `"blocked"`; one-sentence explanation
-- `assumptions` — array of inferred values that were not directly confirmed by inputs
-- `open_questions` — array of items that need a human decision before the artifact can be considered final
+- `status` - `"complete"`, `"blocked"`, or `"partial"`
+- `intent` - `"create"`, `"update"`, or `"validate"` (matches the detected intent)
+- `reason` - required when `status` is `"blocked"`; one-sentence explanation
+- `assumptions` - array of inferred values that were not directly confirmed by inputs
+- `open_questions` - array of items that need a human decision before the artifact can be considered final
 
 ## Create
 
@@ -61,7 +61,7 @@ Every headless run ends with one of these payloads. Omit keys for artifacts not 
 }
 ```
 
-`validation_report` is always written for Validate intent — the path here is required, not optional.
+`validation_report` is always written for Validate intent - the path here is required, not optional.
 
 ## Blocked
 
@@ -69,7 +69,7 @@ Every headless run ends with one of these payloads. Omit keys for artifacts not 
 {
   "status": "blocked",
   "intent": "update",
-  "reason": "Change signal ambiguous — could be a scope expansion or a clarification; no inferred direction"
+  "reason": "Change signal ambiguous - could be a scope expansion or a clarification; no inferred direction"
 }
 ```
 

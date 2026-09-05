@@ -51,13 +51,13 @@ const ClueBuilder: React.FC<ClueBuilderProps> = ({ suspects, gridSize, onAddClue
       </select>
       <label style={s.label}>Primary Suspect</label>
       <select style={s.select} value={primaryId} onChange={(e) => setPrimaryId(e.target.value)}>
-        <option value="">— select —</option>
+        <option value=""> - select - </option>
         {suspects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
       {needsSecondary && <>
         <label style={s.label}>Secondary Suspect</label>
         <select style={s.select} value={secondaryId} onChange={(e) => setSecondaryId(e.target.value)}>
-          <option value="">— select —</option>
+          <option value=""> - select - </option>
           {suspects.filter((s) => s.id !== primaryId).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </>}

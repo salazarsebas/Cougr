@@ -3,9 +3,9 @@ name = "cougr-core-circuits"
 version = "1.1.0"
 edition = "2021"
 publish = false
-description = "Internal ZK game circuit builders — compiled into cougr-core via include"
+description = "Internal ZK game circuit builders - compiled into cougr-core via include"
 license = "MIT"
-rust-version = "1.70.0"
+rust-version = "1.88.0"
 
 [lib]
 path = "src/lib.rs"

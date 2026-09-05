@@ -1,4 +1,4 @@
-# ️ Guild Treasury Wars — DAO-Governed Factions with stellar-zk Commitments
+# ️ Guild Treasury Wars - DAO-Governed Factions with stellar-zk Commitments
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
 [![Tests](https://img.shields.io/badge/tests-14%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
@@ -8,7 +8,7 @@ A guild-based strategy game implemented as a **Soroban smart contract** using `c
 
 ## Why stellar-zk?
 
-In strategy games, revealing your plans to the enemy is a losing move. **stellar-zk** enables **sealed war plans** — players commit to strategies without revealing them, then prove their commitments on-chain when it's time to resolve battles.
+In strategy games, revealing your plans to the enemy is a losing move. **stellar-zk** enables **sealed war plans** - players commit to strategies without revealing them, then prove their commitments on-chain when it's time to resolve battles.
 
 | Without stellar-zk | With stellar-zk |
 |---|---|
@@ -86,9 +86,9 @@ Each commitment hash acts as a **nullifier** (following stellar-zk's verifier co
 
 ### References
 
-- [stellar-zk](https://github.com/salazarsebas/stellar-zk) — ZK DevKit for Stellar/Soroban
-- [stellar-zk on crates.io](https://crates.io/crates/stellar-zk) — Crate reference
-- [Stellar Governance](https://governance.script3.io) — DAO voting patterns inspiration
+- [stellar-zk](https://github.com/salazarsebas/stellar-zk) - ZK DevKit for Stellar/Soroban
+- [stellar-zk on crates.io](https://crates.io/crates/stellar-zk) - Crate reference
+- [Stellar Governance](https://governance.script3.io) - DAO voting patterns inspiration
 
 ---
 
@@ -155,7 +155,7 @@ let _guild_entity = world.spawn_entity();
 
 | Tool | Version | Installation |
 |---|---|---|
-| Rust | 1.70.0+ | [rustup.rs](https://rustup.rs) |
+| Rust | 1.88.0+ | [rustup.rs](https://rustup.rs) |
 | Stellar CLI | Latest | [Stellar Docs](https://developers.stellar.org/docs/tools/cli) |
 | WASM Target | - | `rustup target add wasm32v1-none` |
 

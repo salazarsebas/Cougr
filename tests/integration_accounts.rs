@@ -236,7 +236,7 @@ fn test_device_manager_full_lifecycle() {
 
         assert_eq!(manager.active_device_count(&env), 3);
 
-        // At limit — should fail
+        // At limit - should fail
         let k4 = BytesN::from_array(&env, &[4u8; 32]);
         let result = manager.register_device(&env, k4, symbol_short!("extra"));
         assert_eq!(result, Err(AccountError::DeviceLimitReached));

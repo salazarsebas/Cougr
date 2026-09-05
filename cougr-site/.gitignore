@@ -1,4 +1,4 @@
-# mdBook build output — never commit
+# mdBook build output - never commit
 book/
 
 # Generated showcase files (run: python3 cougr-site/generate-showcase.py)

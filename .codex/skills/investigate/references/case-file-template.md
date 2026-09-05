@@ -42,7 +42,7 @@
 
 ### Finding 1: {title}
 
-**Evidence:** {citation — `path:line`, log timestamp, or commit hash}
+**Evidence:** {citation - `path:line`, log timestamp, or commit hash}
 
 **Detail:** {description}
 

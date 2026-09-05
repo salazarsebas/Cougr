@@ -70,7 +70,7 @@ impl PublicInputLayout {
         }
     }
 
-    /// Layout for [`CircuitId::FogOfWar`] — matches [`FogOfWarCircuit::verify_exploration`].
+    /// Layout for [`CircuitId::FogOfWar`] - matches [`FogOfWarCircuit::verify_exploration`].
     pub fn fog_of_war(env: &Env) -> Self {
         Self {
             slots: Vec::from_array(

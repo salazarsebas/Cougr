@@ -12,10 +12,10 @@
 use soroban_sdk::{contracttype, Address, BytesN, String};
 
 // ============================================================================
-// ECS Components — Guild
+// ECS Components - Guild
 // ============================================================================
 
-/// Guild component — represents an on-chain faction with a shared treasury.
+/// Guild component - represents an on-chain faction with a shared treasury.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct Guild {
@@ -36,7 +36,7 @@ pub struct Guild {
 }
 
 // ============================================================================
-// ECS Components — Governance
+// ECS Components - Governance
 // ============================================================================
 
 /// Proposal actions that a guild can vote on.
@@ -69,7 +69,7 @@ pub enum ProposalStatus {
     Executed = 3,
 }
 
-/// Proposal input — data submitted when creating a new proposal.
+/// Proposal input - data submitted when creating a new proposal.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct ProposalInput {
@@ -85,7 +85,7 @@ pub struct ProposalInput {
     pub description: String,
 }
 
-/// Proposal component — a DAO governance proposal within a guild.
+/// Proposal component - a DAO governance proposal within a guild.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct Proposal {
@@ -116,10 +116,10 @@ pub struct Proposal {
 }
 
 // ============================================================================
-// ECS Components — Strategy (stellar-zk)
+// ECS Components - Strategy (stellar-zk)
 // ============================================================================
 
-/// Proof input — data used for submitting a strategic commitment.
+/// Proof input - data used for submitting a strategic commitment.
 ///
 /// The commitment is `SHA256(action_type || target_guild_id || resource_amount || salt)`.
 /// This follows the stellar-zk commit-reveal pattern where the hash acts as
@@ -133,7 +133,7 @@ pub struct ProofInput {
     pub guild_id: u32,
 }
 
-/// Strategy commitment component — an unrevealed sealed war plan.
+/// Strategy commitment component - an unrevealed sealed war plan.
 ///
 /// Uses the stellar-zk nullifier pattern: once revealed, the commitment
 /// is marked and cannot be replayed. This prevents double-execution of
@@ -153,7 +153,7 @@ pub struct StrategyCommitment {
     pub revealed: bool,
 }
 
-/// Strategy reveal — the preimage data that proves a commitment.
+/// Strategy reveal - the preimage data that proves a commitment.
 ///
 /// When revealed, the contract recomputes
 /// `SHA256(action_type || target_guild_id || resource_amount || salt)`
@@ -172,10 +172,10 @@ pub struct StrategyReveal {
 }
 
 // ============================================================================
-// ECS Components — Game State
+// ECS Components - Game State
 // ============================================================================
 
-/// Global game state — summary of the entire contract state.
+/// Global game state - summary of the entire contract state.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct GameState {

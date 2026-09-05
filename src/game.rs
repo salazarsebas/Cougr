@@ -4,7 +4,7 @@ use soroban_sdk::{Env, Symbol};
 /// Standard trait for Soroban contracts that use Cougr's ECS.
 ///
 /// Provides a consistent pattern for loading and persisting the game world
-/// to Soroban instance storage — removing the need to repeat the storage key
+/// to Soroban instance storage - removing the need to repeat the storage key
 /// symbol in every contract entrypoint. Wire up once with
 /// [`impl_soroban_game!`] and then call `load_world` / `save_world` throughout
 /// the contract implementation.

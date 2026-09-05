@@ -136,7 +136,7 @@ fn test_non_diagonal_move_rejected() {
     let (_env, client, p1, p2) = setup();
     client.init_game(&p1, &p2);
 
-    // (2,1)→(2,3): same row — geometry check fires before destination check.
+    // (2,1)→(2,3): same row - geometry check fires before destination check.
     assert_eq!(
         client.try_submit_move(&p1, &2, &1, &2, &3),
         Err(Ok(CheckersError::IllegalMove))
@@ -150,7 +150,7 @@ fn test_backward_step_for_man_rejected() {
 
     // Advance P1 to row 3.
     client.submit_move(&p1, &2, &1, &3, &2);
-    // P2 filler on the far right — no capture created for P1 at (3,2).
+    // P2 filler on the far right - no capture created for P1 at (3,2).
     client.submit_move(&p2, &5, &6, &4, &7);
     // P1 tries to retreat: legal_steps returns nothing backward → IllegalMove.
     assert_eq!(
@@ -240,11 +240,11 @@ fn test_piece_promoted_to_king_at_back_rank() {
     client.init_game(&p1, &p2);
 
     client.submit_move(&p1, &2, &5, &3, &4); // T1 P1: corridor advance
-    client.submit_move(&p2, &5, &0, &4, &1); // T1 P2: unlock step 1 — frees (5,0)
+    client.submit_move(&p2, &5, &0, &4, &1); // T1 P2: unlock step 1 - frees (5,0)
     client.submit_move(&p1, &2, &7, &3, &6); // T2 P1: safe filler
-    client.submit_move(&p2, &6, &1, &5, &0); // T2 P2: unlock step 2 — frees (6,1)
+    client.submit_move(&p2, &6, &1, &5, &0); // T2 P2: unlock step 2 - frees (6,1)
     client.submit_move(&p1, &2, &1, &3, &0); // T3 P1: safe filler (OOB blocks P2 cap)
-    client.submit_move(&p2, &7, &0, &6, &1); // T3 P2: unlock step 3 — frees (7,0)
+    client.submit_move(&p2, &7, &0, &6, &1); // T3 P2: unlock step 3 - frees (7,0)
     client.submit_move(&p1, &1, &0, &2, &1); // T4 P1: filler ((2,1) vacated at T3)
     client.submit_move(&p2, &5, &2, &4, &3); // T4 P2: arm forced capture for P1@(3,4)
     client.submit_move(&p1, &3, &4, &5, &2); // T5 P1 hop 1: capture over (4,3)
@@ -257,7 +257,7 @@ fn test_piece_promoted_to_king_at_back_rank() {
     );
 }
 
-// 8. King movement — kings can move backward
+// 8. King movement - kings can move backward
 #[test]
 fn test_king_can_move_backward() {
     let (_env, client, p1, p2) = setup();
@@ -277,13 +277,13 @@ fn test_king_can_move_backward() {
 
     assert_eq!(cell(&client, 7, 0), 2, "king at (7,0)");
 
-    // T6 P2: (6,3)→(5,2) — only safe step for P2 (verified exhaustively)
+    // T6 P2: (6,3)→(5,2) - only safe step for P2 (verified exhaustively)
     client.submit_move(&p2, &6, &3, &5, &2);
 
-    // T7 P1: safe filler — (0,1)→(1,0); no P2 forced cap after this
+    // T7 P1: safe filler - (0,1)→(1,0); no P2 forced cap after this
     client.submit_move(&p1, &0, &1, &1, &0);
 
-    // T8 P2: (5,4)→(4,3) — safe filler; no P1 forced cap after this
+    // T8 P2: (5,4)→(4,3) - safe filler; no P1 forced cap after this
     client.submit_move(&p2, &5, &4, &4, &3);
 
     // T9 P1: king retreats (7,0)→(6,1). (6,1) was vacated by the hop-2 capture.

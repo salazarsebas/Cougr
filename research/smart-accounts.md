@@ -202,12 +202,12 @@ impl CustomAccountInterface for AccountContract {
 
 The official Stellar example demonstrates a two-tier authorization policy:
 
-**Tier 1 — Strict Operations** (all signers required):
+**Tier 1 - Strict Operations** (all signers required):
 - Modifying the contract itself
 - Contract creation operations
 - Any operation outside defined spend limits
 
-**Tier 2 — Spend-Limited Operations** (subset of signers):
+**Tier 2 - Spend-Limited Operations** (subset of signers):
 - Token transfers within per-token spending caps
 - When not all signers authorize, the contract tracks remaining spend allowances
 
@@ -232,7 +232,7 @@ Since Protocol 21, Stellar supports the **secp256r1** signature scheme, enabling
 
 ### Native Fee Sponsorship
 
-Stellar provides native fee sponsorship at the protocol level — one account can pay for another's operations without any smart contract infrastructure. This is simpler than Ethereum's Paymaster pattern.
+Stellar provides native fee sponsorship at the protocol level - one account can pay for another's operations without any smart contract infrastructure. This is simpler than Ethereum's Paymaster pattern.
 
 ### Authorization Framework Advantages
 
@@ -296,7 +296,7 @@ Turn = [
 - Reduced gas costs (amortized over batch)
 - Lower latency (one round-trip instead of N)
 
-**Stellar Implementation**: Soroban naturally supports this — a single contract invocation can perform multiple state changes atomically.
+**Stellar Implementation**: Soroban naturally supports this - a single contract invocation can perform multiple state changes atomically.
 
 ### Social Recovery
 
@@ -411,7 +411,7 @@ When a feature isn't available for the connected account type, degrade gracefull
 
 ## 6. Integration Proposal for Cougr
 
-All account abstraction functionality lives as an internal module (`src/accounts/`) within the single `cougr-core` crate. This is a **major expansion** of the crate — adding a full account layer with session management, authorization policies, capability detection, social recovery, and multi-device support. The developer experience stays simple: one dependency (`cougr-core`), one import path (`cougr_core::accounts::*`), no workspace or multi-crate complexity.
+All account abstraction functionality lives as an internal module (`src/accounts/`) within the single `cougr-core` crate. This is a **major expansion** of the crate - adding a full account layer with session management, authorization policies, capability detection, social recovery, and multi-device support. The developer experience stays simple: one dependency (`cougr-core`), one import path (`cougr_core::accounts::*`), no workspace or multi-crate complexity.
 
 ### Module Architecture: `src/accounts/`
 
@@ -421,8 +421,8 @@ src/accounts/
 ├── traits.rs               // CougrAccount, SessionKeyProvider, RecoveryProvider traits
 ├── types.rs                // AccountCapabilities, AuthMethod, GameAction, PlayerId
 ├── error.rs                // AccountError variants (Unauthorized, SessionExpired, etc.)
-├── classic_account.rs      // ClassicStellarAccount — G address implementation
-├── contract_account.rs     // ContractStellarAccount — C address implementation
+├── classic_account.rs      // ClassicStellarAccount - G address implementation
+├── contract_account.rs     // ContractStellarAccount - C address implementation
 ├── session/
 │   ├── mod.rs              // Session key orchestration
 │   ├── key.rs              // SessionKey type with scoping metadata
@@ -553,7 +553,7 @@ impl BatchBuilder {
     /// Add a system call to the batch
     pub fn add<S: System>(mut self, system: Symbol, input: S::In) -> Self;
 
-    /// Execute all actions atomically — all succeed or all revert
+    /// Execute all actions atomically - all succeed or all revert
     pub fn execute(
         self, world: &mut World, account: &impl CougrAccount,
     ) -> Result<Vec<SystemResult>, AccountError>;
@@ -571,7 +571,7 @@ BatchBuilder::new()
 
 ```rust
 /// Account-aware World that tracks player accounts and enforces authorization.
-/// These methods extend the existing World — no separate type needed.
+/// These methods extend the existing World - no separate type needed.
 impl World {
     /// Register a player account and create their player entity
     pub fn register_player(&mut self, account: impl CougrAccount) -> PlayerId;
@@ -614,7 +614,7 @@ impl World {
 ### Account Implementations
 
 ```rust
-/// Classic Stellar account (G address) — works out of the box
+/// Classic Stellar account (G address) - works out of the box
 pub struct ClassicStellarAccount {
     address: Address,
 }
@@ -633,7 +633,7 @@ impl CougrAccount for ClassicStellarAccount {
     // ...
 }
 
-/// Contract account (C address) — full smart account features
+/// Contract account (C address) - full smart account features
 pub struct ContractStellarAccount {
     address: Address,
     // Internal state for session keys, guardians, device keys
@@ -671,7 +671,7 @@ fn test_game_with_session() {
 
 ### Developer Experience Goals
 
-1. **Single crate, single dependency**: `cougr-core` includes everything — no extra crates to add
+1. **Single crate, single dependency**: `cougr-core` includes everything - no extra crates to add
 2. **Zero-config for basic usage**: Classic accounts work out of the box with zero account code
 3. **Opt-in smart features**: Session keys, batching, recovery available when using contract accounts
 4. **Single API**: Developers write game logic once, works with all account types

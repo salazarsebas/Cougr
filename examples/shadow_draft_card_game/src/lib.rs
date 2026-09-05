@@ -221,8 +221,8 @@ pub fn card_power(card_id: u32) -> u32 {
         6 => 6,
         7 => 7,
         8 => 8,
-        9 => 3,  // Spell — 3-damage equivalent power
-        10 => 5, // Spell — 5-damage equivalent power
+        9 => 3,  // Spell - 3-damage equivalent power
+        10 => 5, // Spell - 5-damage equivalent power
         _ => 0,
     }
 }
@@ -555,7 +555,7 @@ impl ShadowDraftCardGame {
 
     // ── ECS Systems ───────────────────────────────────────────────────────────
 
-    /// RoundResolutionSystem — resolves the current round by comparing card powers.
+    /// RoundResolutionSystem - resolves the current round by comparing card powers.
     ///
     /// Awards a round point to the player with the higher-power card; ties award
     /// nothing. Advances to the next draft phase or ends the match when a player
@@ -589,7 +589,7 @@ impl ShadowDraftCardGame {
             return;
         }
 
-        // Advance to next round — DraftSystem resets hand commitments.
+        // Advance to next round - DraftSystem resets hand commitments.
         world.round += 1;
         let empty = BytesN::from_array(env, &[0u8; 32]);
         world.hand_one = HandCommitmentComponent {
@@ -607,7 +607,7 @@ impl ShadowDraftCardGame {
         world.phase = PHASE_DRAFT;
     }
 
-    /// FormatGovernanceSystem — applies an accepted format proposal.
+    /// FormatGovernanceSystem - applies an accepted format proposal.
     ///
     /// Marks the proposal `PROPOSAL_ACCEPTED` and updates the `banned_cards`
     /// list accordingly. In a real DAO integration this would only run after a

@@ -74,7 +74,7 @@ export function HomePage() {
             lineHeight: 1.6,
           }}
         >
-          Every puzzle is a locked room. Every clue is a lie — or is it?
+          Every puzzle is a locked room. Every clue is a lie - or is it?
           Place the suspects. Solve the grid. The truth is on-chain.
         </p>
 

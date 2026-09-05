@@ -63,7 +63,7 @@ pub struct PlayerState {
     pub total_solvers: u32,
 }
 
-/// Representation of a full Murdoku puzzle (v1 — plaintext solution).
+/// Representation of a full Murdoku puzzle (v1 - plaintext solution).
 #[cfg(not(feature = "zk"))]
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -78,7 +78,7 @@ pub struct Puzzle {
     pub active: bool,
 }
 
-/// Representation of a full Murdoku puzzle (ZK mode — solution commitment).
+/// Representation of a full Murdoku puzzle (ZK mode - solution commitment).
 #[cfg(feature = "zk")]
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -422,7 +422,7 @@ impl MurdokuContract {
     ///
     /// The creator provides a Poseidon2 hash of the solution (plus a secret salt)
     /// and a Groth16 verifier key. The contract validates puzzle structure but
-    /// cannot verify the solution itself — that happens at solve time via ZK proof.
+    /// cannot verify the solution itself - that happens at solve time via ZK proof.
     pub fn submit_puzzle(
         env: Env,
         caller: Address,

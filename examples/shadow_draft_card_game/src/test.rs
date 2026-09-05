@@ -126,12 +126,12 @@ fn test_submit_choice_stays_in_draft_until_both_commit() {
 
     let n1 = make_nonce(&env, 1);
     client.submit_choice(&p1, &make_choice(&env, 5, &n1));
-    // Only one player committed — still in draft.
+    // Only one player committed - still in draft.
     assert_eq!(client.get_state().status.phase, PHASE_DRAFT);
 
     let n2 = make_nonce(&env, 2);
     client.submit_choice(&p2, &make_choice(&env, 3, &n2));
-    // Both committed — advances to play.
+    // Both committed - advances to play.
     assert_eq!(client.get_state().status.phase, PHASE_PLAY);
 }
 
@@ -162,7 +162,7 @@ fn test_cannot_commit_in_play_phase() {
     client.submit_choice(&p1, &make_choice(&env, 5, &n1));
     client.submit_choice(&p2, &make_choice(&env, 3, &n2));
 
-    // Attempt another commit while in PLAY — wrong phase.
+    // Attempt another commit while in PLAY - wrong phase.
     let n3 = make_nonce(&env, 3);
     assert!(client
         .try_submit_choice(&p1, &make_choice(&env, 1, &n3))
@@ -180,7 +180,7 @@ fn test_play_card_valid_commitment_resolves_round() {
     client.submit_choice(&p1, &make_choice(&env, 7, &n1));
     client.submit_choice(&p2, &make_choice(&env, 4, &n2));
 
-    // VK not set — proof gate is skipped; commitment + format checks still run.
+    // VK not set - proof gate is skipped; commitment + format checks still run.
     client.play_card(&p1, &make_play(&env, 7, &n1));
     client.play_card(&p2, &make_play(&env, 4, &n2));
 
@@ -205,7 +205,7 @@ fn test_commitment_mismatch_is_rejected() {
     client.submit_choice(&p1, &make_choice(&env, 7, &n1));
     client.submit_choice(&p2, &make_choice(&env, 4, &n2));
 
-    // Player one tries to reveal card 5 with a different nonce — mismatch.
+    // Player one tries to reveal card 5 with a different nonce - mismatch.
     let wrong_nonce = make_nonce(&env, 99);
     assert!(client
         .try_play_card(&p1, &make_play(&env, 5, &wrong_nonce))
@@ -215,11 +215,11 @@ fn test_commitment_mismatch_is_rejected() {
 #[test]
 fn test_cannot_play_before_both_commit() {
     let (env, client, p1, _) = setup();
-    // Only player one commits — stays in DRAFT.
+    // Only player one commits - stays in DRAFT.
     let n1 = make_nonce(&env, 10);
     client.submit_choice(&p1, &make_choice(&env, 7, &n1));
 
-    // Still in DRAFT phase — play_card should fail.
+    // Still in DRAFT phase - play_card should fail.
     assert!(client.try_play_card(&p1, &make_play(&env, 7, &n1)).is_err());
 }
 
@@ -278,7 +278,7 @@ fn test_proof_gate_skipped_without_vk() {
     client.submit_choice(&p2, &make_choice(&env, 3, &n2));
 
     // mock_proof contains zeroed-out curve points that would fail real
-    // verification — they must be accepted here because vk_set == false.
+    // verification - they must be accepted here because vk_set == false.
     client.play_card(&p1, &make_play(&env, 5, &n1));
     client.play_card(&p2, &make_play(&env, 3, &n2));
 
@@ -304,7 +304,7 @@ fn test_invalid_proof_rejected_when_vk_set() {
     client.submit_choice(&p1, &make_choice(&env, 5, &n1));
     client.submit_choice(&p2, &make_choice(&env, 3, &n2));
 
-    // The mock proof is cryptographically invalid — the call must fail.
+    // The mock proof is cryptographically invalid - the call must fail.
     let result = client.try_play_card(&p1, &make_play(&env, 5, &n1));
     assert!(result.is_err());
 }
@@ -325,7 +325,7 @@ fn test_higher_power_card_wins_round() {
 #[test]
 fn test_tie_awards_no_point() {
     let (env, client, p1, p2) = setup();
-    // Both play card 5 (power 5) — tie, no points.
+    // Both play card 5 (power 5) - tie, no points.
     play_round(&env, &client, &p1, &p2, 5, 5, 1, 2);
 
     let state = client.get_state();
@@ -386,7 +386,7 @@ fn test_cannot_play_after_match_ends() {
         );
     }
 
-    // Match is finished — commit attempt must fail.
+    // Match is finished - commit attempt must fail.
     let n = make_nonce(&env, 99);
     assert!(client
         .try_submit_choice(&p1, &make_choice(&env, 5, &n))
@@ -427,7 +427,7 @@ fn test_ban_card_via_governance() {
     let state = client.get_state();
     assert_eq!(state.banned_cards.len(), 1);
     assert_eq!(state.banned_cards.get(0).unwrap(), 8);
-    // Proposal was accepted — no pending proposals.
+    // Proposal was accepted - no pending proposals.
     assert_eq!(state.pending_proposals, 0);
 }
 

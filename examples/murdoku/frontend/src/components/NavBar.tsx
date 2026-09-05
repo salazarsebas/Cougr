@@ -57,7 +57,7 @@ export function NavBar({ wallet, onConnect, onDisconnect }: NavBarProps) {
             gap: '0.5rem',
             flexShrink: 0,
           }}
-          aria-label="Murdoku — home"
+          aria-label="Murdoku - home"
         >
           <span style={{ color: 'var(--accent-gold)' }}>✦</span>
           Murdoku

@@ -6,8 +6,7 @@
 An on-chain Tic Tac Toe game built with the [Cougr](../../README.md) ECS framework on
 Stellar Soroban. Note: although this example already uses cougr-core's newest macro-based
 component pattern (`impl_rich_component!` / `impl_component!` / `impl_soroban_game!`), it is
-not on the canonical examples list, so it is marked transitional per the project standard —
-see "Cougr APIs used" below for why these specific macros were chosen over the manual
+not on the canonical examples list, so it is marked transitional per the project standard - see "Cougr APIs used" below for why these specific macros were chosen over the manual
 `ComponentTrait` implementations used in other transitional examples like `reversi`.
 
 ## Purpose and pattern
@@ -25,10 +24,10 @@ or repeat the storage key in every contract function.
 |---|---|---|---|
 | `init_game` | `player_x: Address`, `player_o: Address` | `GameState` | Spawns the single game entity, seeds an empty 9-cell board, and sets X to move first. Overwrites any previous game. |
 | `make_move` | `player: Address`, `position: u32` | `MoveResult` | Validates and applies a move at `position` (0–8). Returns `success: false` with a status `message` symbol instead of panicking on illegal input. |
-| `get_state` | — | `GameState` | Current board, both player addresses, whose turn it is, move count, and status. |
+| `get_state` | - | `GameState` | Current board, both player addresses, whose turn it is, move count, and status. |
 | `is_valid_move` | `position: u32` | `bool` | Whether `position` is a legal move right now (in range, empty cell, game still in progress). |
-| `get_winner` | — | `Option<Address>` | The winning player's address, or `None` if the game is in progress or drawn. |
-| `reset_game` | — | `GameState` | Re-initializes the board with the same two players, discarding moves. |
+| `get_winner` | - | `Option<Address>` | The winning player's address, or `None` if the game is in progress or drawn. |
+| `reset_game` | - | `GameState` | Re-initializes the board with the same two players, discarding moves. |
 
 ### Status codes
 
@@ -46,7 +45,7 @@ src/
 └── systems.rs       # detect_winner: pure win/draw detection over board cells
 ```
 
-`make_move` runs a fixed validation/execution sequence synchronously on each call — there is
+`make_move` runs a fixed validation/execution sequence synchronously on each call - there is
 no `GameApp` tick loop:
 
 ```
@@ -89,25 +88,25 @@ TTL management.
 
 ## Cougr APIs used
 
-- `cougr_core::{impl_rich_component!}` — used for `Board` (holds a `Vec<u32>`) and `Players`
+- `cougr_core::{impl_rich_component!}` - used for `Board` (holds a `Vec<u32>`) and `Players`
   (holds two `Address` values). Both fields require Soroban's XDR codec rather than fixed-size
   byte packing, so `impl_rich_component!` was chosen to get `RichComponentTrait` for free from
   the `#[contracttype]` derive, avoiding a hand-written `serialize`/`deserialize` pair for
   `Vec<u32>` and `Address` like the one `reversi`'s `components.rs` still carries.
-- `cougr_core::{impl_component!}` — used for `TurnState`, which is three fixed-size plain
+- `cougr_core::{impl_component!}` - used for `TurnState`, which is three fixed-size plain
   fields (`bool`, `u32`, `u32`). `impl_component!` generates a compact, fully typed
   `ComponentTrait` implementation (byte-packed, not XDR) since there are no `Address`/`Vec`
   fields needing the heavier rich-component codec.
-- `cougr_core::game::SorobanGame` / `impl_soroban_game!` — generates `load_world`/
+- `cougr_core::game::SorobanGame` / `impl_soroban_game!` - generates `load_world`/
   `save_world` for the `#[contract]` struct so every entrypoint can read and persist the
   `SimpleWorld` without repeating the instance-storage key (`"ttt_world"`) or its
   get/set boilerplate.
-- `cougr_core::simple_world::SimpleWorld` — used as the single source of truth for the game's
+- `cougr_core::simple_world::SimpleWorld` - used as the single source of truth for the game's
   three components, attached to one fixed entity rather than a dynamic population, since
   tic-tac-toe has exactly one game per contract instance.
 
 This example does not use `GameApp`, `ScheduleStage`, `SimpleQueryBuilder`, `auth`, or
-`privacy` — see Known limitations.
+`privacy` - see Known limitations.
 
 ## Build and test commands
 
@@ -118,10 +117,10 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp` or `ScheduleStage` — validation and win detection run synchronously
+- Does not use `GameApp` or `ScheduleStage` - validation and win detection run synchronously
   inside `make_move` since a turn-based game with one decision point per call has no need for
   staged scheduling.
-- Does not use `SimpleQueryBuilder` — there is exactly one game entity per contract instance,
+- Does not use `SimpleQueryBuilder` - there is exactly one game entity per contract instance,
   so there is no entity population to scan by component type.
 - No timeout/forfeit mechanism for an unresponsive player.
 - No spectator or replay API beyond the read-only getters.

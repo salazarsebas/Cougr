@@ -255,7 +255,7 @@ export function CreatePage() {
                 { label: 'Grid Size',   value: `${gridSize}×${gridSize}` },
                 { label: 'Suspects',    value: suspects.map(s => s.name).join(', ') },
                 { label: 'Clues',       value: `${clues.length} clue${clues.length !== 1 ? 's' : ''}` },
-                { label: 'Solution',    value: solution.some(v => v === 0) ? '⚠ Incomplete — some cells are empty' : '✓ Complete' },
+                { label: 'Solution',    value: solution.some(v => v === 0) ? '⚠ Incomplete - some cells are empty' : '✓ Complete' },
               ].map(({ label, value }) => (
                 <div key={label} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   <dt style={{ ...labelStyle, marginBottom: 0, minWidth: 80, flexShrink: 0 }}>{label}</dt>

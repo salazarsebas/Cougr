@@ -21,7 +21,7 @@
 
 Protocol 25, codenamed **X-Ray**, is Stellar's latest protocol upgrade that brings zero-knowledge proof capabilities to the network. It activated on **Testnet on January 7, 2026** and went live on **Mainnet on January 22, 2026**.
 
-X-Ray introduces native host functions for **BN254 elliptic curve operations** and **Poseidon/Poseidon2 hash primitives** — the two fundamental building blocks required for most modern ZK proof systems.
+X-Ray introduces native host functions for **BN254 elliptic curve operations** and **Poseidon/Poseidon2 hash primitives** - the two fundamental building blocks required for most modern ZK proof systems.
 
 ### CAP-0074: BN254 Elliptic Curve Operations
 
@@ -37,7 +37,7 @@ These functions provide **feature parity with Ethereum's EIP-196 and EIP-197 pre
 
 ### CAP-0075: Poseidon/Poseidon2 Hash Primitives
 
-Traditional hash functions like SHA-256 are computationally expensive to model within ZK circuits. Poseidon and Poseidon2 are hash families specifically designed for ZK proof systems — their operations are native to the prime fields used in ZK circuits.
+Traditional hash functions like SHA-256 are computationally expensive to model within ZK circuits. Poseidon and Poseidon2 are hash families specifically designed for ZK proof systems - their operations are native to the prime fields used in ZK circuits.
 
 CAP-0075 introduces **permutation primitives** rather than complete hash functions, allowing developers to construct sponge-mode hash functions with parameters matching their specific ZK system requirements.
 
@@ -126,7 +126,7 @@ New cost types introduced for BN254 operations: `Bn254FrToU256`, `Bn254FrAddSub`
 ### BLS12-381 (Protocol 22)
 
 Added in 2024, BLS12-381 is the modern, security-focused curve:
-- **128-bit security** — designed for long-term safety
+- **128-bit security** - designed for long-term safety
 - Preferred by newer networks (Zcash, Ethereum 2.0)
 - Supports Groth16 proof verification natively on Stellar
 - Larger field elements than BN254
@@ -134,7 +134,7 @@ Added in 2024, BLS12-381 is the modern, security-focused curve:
 ### BN254 (Protocol 25)
 
 The legacy but most widely-adopted curve:
-- **~100-bit security** — lightweight and computationally cheaper
+- **~100-bit security** - lightweight and computationally cheaper
 - Used by the vast majority of existing ZK applications
 - Feature parity with Ethereum's precompiles (EIP-196/197)
 - Now fully supported on Stellar with X-Ray
@@ -169,7 +169,7 @@ With Protocol 25, Stellar now has functional parity with Ethereum's ZK precompil
 | BLS12-381 precompile | Protocol 22 host functions |
 | N/A (no native Poseidon) | `poseidon_permutation`, `poseidon2_permutation` |
 
-Stellar actually **exceeds** Ethereum in Poseidon support — Ethereum doesn't have native Poseidon precompiles, requiring expensive in-contract computation.
+Stellar actually **exceeds** Ethereum in Poseidon support - Ethereum doesn't have native Poseidon precompiles, requiring expensive in-contract computation.
 
 ---
 
@@ -193,7 +193,7 @@ Player proves:    "My move is valid given my hidden state"
                   without revealing positions or unit locations
 ```
 
-**Reference implementation: Dark Forest** — the first fully on-chain MMO real-time strategy game using zk-SNARKs for fog of war. Players submit proofs that their coordinates are valid against a public hash, without disclosing fleet positions.
+**Reference implementation: Dark Forest** - the first fully on-chain MMO real-time strategy game using zk-SNARKs for fog of war. Players submit proofs that their coordinates are valid against a public hash, without disclosing fleet positions.
 
 ### Hidden Information Games
 
@@ -276,7 +276,7 @@ This prevents the "last mover advantage" where the last player to submit can see
 Zero-knowledge concepts map naturally to ECS components:
 
 ```rust
-/// A component whose value is hidden — only a commitment is stored on-chain
+/// A component whose value is hidden - only a commitment is stored on-chain
 pub struct ZKHiddenState {
     pub commitment: Hash<32>,     // Hash of the actual value
     pub last_proof_tick: u64,     // When the last valid proof was submitted
@@ -459,7 +459,7 @@ impl GameCircuit for MovementCircuit {
 
 ### Module Architecture: `src/zk/`
 
-ZK functionality lives as an internal module within the single `cougr-core` crate. This is a **major expansion** of the crate — adding a complete zero-knowledge proof layer with cryptographic primitives, pre-built game circuits, verification systems, and ECS-integrated components. The developer experience stays simple: one dependency, one import path, no workspace juggling.
+ZK functionality lives as an internal module within the single `cougr-core` crate. This is a **major expansion** of the crate - adding a complete zero-knowledge proof layer with cryptographic primitives, pre-built game circuits, verification systems, and ECS-integrated components. The developer experience stays simple: one dependency, one import path, no workspace juggling.
 
 ```
 src/zk/
@@ -469,27 +469,27 @@ src/zk/
 ├── types.rs                // G1Point, G2Point, Scalar, FieldElement, Proof, VerificationKey
 ├── components/
 │   ├── mod.rs              // Re-exports ZK components
-│   ├── hidden_state.rs     // ZKHiddenState — commitment-based hidden values
-│   ├── commitment.rs       // ZKCommitment — commit-reveal lifecycle
+│   ├── hidden_state.rs     // ZKHiddenState - commitment-based hidden values
+│   ├── commitment.rs       // ZKCommitment - commit-reveal lifecycle
 │   ├── proof.rs            // ZKProofRequired, ZKProofSubmission
 │   └── verifiable.rs       // ZKVerified marker component (attached after proof passes)
 ├── systems/
 │   ├── mod.rs              // Re-exports ZK systems
-│   ├── verification.rs     // ZKVerificationSystem — batch proof verification per tick
-│   ├── commit_reveal.rs    // CommitRevealSystem — phase management and deadline enforcement
-│   ├── hidden_update.rs    // HiddenStateUpdateSystem — update commitments after verified proofs
-│   └── proof_cleanup.rs    // ProofCleanupSystem — remove processed proof submissions
+│   ├── verification.rs     // ZKVerificationSystem - batch proof verification per tick
+│   ├── commit_reveal.rs    // CommitRevealSystem - phase management and deadline enforcement
+│   ├── hidden_update.rs    // HiddenStateUpdateSystem - update commitments after verified proofs
+│   └── proof_cleanup.rs    // ProofCleanupSystem - remove processed proof submissions
 ├── circuits/
 │   ├── mod.rs              // Re-exports pre-built circuits
 │   ├── movement.rs         // Movement validation (position bounds, speed limits, obstacles)
 │   ├── combat.rs           // Combat resolution (damage formulas, stat verification)
 │   ├── inventory.rs        // Inventory verification (conservation, no duplication)
 │   ├── turn.rs             // Turn sequencing (valid order, state transitions)
-│   └── custom.rs           // CustomCircuit — developer-defined circuit adapter
+│   └── custom.rs           // CustomCircuit - developer-defined circuit adapter
 ├── crypto/
 │   ├── mod.rs              // Re-exports crypto wrappers
-│   ├── bn254.rs            // BN254 G1 add/mul/pairing — ergonomic wrappers over host functions
-│   ├── bls12_381.rs        // BLS12-381 operations — wrappers over Protocol 22 host functions
+│   ├── bn254.rs            // BN254 G1 add/mul/pairing - ergonomic wrappers over host functions
+│   ├── bls12_381.rs        // BLS12-381 operations - wrappers over Protocol 22 host functions
 │   ├── poseidon.rs         // Poseidon hash construction (sponge mode, BN254/BLS12-381 fields)
 │   ├── poseidon2.rs        // Poseidon2 hash construction (optimized internal matrix)
 │   ├── groth16.rs          // Groth16 verifier (BN254 + BLS12-381)
@@ -502,7 +502,7 @@ src/zk/
 └── testing.rs              // MockProof, MockCircuit, test_verification_key for unit testing
 ```
 
-This adds **~25 new source files** to `cougr-core`, representing a complete ZK layer that makes Cougr the first ECS game engine with native zero-knowledge proof support. Developers access everything through `cougr_core::zk::*` — no extra crate to add, no version mismatches to manage.
+This adds **~25 new source files** to `cougr-core`, representing a complete ZK layer that makes Cougr the first ECS game engine with native zero-knowledge proof support. Developers access everything through `cougr_core::zk::*` - no extra crate to add, no version mismatches to manage.
 
 ### ZK Components as First-Class Citizens
 
@@ -614,7 +614,7 @@ pub struct SparseMerkleTree {
 ### Testing Utilities
 
 ```rust
-/// Mock proof that always passes verification — for unit testing game logic
+/// Mock proof that always passes verification - for unit testing game logic
 pub struct MockProof;
 
 /// Mock circuit for testing without actual ZK computation
@@ -700,25 +700,25 @@ pub fn process_hidden_movement(world: &mut World, env: &Env) {
 
 ### Implementation Roadmap
 
-**Phase 1 — Foundation (Immediate)**
+**Phase 1 - Foundation (Immediate)**
 - Wrap BN254 and Poseidon host functions in ergonomic Rust API
 - Implement Groth16 verifier using host functions
 - Create basic ZK component types
 - Example: simple commit-reveal game
 
-**Phase 2 — Game Circuits (Short-term)**
+**Phase 2 - Game Circuits (Short-term)**
 - Build pre-built circuits for movement, combat, inventory
 - Create client-side proof generation SDK
 - Implement ZKVerificationSystem
 - Example: card game with hidden hands
 
-**Phase 3 — Advanced Patterns (Medium-term)**
+**Phase 3 - Advanced Patterns (Medium-term)**
 - Fog of war system with Merkle tree exploration
 - Multi-player ZK state channels
 - Recursive proof composition for complex game logic
 - Example: strategy game with fog of war
 
-**Phase 4 — Ecosystem Integration (Long-term)**
+**Phase 4 - Ecosystem Integration (Long-term)**
 - Integration with Circom/Snarkjs for circuit development
 - Integration with Arkworks for Rust-native circuits
 - Circuit compiler for game rules → ZK circuits

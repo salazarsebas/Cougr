@@ -98,7 +98,7 @@ fn test_start_session_returns_expiry() {
     assert!(expiry >= env.ledger().timestamp() + 7200);
 }
 
-// ─── Turn submission — single action ────────────────────────────────────────
+// ─── Turn submission - single action ────────────────────────────────────────
 
 #[test]
 fn test_play_creature_succeeds() {
@@ -120,13 +120,13 @@ fn test_cast_spell_deals_damage() {
 
     // card 9 is a 2-cost spell that deals 3 damage.
     // Starting hand for player_a has cards 1,2,3,4 (first 4 of the deck).
-    // Card 9 is index 5 in deck — will be drawn on A's 2nd turn (turn 3 overall).
+    // Card 9 is index 5 in deck - will be drawn on A's 2nd turn (turn 3 overall).
     // Turn 1 (A): play card 1
     client.submit_turn(&player_a, &single_action(&env, Action::PlayCreature(1)));
     // Turn 2 (B): play card 1
     client.submit_turn(&player_b, &single_action(&env, Action::PlayCreature(1)));
     // Turn 3 (A): draw gives card 5 (idx 4 from original deck, since 4 were drawn at start → remaining[0]=card5).
-    // Hmm — deck after initial draw of 4: remaining = [5, 9, 10]. Turn 3 draws card 5.
+    // Hmm - deck after initial draw of 4: remaining = [5, 9, 10]. Turn 3 draws card 5.
     // Turn 4 (B): …
     // Turn 5 (A): draw gives card 9.
     // Turn 3 (A): play card 2 (still in hand)
@@ -154,7 +154,7 @@ fn test_direct_attack_reduces_health() {
     // Player B passes (plays a cheap creature too)
     client.submit_turn(&player_b, &single_action(&env, Action::PlayCreature(1)));
 
-    // Turn 3 — player A attacks face (target_idx = u32::MAX means direct)
+    // Turn 3 - player A attacks face (target_idx = u32::MAX means direct)
     let result = client.submit_turn(
         &player_a,
         &single_action(&env, Action::DeclareAttack(0, u32::MAX)),
@@ -245,7 +245,7 @@ fn test_mana_increments_each_turn() {
 
     client.submit_turn(&player_b, &single_action(&env, Action::PlayCreature(1)));
 
-    // Turn 3 — player A: max_mana should increment to 3 inside submit_turn
+    // Turn 3 - player A: max_mana should increment to 3 inside submit_turn
     client.submit_turn(&player_a, &single_action(&env, Action::PlayCreature(2)));
     let stats_a = client.get_stats(&player_a);
     assert_eq!(stats_a.max_mana, 3);
@@ -326,7 +326,7 @@ fn test_creature_trades_in_combat() {
     client.submit_turn(&player_a, &single_action(&env, Action::PlayCreature(2)));
     client.submit_turn(&player_b, &single_action(&env, Action::PlayCreature(2)));
 
-    // A attacks B's creature — both 2/2, so they trade (both toughness → 0, both die)
+    // A attacks B's creature - both 2/2, so they trade (both toughness → 0, both die)
     client.submit_turn(&player_a, &single_action(&env, Action::DeclareAttack(0, 0)));
 
     let field = client.get_field();
@@ -357,7 +357,7 @@ fn test_win_condition_health_zero() {
     client.start_session(&pa);
     client.start_session(&pb);
 
-    // Turn 1 (A): PlayCreature(1) — mana after system = 2, cost = 1, ok.
+    // Turn 1 (A): PlayCreature(1) - mana after system = 2, cost = 1, ok.
     client.submit_turn(&pa, &single_action(&env, Action::PlayCreature(1)));
     // Turn 2 (B): PlayCreature(1)
     client.submit_turn(&pb, &single_action(&env, Action::PlayCreature(1)));
@@ -427,10 +427,10 @@ fn test_win_by_spell_damage() {
         }
         let is_a = s.active_player == pa;
         if is_a {
-            // Cast 1 spell — always affordable (mana ≥ 2 after ManaSystem; spell costs 2)
+            // Cast 1 spell - always affordable (mana ≥ 2 after ManaSystem; spell costs 2)
             let _ = client.try_submit_turn(&pa, &single_action(&env, Action::CastSpell(9)));
         } else {
-            // B plays a 1-cost creature — always affordable (mana ≥ 2 after ManaSystem)
+            // B plays a 1-cost creature - always affordable (mana ≥ 2 after ManaSystem)
             let _ = client.try_submit_turn(&pb, &single_action(&env, Action::PlayCreature(1)));
         }
     }
@@ -482,7 +482,7 @@ fn test_non_active_player_cannot_submit_turn() {
 fn test_invalid_attacker_index_panics() {
     let (env, client, player_a, _) = setup_match();
 
-    // No creatures on field — attacker_idx 0 is out of bounds
+    // No creatures on field - attacker_idx 0 is out of bounds
     let result = client.try_submit_turn(
         &player_a,
         &single_action(&env, Action::DeclareAttack(0, u32::MAX)),
@@ -556,7 +556,7 @@ fn test_card_drawn_at_start_of_turn() {
     assert_eq!(hand_after, initial_hand_size);
 
     client.submit_turn(&player_b, &single_action(&env, Action::PlayCreature(1)));
-    // A's turn again — draw happens, then play card 2
+    // A's turn again - draw happens, then play card 2
     client.submit_turn(&player_a, &single_action(&env, Action::PlayCreature(2)));
     let hand_a_turn3 = client.get_hand(&player_a).len();
     // Started turn with same initial size (drew 1, played 1) → same net
@@ -576,7 +576,7 @@ fn test_session_expired_blocks_turn() {
     let deck = vec![&env, 1u32, 2u32, 3u32, 4u32, 5u32];
     client.new_match(&pa, &pb, &deck, &deck);
 
-    // Do NOT call start_session — session_a_expires == 0 → expired
+    // Do NOT call start_session - session_a_expires == 0 → expired
     let result = client.try_submit_turn(&pa, &single_action(&env, Action::PlayCreature(1)));
     assert!(result.is_err());
 }

@@ -15,7 +15,7 @@ use cougr_core::session::SessionManager;
 use crate::types::*;
 
 // ============================================================================
-// AuthSystem — Passkey registration and verification
+// AuthSystem - Passkey registration and verification
 // ============================================================================
 
 /// Register a secp256r1 passkey for a player.
@@ -99,7 +99,7 @@ pub fn authenticate_and_create_session(
 }
 
 // ============================================================================
-// SessionSystem — Session validation
+// SessionSystem - Session validation
 // ============================================================================
 
 /// Validate that a session is still active and decrement operations via SessionManager.

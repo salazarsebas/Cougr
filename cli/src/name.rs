@@ -28,11 +28,11 @@ const MAX_NAME_LEN: usize = 64;
 /// A validated project name plus its derived spellings.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectName {
-    /// The name exactly as typed — used for the Cargo package and directory.
+    /// The name exactly as typed - used for the Cargo package and directory.
     crate_name: String,
-    /// `snake_case` form — the Rust library/module identifier.
+    /// `snake_case` form - the Rust library/module identifier.
     module_name: String,
-    /// `PascalCase` form — the `#[contract]` struct identifier.
+    /// `PascalCase` form - the `#[contract]` struct identifier.
     type_name: String,
 }
 

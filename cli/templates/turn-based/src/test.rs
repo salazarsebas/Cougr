@@ -152,7 +152,7 @@ fn reset_game_clears_the_board_and_keeps_the_players() {
 #[test]
 fn detect_status_reports_a_full_board_as_a_draw() {
     let env = Env::default();
-    // X O X / X O O / O X X — full board with no line.
+    // X O X / X O O / O X X - full board with no line.
     let cells = soroban_sdk::vec![&env, 1, 2, 1, 1, 2, 2, 2, 1, 1];
 
     assert_eq!(detect_status(&cells, 9), DRAW);

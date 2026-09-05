@@ -7,7 +7,7 @@
 Most Cougr examples are headless smart contracts with no frontend. A showcase gallery needs a visual preview per entry. Rather than faking screenshots or hand-drawing images, this tool extracts final-state data from each example's existing test assertions and renders it as a deterministic, reproducible SVG.
 
 **Board/grid games** (Tic-Tac-Toe, Checkers, Battleship, …) get a full state renderer.  
-**Real-time arcade games** (Snake, Asteroids, Pong, …) get a branded category-icon fallback, explicitly labeled as such — not faked.
+**Real-time arcade games** (Snake, Asteroids, Pong, …) get a branded category-icon fallback, explicitly labeled as such - not faked.
 
 ---
 
@@ -65,7 +65,7 @@ tools/preview-gen/
 
 Follow these steps when adding a canonical board/grid example to the gallery.
 
-### Step 1 — Identify the representative state
+### Step 1 - Identify the representative state
 
 Open the example's `src/test.rs` and find the most illustrative terminal state. Good candidates:
 
@@ -75,7 +75,7 @@ Open the example's `src/test.rs` and find the most illustrative terminal state. 
 
 **Do not invent data**. Every value in the JSON must be traceable to a specific test assertion.
 
-### Step 2 — Create `states/<your_game>.json`
+### Step 2 - Create `states/<your_game>.json`
 
 ```json
 {
@@ -89,14 +89,14 @@ Open the example's `src/test.rs` and find the most illustrative terminal state. 
 
 Include the `_source` field so anyone reading the file can trace back to the original test.
 
-### Step 3 — Create `renderers/<your_game>.js`
+### Step 3 - Create `renderers/<your_game>.js`
 
 ```js
 /**
  * <GameName> SVG renderer.
  *
  * Input state shape:
- *   field1: type  — description
+ *   field1: type - description
  *   ...
  *
  * Produces a WIDTHxHEIGHT SVG.
@@ -118,7 +118,7 @@ export function render(state) {
 - `COUGR · GAME_NAME` watermark in the status bar
 - No external image references or fonts (SVG must render without network access)
 
-### Step 4 — Register the renderer
+### Step 4 - Register the renderer
 
 In `generate.js`, register the renderer by path. It is imported on demand, after the design tokens
 it reads have been built:
@@ -140,7 +140,7 @@ const FALLBACK_GAMES = {
 
 Fallback cards take their accent from the brand tokens, so there is no per-game color to pick.
 
-### Step 5 — Run and verify
+### Step 5 - Run and verify
 
 ```bash
 node generate.js your_game
@@ -151,7 +151,7 @@ Open `examples/your_game/preview.svg` in a browser. Confirm:
 - The image is legible at 400–520px wide
 - The status bar correctly reflects the game outcome
 
-### Step 6 — Check in
+### Step 6 - Check in
 
 ```bash
 git add \
@@ -173,7 +173,7 @@ Use `category_fallback` (not a board renderer) when:
 - The game state at any single moment doesn't convey how the game works
 - Rendering a fake "representative" frame would be misleading
 
-The fallback is explicitly labeled "Real-time game — no static board state" so gallery visitors understand why no gameplay preview is shown.
+The fallback is explicitly labeled "Real-time game - no static board state" so gallery visitors understand why no gameplay preview is shown.
 
 ---
 

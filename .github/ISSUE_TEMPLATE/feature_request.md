@@ -24,7 +24,7 @@ assignees: ""
 
 ## Proposed approach
 
-<!-- Optional. If you have a concrete implementation idea, sketch it here. If not, leave this section blank — a clear problem statement is sufficient to open the conversation. -->
+<!-- Optional. If you have a concrete implementation idea, sketch it here. If not, leave this section blank - a clear problem statement is sufficient to open the conversation. -->
 
 ## Alternatives considered
 

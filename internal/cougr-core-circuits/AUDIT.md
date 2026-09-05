@@ -1,4 +1,4 @@
-# Cougr Game Circuits — Trusted Setup Policy
+# Cougr Game Circuits - Trusted Setup Policy
 
 ## Scope
 
@@ -16,11 +16,11 @@ still require an independent phase-2 ceremony per circuit variant.
 
 ## Test pipeline (CI-safe)
 
-1. `compile.sh` — Circom → R1CS + WASM
-2. `download-ptau.sh` — Hermez pot14 (`PTAU_POWER=14`, required for `hidden_cards`)
-3. `setup.sh` — Groth16 phase-2 per circuit + `*_vk.json`
-4. `prove.sh` — witness → proof → snarkjs verify
-5. `export-vk.sh` — copy VK JSON to `exported/` for contract embedding
+1. `compile.sh` - Circom → R1CS + WASM
+2. `download-ptau.sh` - Hermez pot14 (`PTAU_POWER=14`, required for `hidden_cards`)
+3. `setup.sh` - Groth16 phase-2 per circuit + `*_vk.json`
+4. `prove.sh` - witness → proof → snarkjs verify
+5. `export-vk.sh` - copy VK JSON to `exported/` for contract embedding
 
 **Never** ship test `*_final.zkey` or CI-generated VKs to production.
 

@@ -38,7 +38,7 @@ impl VerificationKey {
     ///
     /// - `alpha_g1`: 64 bytes (G1 uncompressed, x ‖ y)
     /// - `beta_g2`, `gamma_g2`, `delta_g2`: 128 bytes each (G2 uncompressed)
-    /// - `ic`: slice of 64-byte G1 chunks — one per public input + 1
+    /// - `ic`: slice of 64-byte G1 chunks - one per public input + 1
     pub fn from_raw_bytes(
         env: &Env,
         alpha_g1: &[u8; 64],

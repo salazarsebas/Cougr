@@ -6,8 +6,8 @@ PvP arena game on Soroban demonstrating **guild-based social recovery** and **mu
 
 On-chain gaming has a key risk: players losing access to accounts holding progress, items, and currency. Guild Arena solves this with two Cougr-Core account patterns:
 
-1. **Social Recovery** — guild members act as guardians who can collectively restore account access after a timelock period
-2. **Multi-Device** — players register multiple device keys (desktop, mobile) with per-device permission policies
+1. **Social Recovery** - guild members act as guardians who can collectively restore account access after a timelock period
+2. **Multi-Device** - players register multiple device keys (desktop, mobile) with per-device permission policies
 
 ## How It Works
 
@@ -23,9 +23,9 @@ Player registers → sets 3 guild members as guardians (threshold 2-of-3)
 
 Players queue for PvP matches. Combat is turn-based with three actions:
 
-- **Attack** — standard damage
-- **Defend** — reduced damage
-- **Special** — high damage
+- **Attack** - standard damage
+- **Defend** - reduced damage
+- **Special** - high damage
 
 Elo-style ratings update after each match. Every 3 wins triggers a level-up with stat boosts.
 

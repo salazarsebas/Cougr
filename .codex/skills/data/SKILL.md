@@ -406,7 +406,7 @@ Self-hosted data pipeline for processing Stellar ledger data:
 
 ### Data Lake
 
-RPC "Infinite Scroll" is powered by the Stellar data lake — a cloud-based object store (SEP-0054 format):
+RPC "Infinite Scroll" is powered by the Stellar data lake - a cloud-based object store (SEP-0054 format):
 - **Public access**: `s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet` (AWS Open Data)
 - **Self-host**: Use Galexie to export to AWS S3 or Google Cloud Storage
 - **Hosted**: [Quasar (Lightsail Network)](https://quasar.lightsail.network) provides hosted Galexie Data Lake + Archive RPC endpoints
@@ -418,10 +418,10 @@ RPC "Infinite Scroll" is powered by the Stellar data lake — a cloud-based obje
 
 For complex queries, event streaming, or custom data pipelines beyond what RPC/Horizon provide:
 
-- **Mercury** — Stellar-native indexer with Retroshades, GraphQL API (https://mercurydata.app)
-- **SubQuery** — Multi-chain indexer with Stellar/Soroban support, event handlers (https://subquery.network)
-- **Goldsky** — Real-time data replication pipelines and subgraphs (https://goldsky.com)
-- **StellarExpert API** — Free, no-auth REST API for assets, accounts, ledger resolution (https://stellar.expert/openapi.html)
+- **Mercury** - Stellar-native indexer with Retroshades, GraphQL API (https://mercurydata.app)
+- **SubQuery** - Multi-chain indexer with Stellar/Soroban support, event handlers (https://subquery.network)
+- **Goldsky** - Real-time data replication pipelines and subgraphs (https://goldsky.com)
+- **StellarExpert API** - Free, no-auth REST API for assets, accounts, ledger resolution (https://stellar.expert/openapi.html)
 
 See the full indexer directory: https://developers.stellar.org/docs/data/indexers
 

@@ -7,9 +7,8 @@ A fully on-chain two-player Checkers game implemented as a Soroban smart contrac
 
 ## Purpose and pattern
 
-This example demonstrates a turn-based board game with non-trivial rule enforcement —
-diagonal grid movement, mandatory captures, multi-hop chain captures, king promotion,
-and win detection — implemented as plain Rust functions over `#[contracttype]` structs.
+This example demonstrates a turn-based board game with non-trivial rule enforcement - diagonal grid movement, mandatory captures, multi-hop chain captures, king promotion,
+and win detection - implemented as plain Rust functions over `#[contracttype]` structs.
 It showcases the simplest possible Cougr-adjacent pattern: component-shaped data types
 with hand-written contract storage access, predating the `ComponentTrait`/`GameApp`
 conventions used by newer examples. It is a useful reference for understanding what a
@@ -21,9 +20,9 @@ Soroban board-game contract looks like with no ECS framework involvement at all.
 |---|---|---|---|
 | `init_game` | `player_one: Address`, `player_two: Address` | `Result<(), CheckersError>` | Seeds the standard 8×8 opening position; Player One moves first. Returns `AlreadyInitialised` if called more than once. |
 | `submit_move` | `player: Address`, `from_row: u32`, `from_col: u32`, `to_row: u32`, `to_col: u32` | `Result<(), CheckersError>` | Validates and applies a step or capture, resolves chain captures, promotes kings, and advances or holds the turn. Returns one of the `CheckersError` variants on any rule violation. |
-| `get_state` | — | `Result<GameState, CheckersError>` | Full snapshot: board, turn, status, and both player addresses. |
-| `get_board` | — | `Result<BoardState, CheckersError>` | Raw 64-cell board array, row-major order. |
-| `get_current_player` | — | `Result<Address, CheckersError>` | The `Address` of the player whose turn it currently is. |
+| `get_state` | - | `Result<GameState, CheckersError>` | Full snapshot: board, turn, status, and both player addresses. |
+| `get_board` | - | `Result<BoardState, CheckersError>` | Raw 64-cell board array, row-major order. |
+| `get_current_player` | - | `Result<Address, CheckersError>` | The `Address` of the player whose turn it currently is. |
 
 ### Error codes
 
@@ -79,15 +78,15 @@ All state lives in **persistent storage**, under five top-level `Symbol` keys:
 
 | Key | Contents |
 |---|---|
-| `BOARD` | `BoardComponent` — 64-cell flat grid |
-| `TURN` | `TurnComponent` — current player and move number |
-| `STATUS` | `GameStatusComponent` — active/finished and winner |
+| `BOARD` | `BoardComponent` - 64-cell flat grid |
+| `TURN` | `TurnComponent` - current player and move number |
+| `STATUS` | `GameStatusComponent` - active/finished and winner |
 | `P1` | `Address` of Player One |
 | `P2` | `Address` of Player Two |
-| `CHAIN` | `ChainCapture` — present only while a multi-hop capture sequence is in progress |
+| `CHAIN` | `ChainCapture` - present only while a multi-hop capture sequence is in progress |
 
 Persistent storage (rather than instance storage) is used because each key is read and
-rewritten independently inside `submit_move` — the board, turn, and status are not bundled
+rewritten independently inside `submit_move` - the board, turn, and status are not bundled
 into one aggregate struct in this example, so per-key persistent entries map directly onto
 that access pattern. The `CHAIN` key is removed as soon as a turn fully ends; its absence
 is what tells `submit_move` that no multi-hop sequence is active, so it doubles as both
@@ -101,7 +100,7 @@ data and a lightweight state flag.
    The contract checks turn order, bounds, the dark-square rule, piece ownership, and
    move geometry (diagonal step or jump).
 3. If any capture is available for the mover anywhere on the board, a non-capture move is
-   rejected with `MustCapture` — captures are mandatory, not optional.
+   rejected with `MustCapture` - captures are mandatory, not optional.
 4. On a legal capture, the jumped piece is removed. If the landing square has a further
    capture available, the turn is **held**: the same player must continue jumping with the
    same piece (tracked via the `CHAIN` key) until no further capture exists.
@@ -114,7 +113,7 @@ data and a lightweight state flag.
 
 ## Cougr APIs used
 
-- `cougr_core::component::ComponentTrait` — gives each component (`BoardComponent`,
+- `cougr_core::component::ComponentTrait` - gives each component (`BoardComponent`,
   `TurnComponent`, `GameStatusComponent`) a `component_type()` symbol and byte-level
   `serialize`/`deserialize`, chosen here because the game has a single fixed set of
   components per instance rather than a dynamic entity population that would benefit from
@@ -125,7 +124,7 @@ Per the API usage guidance in `EXAMPLE_STANDARD.md` §8, `GameApp`/`ScheduleStag
 fixed-shape game state per contract instance, one synchronous validation pipeline per
 call, no session-key or multi-device flow, and no hidden information or proof submission.
 This example is kept as a transitional reference precisely because it predates Cougr's
-`GameApp` tick conventions — see `snake` for the current recommended approach.
+`GameApp` tick conventions - see `snake` for the current recommended approach.
 
 ## Build and test commands
 
@@ -136,7 +135,7 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` - game logic is invoked
   directly from contract entrypoints rather than through a tick-based scheduler, since a
   two-player, one-decision-per-call board game does not require staged scheduling or
   entity queries.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# play.sh — Build, deploy, and solve the Sudoku contract on Stellar Testnet.
+# play.sh - Build, deploy, and solve the Sudoku contract on Stellar Testnet.
 # Usage: ./scripts/play.sh
 # Prereqs: stellar CLI installed, Rust with wasm32v1-none target
 

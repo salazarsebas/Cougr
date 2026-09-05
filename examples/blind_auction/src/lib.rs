@@ -1,4 +1,4 @@
-//! blind_auction — canonical Cougr ZK circuits example for sealed-bid reveals.
+//! blind_auction - canonical Cougr ZK circuits example for sealed-bid reveals.
 
 #![no_std]
 

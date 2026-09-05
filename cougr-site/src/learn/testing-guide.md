@@ -16,4 +16,4 @@
 - How the Soroban test sandbox works (and how it differs from running `cargo test` for a normal library)
 - Estimating resource costs before you deploy
 
-Check back soon — or [watch the repository](https://github.com/salazarsebas/Cougr).
+Check back soon - or [watch the repository](https://github.com/salazarsebas/Cougr).

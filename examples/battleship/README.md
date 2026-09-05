@@ -6,7 +6,7 @@ This example is Cougr's **canonical** hidden-information reference. It intention
 
 ## Status
 
-**Canonical** — maintained reference implementation for commit-reveal + selective disclosure on Soroban. Uses `cougr-core = "1.1.0"`, `privacy::stable` Merkle primitives, and `impl_component!` macros for standardized serialization.
+**Canonical** - maintained reference implementation for commit-reveal + selective disclosure on Soroban. Uses `cougr-core = "1.1.0"`, `privacy::stable` Merkle primitives, and `impl_component!` macros for standardized serialization.
 
 ## The Hidden Information Problem
 
@@ -142,8 +142,8 @@ The leaf payload still binds `index || value`, but the inclusion proof format an
 
 | Pattern | Best For | Cost | Complexity |
 |---------|----------|------|------------|
-| **Commit-Reveal + Merkle** | Hidden boards, card hands, fog-of-war | O(log n) proof verification | Low — uses standard SHA256 |
-| **ZK Circuits (Groth16/Poseidon)** | Private game logic evaluation, hidden card deals | Single on-chain verification | High — requires circuit compilation |
+| **Commit-Reveal + Merkle** | Hidden boards, card hands, fog-of-war | O(log n) proof verification | Low - uses standard SHA256 |
+| **ZK Circuits (Groth16/Poseidon)** | Private game logic evaluation, hidden card deals | Single on-chain verification | High - requires circuit compilation |
 
 Use **commit-reveal** when you need to hide state but reveal it incrementally with verifiable proofs. Use **ZK circuits** when the game logic itself must remain private (e.g., proving a move is valid without revealing the move).
 
@@ -154,18 +154,18 @@ For a reference ZK implementation, see [hidden_hand](../hidden_hand/), which dem
 ### Committed State
 
 Stored on-chain during setup:
-- `commitment_a/b` — SHA256 hash of each player's board with random salt
-- `merkle_root_a/b` — root of the Merkle tree built from cell hashes
-- `has_commitment_a/b` — flags tracking which players have committed
+- `commitment_a/b` - SHA256 hash of each player's board with random salt
+- `merkle_root_a/b` - root of the Merkle tree built from cell hashes
+- `has_commitment_a/b` - flags tracking which players have committed
 
 Both commitments must be submitted before the game transitions to `Phase::Attack`.
 
 ### Revealed State
 
 Updated during the attack phase:
-- `attack_grid_a/b` — maps cell indices to `CellResult` (hit/miss)
-- `ship_status` — tracks remaining ship cells per player (starts at 17)
-- `turn_state` — tracks current player, phase, and pending reveals
+- `attack_grid_a/b` - maps cell indices to `CellResult` (hit/miss)
+- `ship_status` - tracks remaining ship cells per player (starts at 17)
+- `turn_state` - tracks current player, phase, and pending reveals
 
 ### Proven State
 
@@ -190,7 +190,7 @@ This replaces manual byte-level serialization with a type-safe macro that handle
 ## Building & Testing
 
 ### Prerequisites
-- Rust 1.70.0+
+- Rust 1.88.0+
 - Stellar CLI 25.0.0+ (optional)
 
 ### Build
@@ -328,7 +328,7 @@ stellar contract deploy \
 - [Cougr Repository](https://github.com/salazarsebas/Cougr)
 - [Merkle Trees](https://en.wikipedia.org/wiki/Merkle_tree)
 - [Commitment Schemes](https://en.wikipedia.org/wiki/Commitment_scheme)
-- [hidden_hand — ZK circuit example](../hidden_hand/)
+- [hidden_hand - ZK circuit example](../hidden_hand/)
 - [Soroban Documentation](https://developers.stellar.org/docs/build/smart-contracts)
 
 ## License

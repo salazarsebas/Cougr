@@ -25,12 +25,12 @@ ECS-lite examples for typed, byte-serializable game state.
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `new_game` | `white: Address`, `black: Address` | — | Initializes the standard 8x8 opening position, computes the initial `state_hash`, and sets White to move first. |
+| `new_game` | `white: Address`, `black: Address` | - | Initializes the standard 8x8 opening position, computes the initial `state_hash`, and sets White to move first. |
 | `submit_move` | `player: Address`, `from: u32`, `to: u32`, `proof: Bytes` | `MoveResult` | Requires `player.require_auth()`. Checks turn order and game status, verifies the supplied proof against the stored verification key and current `state_hash`, then applies the move, recomputes the hash, and switches turns. |
-| `resign` | `player: Address` | — | Marks the game `Resigned` if called by either registered player. |
-| `get_board` | — | `BoardState` | Current piece map and `state_hash`. |
-| `get_state` | — | `GameState` | Full game state: both players, board, turn state, and last proof record. |
-| `set_vk` | `vk: VerificationKey` | — | Admin function to set/replace the Groth16 verification key used for move proofs. |
+| `resign` | `player: Address` | - | Marks the game `Resigned` if called by either registered player. |
+| `get_board` | - | `BoardState` | Current piece map and `state_hash`. |
+| `get_state` | - | `GameState` | Full game state: both players, board, turn state, and last proof record. |
+| `set_vk` | `vk: VerificationKey` | - | Admin function to set/replace the Groth16 verification key used for move proofs. |
 
 ## Architecture overview
 
@@ -60,8 +60,8 @@ The entire game lives under one instance-storage key (`GAME_KEY`,
 `symbol_short!("GAME")`) as a single `GameState` struct bundling both player addresses, the
 board, turn state, and the last proof record. The verification key is stored separately
 under its own instance-storage key (`VK_KEY`, `symbol_short!("VK")`) so it can be rotated
-with `set_vk` independently of game state. Instance storage is used for both — not persistent
-or temporary — because there is exactly one game and one verification key per contract
+with `set_vk` independently of game state. Instance storage is used for both - not persistent
+or temporary - because there is exactly one game and one verification key per contract
 instance, with no per-entry TTL management needed.
 
 ## Main gameplay flow
@@ -81,11 +81,11 @@ instance, with no per-entry TTL management needed.
 
 ## Cougr APIs used
 
-- `cougr_core::component::ComponentTrait` — gives `BoardState` and `TurnState` a
+- `cougr_core::component::ComponentTrait` - gives `BoardState` and `TurnState` a
   `component_type()` symbol and byte-level `serialize`/`deserialize`, chosen because chess has
   a single fixed-shape game state per contract instance rather than a dynamic entity
   population that would benefit from `SimpleWorld`/`SimpleQueryBuilder` scanning.
-- `cougr_core::privacy::experimental` (`CustomCircuit`) — chosen specifically because this
+- `cougr_core::privacy::experimental` (`CustomCircuit`) - chosen specifically because this
   example demonstrates Groth16 proof submission: the contract never evaluates chess rules
   itself, it only binds a proof's public inputs (`state_hash`, `from`, `to`) to a
   verification key and checks the proof verifies. This is the canonical use case the
@@ -95,7 +95,7 @@ instance, with no per-entry TTL management needed.
   `fog_explorer`, `dice_duel`, `blind_auction`) use the higher-level `cougr_core::circuits`
   pre-built builders instead of hand-rolling a `CustomCircuit`; this example predates that
   module and is kept as a reference for the lower-level builder API.
-- `cougr_core::privacy::{Groth16Proof, VerificationKey}` — the concrete proof and key types
+- `cougr_core::privacy::{Groth16Proof, VerificationKey}` - the concrete proof and key types
   the `CustomCircuit` builder and verifier operate on; stored on-chain (`VerificationKey`) or
   passed per-call (`Groth16Proof`, decoded from the `proof: Bytes` argument) so the contract
   has everything it needs to verify a move without re-deriving any chess logic.
@@ -109,7 +109,7 @@ stellar contract build
 
 ## Known limitations
 
-- Proof decoding (`zk::decode_proof`) is not implemented — it intentionally panics, since
+- Proof decoding (`zk::decode_proof`) is not implemented - it intentionally panics, since
   wiring up a real off-chain Groth16 prover/serializer is out of scope for this example. Tests
   exercise the turn/resign/game-over paths that return before proof verification is reached.
 - The move-validation circuit itself (piece movement rules, path obstruction, check/checkmate
@@ -117,6 +117,6 @@ stellar contract build
   verification wrapper is shown.
 - Checkmate detection is simplified to "a king is missing from the board" rather than full
   check/checkmate/stalemate rules. Castling, en passant, and pawn promotion are not modeled.
-- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — `submit_move` runs its pipeline
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` - `submit_move` runs its pipeline
   directly from the contract entrypoint since each call has exactly one decision point and
   does not need staged scheduling.

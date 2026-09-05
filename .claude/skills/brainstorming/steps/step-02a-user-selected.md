@@ -87,7 +87,7 @@ Show available categories with brief descriptions:
 
 **Which category interests you most? Enter 1-7, or tell me what type of thinking you're drawn to.**"
 
-**HALT — wait for user selection before proceeding.**
+**HALT - wait for user selection before proceeding.**
 
 ### 3. Handle Category Selection
 
@@ -156,7 +156,7 @@ This combination will take approximately [total_time] and focus on [expected out
 [C] Continue - Begin technique execution
 [Back] - Modify technique selection"
 
-**HALT — wait for user selection before proceeding.**
+**HALT - wait for user selection before proceeding.**
 
 ### 6. Update Frontmatter and Continue
 

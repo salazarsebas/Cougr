@@ -60,7 +60,7 @@ The defended set of public APIs that are part of Cougr's `1.0` stable contract. 
 ## D
 
 ### Default runtime surface
-`app::GameApp` — the recommended entrypoint for new multi-system contracts. Provides stage-based scheduling, plugin registration, and runtime resource management.
+`app::GameApp` - the recommended entrypoint for new multi-system contracts. Provides stage-based scheduling, plugin registration, and runtime resource management.
 
 ---
 
@@ -84,7 +84,7 @@ App-level orchestration that owns a `SimpleWorld`, scheduler, plugin registratio
 ## H
 
 ### Hidden state
-Private game state encoded for selective disclosure. Players hold commitments or Merkle roots of hidden state and reveal only the subset needed for a given verification. Distinct from "secret" or "off-chain" state — hidden state is on-chain but unreadable without the reveal key.
+Private game state encoded for selective disclosure. Players hold commitments or Merkle roots of hidden state and reveal only the subset needed for a given verification. Distinct from "secret" or "off-chain" state - hidden state is on-chain but unreadable without the reveal key.
 
 ### Hooks
 Callbacks triggered on component `add` / `remove` events. A synchronous mechanism for enforcing invariants when components change.
@@ -116,7 +116,7 @@ Persistence layer that only flushes entities with dirty components (tracked by t
 ## M
 
 ### Maturity model
-The Stable / Beta / Experimental classification system governing compatibility promises, documentation depth, and test coverage across Cougr's public surfaces. Defined in [MATURITY_MODEL.md](MATURITY_MODEL.md). These three terms must be used identically everywhere — never synonyms ("production-ready" for Stable, "unstable" for Experimental, etc.).
+The Stable / Beta / Experimental classification system governing compatibility promises, documentation depth, and test coverage across Cougr's public surfaces. Defined in [MATURITY_MODEL.md](MATURITY_MODEL.md). These three terms must be used identically everywhere - never synonyms ("production-ready" for Stable, "unstable" for Experimental, etc.).
 
 ### Merkle proof
 An inclusion proof against a Merkle tree root. Used in hidden-information games (fog-of-war, private inventory) to prove state membership without full disclosure. Supported as a stable primitive in `privacy::stable`.

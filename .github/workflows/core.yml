@@ -76,3 +76,21 @@ jobs:
           name: verified-badge-report
           path: verified.json
           retention-days: 30
+
+  msrv:
+    name: MSRV Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust 1.88.0
+        uses: dtolnay/rust-toolchain@1.88.0
+        with:
+          targets: wasm32v1-none
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check against declared MSRV
+        run: cargo check --workspace --all-features

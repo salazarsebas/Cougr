@@ -28,7 +28,7 @@ path requires weeks of ZK specialization.
    `zk::experimental::verify_groth16`. Production deploys replace the VK via
    `with_verification_key`.
 
-3. `fog_of_war` reuses `FogOfWarCircuit` in `zk::advanced` — no duplicate
+3. `fog_of_war` reuses `FogOfWarCircuit` in `zk::advanced` - no duplicate
    verification logic.
 
 4. Circom scaffolds and off-chain scripts live in

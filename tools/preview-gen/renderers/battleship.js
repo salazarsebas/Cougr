@@ -2,17 +2,16 @@
  * Battleship SVG renderer.
  *
  * Battleship uses a commit-reveal scheme: each player commits a board,
- * then attacks. The publicly visible state is the *attack grid* —
- * which cells have been fired at and whether they were hits or misses.
+ * then attacks. The publicly visible state is the *attack grid* - * which cells have been fired at and whether they were hits or misses.
  *
  * Input state shape (from examples/battleship/src/lib.rs :: GameState):
  *   grid:           Record<number, "Hit"|"Miss"|"Unknown">
- *                   — map from cell index (0-99) to result
- *                   — cells not present = Unknown (not yet attacked)
- *   grid_size:      number  — default 10
- *   label:          string  — e.g. "Player A's attack grid"
- *   ship_remaining: number  — ships remaining on the target board
- *   total_ships:    number  — 17 (5+4+3+3+2)
+ * - map from cell index (0-99) to result
+ * - cells not present = Unknown (not yet attacked)
+ *   grid_size:      number - default 10
+ *   label:          string - e.g. "Player A's attack grid"
+ *   ship_remaining: number - ships remaining on the target board
+ *   total_ships:    number - 17 (5+4+3+3+2)
  *   phase:          "Setup" | "Attack" | "Finished"
  *   turn:           "A" | "B"
  *   winner:         null | "A" | "B"
@@ -27,7 +26,7 @@ import { BRAND, GAME, LINE, FONT_STYLE, TINT, px } from '../theme.js';
 const GRID = 10;
 const CELL_SZ = 36;         // each cell is 36×36px
 const BOARD_W = GRID * CELL_SZ;   // 360
-const SVG_W = BOARD_W + 80;       // 440 — extra for labels
+const SVG_W = BOARD_W + 80;       // 440 - extra for labels
 const BOARD_H = GRID * CELL_SZ;   // 360
 const GAP = 24;                    // gap between the two boards
 const STATUS_H = 72;
@@ -160,7 +159,7 @@ export function render(state) {
   const statusText = winner
     ? `Player ${winner} wins!`
     : phase === 'Setup'
-      ? 'Setup phase — awaiting commitments'
+      ? 'Setup phase - awaiting commitments'
       : `Player ${turn}'s turn to attack`;
   const statusColor = winner
     ? COLORS.badge_finished

@@ -1,7 +1,7 @@
 //! ECS components for {{crate_name}}.
 //!
 //! `Position` is declared with `impl_component_observed!` so every change emits
-//! an indexed `(COUGR, set, position)` Soroban event — off-chain clients can
+//! an indexed `(COUGR, set, position)` Soroban event - off-chain clients can
 //! follow movement from the event stream instead of polling. `Moves` uses the
 //! plain `impl_component!` macro because the move budget is only ever read back
 //! through an explicit contract call.

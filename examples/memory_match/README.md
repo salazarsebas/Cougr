@@ -21,12 +21,12 @@ board, one player) with no dynamic entity population.
 |---|---|---|---|
 | `init_game` | `player: Address` | `GameState` | Seeds a fresh 16-card board (8 deterministic pairs) for `player` and returns the initial state. |
 | `reveal_card` | `player: Address`, `position: u32` | `RevealInfo` | Reveals the card at `position`. Resolves a pair once two cards are revealed (match, no-match, or game-over). Panics if not initialized, the caller isn't the registered player, the game is over, two cards are already revealed, the position is out of range, or the card is already revealed/matched. |
-| `get_game_state` | — | `GameState` | Current board view, revealed/matched counts, move count, and game-over flag. |
+| `get_game_state` | - | `GameState` | Current board view, revealed/matched counts, move count, and game-over flag. |
 | `reset_game` | `player: Address` | `GameState` | Hides all cards and clears progress, keeping the same board layout. Panics if not initialized or the caller isn't the registered player. |
 
 ## Architecture overview
 
-There is no `GameApp` tick loop — `reveal_card` runs a fixed pipeline synchronously on each
+There is no `GameApp` tick loop - `reveal_card` runs a fixed pipeline synchronously on each
 invocation:
 
 ```
@@ -49,7 +49,7 @@ validation, reveal, resolution, reset, and projection functions; `lib.rs` owns t
 
 The entire game lives under one instance-storage key (`WORLD_KEY`, `symbol_short!("WORLD")`)
 as a single `ECSWorldState` struct bundling all 16 card components, the board component, and
-the game-state component. Instance storage is used — not persistent or temporary — because
+the game-state component. Instance storage is used - not persistent or temporary - because
 there is exactly one game per contract instance and the state must survive for the lifetime
 of that instance with no per-entry TTL management.
 
@@ -69,7 +69,7 @@ of that instance with no per-entry TTL management.
 
 ## Cougr APIs used
 
-- `cougr_core::component::ComponentTrait` — gives each component (`CardComponent`,
+- `cougr_core::component::ComponentTrait` - gives each component (`CardComponent`,
   `BoardComponent`, `GameStateComponent`) a `component_type()` symbol and explicit byte-level
   `serialize`/`deserialize`. This is the only Cougr API the example uses: the game has one
   fixed-shape `ECSWorldState` per contract instance (16 cards, one board, one player) rather
@@ -88,7 +88,7 @@ stellar contract build
 
 ## Known limitations
 
-- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` — game logic is invoked directly
+- Does not use `GameApp`, `ScheduleStage`, or `SimpleWorld` - game logic is invoked directly
   from contract entrypoints rather than through a tick-based scheduler, since a single-player
   game with one decision point per call does not need staged scheduling.
 - The card layout is fixed and deterministic (not shuffled), so the pairing is the same for

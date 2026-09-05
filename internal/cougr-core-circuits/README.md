@@ -50,10 +50,10 @@ See [AUDIT.md](./AUDIT.md) for trusted-setup policy.
 
 ## Deploying to mainnet
 
-Everything above is the **test** pipeline — fine for CI, examples, and integration tests, not for mainnet. If
+Everything above is the **test** pipeline - fine for CI, examples, and integration tests, not for mainnet. If
 you're preparing a real deployment:
 
-1. [CEREMONY.md](./CEREMONY.md) — how to run a real, multi-party phase-2 ceremony instead of `setup.sh`'s
+1. [CEREMONY.md](./CEREMONY.md) - how to run a real, multi-party phase-2 ceremony instead of `setup.sh`'s
    single-contributor test key.
-2. [PRODUCTION_KEYS.md](./PRODUCTION_KEYS.md) — how to get the ceremony's output into
+2. [PRODUCTION_KEYS.md](./PRODUCTION_KEYS.md) - how to get the ceremony's output into
    `GameCircuitSpec::with_verification_key` correctly.

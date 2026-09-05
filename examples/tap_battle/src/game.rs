@@ -11,7 +11,7 @@ use soroban_sdk::{Address, Env};
 use crate::types::*;
 
 // ============================================================================
-// TapSystem — Core tapping mechanic
+// TapSystem - Core tapping mechanic
 // ============================================================================
 
 /// Process a tap action for a player.
@@ -40,7 +40,7 @@ pub fn process_tap(env: &Env, player: &Address) -> TapResult {
         // Combo continues
         tap_state.combo += 1;
     } else {
-        // Combo breaks — reset
+        // Combo breaks - reset
         tap_state.combo = 1;
     }
 
@@ -92,7 +92,7 @@ pub fn process_tap(env: &Env, player: &Address) -> TapResult {
 }
 
 // ============================================================================
-// PowerUpSystem — Power-up activation
+// PowerUpSystem - Power-up activation
 // ============================================================================
 
 /// Activate a power-up for a player.
@@ -137,7 +137,7 @@ pub fn activate_power_up(env: &Env, player: &Address, power_up_kind: u32) {
 }
 
 // ============================================================================
-// RoundSystem — Match management
+// RoundSystem - Match management
 // ============================================================================
 
 /// Start a new competitive round between two players.
@@ -218,7 +218,7 @@ pub fn get_round(env: &Env) -> RoundState {
     if !round.finished {
         let current_ledger = env.ledger().sequence() as u64;
         if current_ledger >= round.started_at + round.duration {
-            // Round is over — finalize
+            // Round is over - finalize
             round.finished = true;
             env.storage().instance().set(&DataKey::Round, &round);
             env.storage().instance().set(&DataKey::RoundActive, &false);

@@ -11,7 +11,7 @@ DECK_SIZE="${DECK_SIZE:-52}"
 HAND_SIZE="${HAND_SIZE:-5}"
 
 if ! command -v "$CIRCOM_BIN" >/dev/null 2>&1; then
-  echo "circom not found — set CIRCOM or install from https://github.com/iden3/circom" >&2
+  echo "circom not found - set CIRCOM or install from https://github.com/iden3/circom" >&2
   exit 1
 fi
 

@@ -1,4 +1,4 @@
-# Tap Battle — Mobile-First Competitive Tapping Game
+# Tap Battle - Mobile-First Competitive Tapping Game
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/salazarsebas/Cougr)
 [![Tests](https://img.shields.io/badge/tests-17%20passing-brightgreen)](https://github.com/salazarsebas/Cougr)
@@ -105,7 +105,7 @@ SessionManager::renew(&env, &owner, &key_id, new_expires_at)?;
 SessionManager::fallback_execute(&env, &session_intent, &direct_intent)?;
 ```
 
-Sessions are managed by `cougr_core::session::SessionManager` — the same pattern as [`session_arena`](../session_arena/README.md).
+Sessions are managed by `cougr_core::session::SessionManager` - the same pattern as [`session_arena`](../session_arena/README.md).
 
 > **Duration semantics:** Session `expires_in` / `expires_at` use **ledger timestamps** (seconds), not ledger sequence numbers. Round duration (`start_round`) still uses ledger sequences for combo timing.
 
@@ -119,7 +119,7 @@ Sessions are managed by `cougr_core::session::SessionManager` — the same patte
 | `RoundState` | `started_at`, `duration`, `scores`, `finished` | Match state |
 | `PlayerProfile` | `total_wins`, `total_taps`, `best_combo` | Persistent stats |
 
-Session state lives in `SessionManager` / `SessionStorage` — not as a custom ECS component.
+Session state lives in `SessionManager` / `SessionStorage` - not as a custom ECS component.
 
 ---
 
@@ -193,7 +193,7 @@ Taps within **5 ledger sequences** of each other maintain a combo streak:
 
 | Tool | Version | Installation |
 |---|---|---|
-| Rust | 1.70.0+ | [rustup.rs](https://rustup.rs) |
+| Rust | 1.88.0+ | [rustup.rs](https://rustup.rs) |
 | Stellar CLI | Latest | [Stellar Docs](https://developers.stellar.org/docs/tools/cli) |
 | WASM Target | - | `rustup target add wasm32v1-none` |
 

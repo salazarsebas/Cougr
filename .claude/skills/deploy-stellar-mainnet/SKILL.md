@@ -14,27 +14,27 @@ Check each item. If any fails, stop and fix before moving on.
 **Contract correctness:**
 - [ ] All contract tests pass on testnet (`stellar contract invoke ...` against a deployed testnet copy)
 - [ ] At least one end-to-end integration test exists (deploy → invoke → assert state)
-- [ ] Storage usage profiled — no unbounded growth, TTL extension wired up for long-lived data
-- [ ] Authorization paths reviewed — every `require_auth` is justified, no missing auth on sensitive operations
+- [ ] Storage usage profiled - no unbounded growth, TTL extension wired up for long-lived data
+- [ ] Authorization paths reviewed - every `require_auth` is justified, no missing auth on sensitive operations
 - [ ] CPI (cross-contract call) safety considered if calling other contracts (reentrancy patterns)
 
 **Security:**
-- [ ] No `unwrap()` on user-controlled paths — use `?` with proper error types
+- [ ] No `unwrap()` on user-controlled paths - use `?` with proper error types
 - [ ] No panics on malformed input
-- [ ] Integer overflow handled — `checked_*` arithmetic or `i128` where appropriate
+- [ ] Integer overflow handled - `checked_*` arithmetic or `i128` where appropriate
 - [ ] Admin operations gated by explicit role checks
 - [ ] If accepting assets, contract uses the Stellar Asset Contract (SAC) correctly
 
 **Audit / formal verification (for high-value contracts):**
 - [ ] At least informal peer review by someone outside the team
-- [ ] For contracts holding >$100K TVL or critical infra: third-party audit (Certora, OtterSec, Code4rena are active on Stellar — see `data/lumenloop/audits/registry.json`)
+- [ ] For contracts holding >$100K TVL or critical infra: third-party audit (Certora, OtterSec, Code4rena are active on Stellar - see `data/lumenloop/audits/registry.json`)
 - [ ] If skipping audit, document explicit risk acceptance with reasoning
 
 **Operational:**
 - [ ] Admin keys: who holds them, where stored (hardware wallet preferred, NOT in CI secrets)
 - [ ] Upgrade path: contract is upgradeable via WASM hot-swap, OR explicitly immutable and documented as such
 - [ ] Emergency pause exists and is admin-only if user-facing funds are involved
-- [ ] Deploy SOPs documented (1-pager — at minimum: who can deploy, network config, contract ID location)
+- [ ] Deploy SOPs documented (1-pager - at minimum: who can deploy, network config, contract ID location)
 
 ### Gate 2: Deployment mechanics
 
@@ -89,15 +89,15 @@ After successful deploy:
 **Monitoring:**
 - [ ] Indexer or event stream set up (Mercury, Subquery, or custom) to capture contract events
 - [ ] Alerting on: unexpected admin operations, large value transfers, paused state changes, error rate spikes
-- [ ] Dashboard for key metrics (TVL, user count, transaction volume) — even a simple Streamlit or Notion page works
+- [ ] Dashboard for key metrics (TVL, user count, transaction volume) - even a simple Streamlit or Notion page works
 
 **Ecosystem distribution:**
 - [ ] Announce on X / Discord with contract ID and a `stellar.expert` link to verify
 - [ ] Submit project to lumenloop.com if not already listed
-- [ ] Open PR to `github.com/lumenloop/stellar-ecosystem-db` adding a YAML entry — free distribution to the Stellar ecosystem
+- [ ] Open PR to `github.com/lumenloop/stellar-ecosystem-db` adding a YAML entry - free distribution to the Stellar ecosystem
 
 **Funding / grants:**
-- [ ] If pre-launch SCF Build Award already received: prepare tranche reports — route to `scf-tranche-reporter`
+- [ ] If pre-launch SCF Build Award already received: prepare tranche reports - route to `scf-tranche-reporter`
 - [ ] If not yet funded and round is open: route to `scf-round-watcher` for active round status, then `scf-submission-drafter`
 
 ## Constraints
@@ -105,4 +105,4 @@ After successful deploy:
 - Do not let the user skip any Gate 1 checkbox. A broken mainnet contract is dramatically harder to fix than a delayed deploy
 - For first-time deployers, walk them through `stellar` CLI installation if `which stellar` returns nothing
 - For high-value contracts (anything holding user funds or being core infrastructure), refuse to proceed without at least informal peer-review evidence
-- Mainnet network passphrase is critical — never copy from testnet config. The mainnet passphrase contains "September 2015"; testnet contains "September 2015" too but with "Test" prefix — always verify
+- Mainnet network passphrase is critical - never copy from testnet config. The mainnet passphrase contains "September 2015"; testnet contains "September 2015" too but with "Test" prefix - always verify

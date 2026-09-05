@@ -36,7 +36,7 @@ pub struct ComponentRemovedEvent {
 /// Data: `{ "entity_id": u32 }`
 ///
 /// Rich components are stored using Soroban's XDR codec. The full value is
-/// not embedded in the event — off-chain indexers should query the contract's
+/// not embedded in the event - off-chain indexers should query the contract's
 /// instance storage for the updated value after receiving this notification.
 #[contractevent(topics = ["COUGR", "rich"])]
 pub struct RichComponentChangedEvent {

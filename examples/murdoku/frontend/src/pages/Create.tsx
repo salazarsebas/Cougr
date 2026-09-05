@@ -96,7 +96,7 @@ const Create: React.FC = () => {
   function renderStep0() {
     return (
       <div style={S.card}>
-        <h2 style={S.stepTitle}>Step 1 — Grid Configuration</h2>
+        <h2 style={S.stepTitle}>Step 1 - Grid Configuration</h2>
         <label style={S.label}>Puzzle Name <span style={{ color:"#e63946" }}>*</span></label>
         <input style={S.input} maxLength={64} placeholder="My Murdoku Puzzle" value={state.puzzleName}
           onChange={(e) => dispatch({ type:"SET_NAME", payload:e.target.value })} />
@@ -137,7 +137,7 @@ const Create: React.FC = () => {
     const allFilled = state.suspects.every((s) => s.name.trim());
     return (
       <div style={S.card}>
-        <h2 style={S.stepTitle}>Step 2 — Suspects</h2>
+        <h2 style={S.stepTitle}>Step 2 - Suspects</h2>
         <p style={S.hint}>Define {state.gridSize} suspects. Each name must be unique (max 32 chars).</p>
         <div style={S.suspectGrid}>
           {state.suspects.map((suspect, i) => (
@@ -162,7 +162,7 @@ const Create: React.FC = () => {
     const complete = isCompleteSolution(state.solution, state.gridSize);
     return (
       <div style={S.card}>
-        <h2 style={S.stepTitle}>Step 3 — Solution</h2>
+        <h2 style={S.stepTitle}>Step 3 - Solution</h2>
         <p style={S.hint}>Place each suspect once per row and column. Click a filled cell to clear it.</p>
         <div style={S.row}>
           {state.suspects.map((s) => (
@@ -212,7 +212,7 @@ const Create: React.FC = () => {
   function renderStep3() {
     return (
       <div style={S.card}>
-        <h2 style={S.stepTitle}>Step 4 — Clues</h2>
+        <h2 style={S.stepTitle}>Step 4 - Clues</h2>
         <p style={S.hint}>Add at least one clue to help players solve the puzzle.</p>
         <ClueBuilder suspects={state.suspects} gridSize={state.gridSize}
           onAddClue={(clue) => dispatch({ type:"ADD_CLUE", payload:clue })} />
@@ -226,7 +226,7 @@ const Create: React.FC = () => {
                 <div key={clue.id} style={S.clueItem}>
                   <div style={{ flex:1 }}>
                     <span style={{ color:"#6a4c93", fontWeight:700 }}>{CLUE_TYPE_LABELS[clue.type]}</span>
-                    {" — "}<span style={{ color:primary?.color }}>{primary?.name}</span>
+                    {" - "}<span style={{ color:primary?.color }}>{primary?.name}</span>
                     {CLUE_NEEDS_SECONDARY.includes(clue.type) && secondary && <> & <span style={{ color:secondary.color }}>{secondary.name}</span></>}
                     {clue.row!==undefined && <span style={{ color:"#aaa" }}> at row {clue.row+1}, col {clue.col!+1}</span>}
                   </div>
@@ -272,7 +272,7 @@ const Create: React.FC = () => {
     }
     return (
       <div style={S.card}>
-        <h2 style={S.stepTitle}>Step 5 — Preview & Submit</h2>
+        <h2 style={S.stepTitle}>Step 5 - Preview & Submit</h2>
         <div style={S.previewSummary}>
           {[["Puzzle Name",state.puzzleName],["Grid Size",`${state.gridSize}×${state.gridSize}`],["Difficulty",state.difficulty],
             ["Suspects",state.suspects.map((s)=>s.name).join(", ")],["Clues",state.clues.length]].map(([k,v]) => (
@@ -303,7 +303,7 @@ const Create: React.FC = () => {
               <div key={clue.id} style={S.clueItem}>
                 <span style={{ color:"#888", marginRight:8 }}>{i+1}.</span>
                 <span style={{ color:"#6a4c93", fontWeight:700 }}>{CLUE_TYPE_LABELS[clue.type]}</span>
-                {" — "}<span style={{ color:primary?.color }}>{primary?.name}</span>
+                {" - "}<span style={{ color:primary?.color }}>{primary?.name}</span>
                 {CLUE_NEEDS_SECONDARY.includes(clue.type) && secondary && <> & <span style={{ color:secondary.color }}>{secondary.name}</span></>}
               </div>
             );

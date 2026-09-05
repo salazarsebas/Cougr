@@ -36,13 +36,13 @@ All protocols use USDC (SEP-41 SAC) by default; `stellar:testnet` / `stellar:pub
 
 ---
 
-# Part 1: x402 — Paid APIs + Agent Buyer Clients
+# Part 1: x402 - Paid APIs + Agent Buyer Clients
 
 
 ## When to use x402
 x402 is the right choice when:
-- You want the fastest path to a paid API — minimal code, no contract deployment
-- You want clients (including AI agents) to pay with **zero XLM** — the OZ Channels facilitator sponsors all network fees
+- You want the fastest path to a paid API - minimal code, no contract deployment
+- You want clients (including AI agents) to pay with **zero XLM** - the OZ Channels facilitator sponsors all network fees
 - You're building on top of an existing x402 ecosystem (Coinbase, other chains)
 
 Trade-off: you depend on OZ Channels (or a self-hosted relayer) for verification and settlement. If you need zero third-party dependency, use MPP Charge (Part 2 below) instead.
@@ -125,14 +125,14 @@ app.listen(3001, () => console.log(`x402 server on http://localhost:3001 (${NETW
 ```
 
 **Env vars:**
-- `STELLAR_NETWORK` — CAIP-2 network ID; defaults to `stellar:testnet`. Set to `stellar:pubnet` for mainnet.
-- `STELLAR_RECIPIENT` — your G... address (receives USDC, needs a USDC trustline)
-- `OZ_API_KEY` — OZ Channels API key (**required on both testnet and mainnet**; generate at the link in the runbook below)
-- `FACILITATOR_URL` — defaults to testnet URL above; set to `https://channels.openzeppelin.com/x402` for mainnet
+- `STELLAR_NETWORK` - CAIP-2 network ID; defaults to `stellar:testnet`. Set to `stellar:pubnet` for mainnet.
+- `STELLAR_RECIPIENT` - your G... address (receives USDC, needs a USDC trustline)
+- `OZ_API_KEY` - OZ Channels API key (**required on both testnet and mainnet**; generate at the link in the runbook below)
+- `FACILITATOR_URL` - defaults to testnet URL above; set to `https://channels.openzeppelin.com/x402` for mainnet
 
 **Price format options:**
-- `"$0.001"` — human-readable, auto-converts to 7-decimal USDC units
-- `{ amount: "1000", asset: "ASSET_SAC_CONTRACT_ID" }` — explicit base units for non-USDC assets
+- `"$0.001"` - human-readable, auto-converts to 7-decimal USDC units
+- `{ amount: "1000", asset: "ASSET_SAC_CONTRACT_ID" }` - explicit base units for non-USDC assets
 
 **`payTo` is the recipient's classic Stellar account (`G...`), not the USDC SAC contract address.** Sending USDC lands in the classic balance of the `payTo` account, which is why that account also needs a USDC trustline. The SAC contract address is what the protocol invokes `transfer` on; see "Two USDC addresses" below.
 
@@ -153,8 +153,7 @@ import { ExactStellarScheme } from "@x402/stellar/exact/client";
 const NETWORK = process.env.STELLAR_NETWORK || "stellar:testnet";
 
 // createEd25519Signer takes the raw S... secret string and the CAIP-2 network ID.
-// Do NOT pre-wrap with Keypair.fromSecret or call getNetworkPassphrase yourself —
-// the signer does both internally.
+// Do NOT pre-wrap with Keypair.fromSecret or call getNetworkPassphrase yourself - // the signer does both internally.
 const signer = createEd25519Signer(process.env.STELLAR_SECRET_KEY, NETWORK);
 
 // wrapFetchWithPaymentFromConfig returns a fetch that handles 402 negotiation
@@ -169,8 +168,8 @@ console.log(await res.json());
 ```
 
 **Env vars:**
-- `STELLAR_NETWORK` — CAIP-2 network ID; defaults to `stellar:testnet`. Must match the server's network.
-- `STELLAR_SECRET_KEY` — your S... secret key (needs USDC trustline + balance)
+- `STELLAR_NETWORK` - CAIP-2 network ID; defaults to `stellar:testnet`. Must match the server's network.
+- `STELLAR_SECRET_KEY` - your S... secret key (needs USDC trustline + balance)
 
 **Browser frontends:** this client uses Node `fetch` and `createEd25519Signer`, both of which run in Node. A vanilla browser cannot sign Soroban auth entries through a typical wallet extension without additional glue. For a browser payer, run the x402 client server-side and expose a thin proxy endpoint to the page, or wire up Wallets-Kit / Freighter with custom auth-entry signing.
 
@@ -191,7 +190,7 @@ Two steps are web-only (Captcha or auth form) and cannot be scripted: the Circle
    curl "https://friendbot.stellar.org?addr=PAYER_G..."
    ```
 
-3. **Add a USDC trustline to BOTH accounts** — open [Stellar Lab](https://lab.stellar.org/account/fund?network=test) and add a USDC trustline to each `G...`, or run via SDK for each keypair:
+3. **Add a USDC trustline to BOTH accounts** - open [Stellar Lab](https://lab.stellar.org/account/fund?network=test) and add a USDC trustline to each `G...`, or run via SDK for each keypair:
    ```js
    import * as StellarSdk from "@stellar/stellar-sdk";
 
@@ -222,7 +221,7 @@ Two steps are web-only (Captcha or auth form) and cannot be scripted: the Circle
 
    Without a trustline on the recipient, the SAC `transfer` settles into nothing and the request fails with `op_no_trust`.
 
-4. **Fund the PAYER with testnet USDC** — open the [Circle testnet faucet](https://faucet.circle.com/), select **Stellar testnet**, paste the payer's `G...`. Web Captcha; no API.
+4. **Fund the PAYER with testnet USDC** - open the [Circle testnet faucet](https://faucet.circle.com/), select **Stellar testnet**, paste the payer's `G...`. Web Captcha; no API.
 
 5. **Generate an OZ Channels testnet API key** ([channels.openzeppelin.com/testnet/gen](https://channels.openzeppelin.com/testnet/gen)). **Required, not optional.** Without it the server crashes at startup with `Failed to initialize: no supported payment kinds loaded from any facilitator`.
 
@@ -315,17 +314,17 @@ Always test on testnet first. To switch a working setup to mainnet, change only 
 
 ## Key concepts
 
-**Auth entry signing** — On Stellar, x402 clients sign Soroban authorization entries, not full transaction envelopes. The facilitator assembles the complete transaction. This is lighter than EVM/Solana signing, and means clients never need to manage sequence numbers or pay fees.
+**Auth entry signing** - On Stellar, x402 clients sign Soroban authorization entries, not full transaction envelopes. The facilitator assembles the complete transaction. This is lighter than EVM/Solana signing, and means clients never need to manage sequence numbers or pay fees.
 
-**Fee sponsorship** — OZ Channels pays all Stellar network fees (~$0.00001/tx). Clients need a funded wallet with USDC but zero XLM.
+**Fee sponsorship** - OZ Channels pays all Stellar network fees (~$0.00001/tx). Clients need a funded wallet with USDC but zero XLM.
 
-**`exact-v2` scheme** — The Stellar x402 scheme version. Server advertises `scheme: "exact"` + `x402Version: 2`. Don't mix v1 and v2 packages.
+**`exact-v2` scheme** - The Stellar x402 scheme version. Server advertises `scheme: "exact"` + `x402Version: 2`. Don't mix v1 and v2 packages.
 
-**SAC (Stellar Asset Contract)** — USDC on Stellar is a classic asset wrapped in a Soroban contract. x402 payments invoke `transfer` on the SAC. Any SEP-41 token works; USDC is the default.
+**SAC (Stellar Asset Contract)** - USDC on Stellar is a classic asset wrapped in a Soroban contract. x402 payments invoke `transfer` on the SAC. Any SEP-41 token works; USDC is the default.
 
-**Ledger expiration** — Auth entries include a `max_ledger` bound. Use `latestLedger + 12` (~1 minute at 5s/ledger). Expired entries fail at settlement.
+**Ledger expiration** - Auth entries include a `max_ledger` bound. Use `latestLedger + 12` (~1 minute at 5s/ledger). Expired entries fail at settlement.
 
-**CAIP-2 network IDs** — `stellar:testnet` and `stellar:pubnet`. These are the exact strings the protocol expects.
+**CAIP-2 network IDs** - `stellar:testnet` and `stellar:pubnet`. These are the exact strings the protocol expects.
 
 ## Common pitfalls
 
@@ -359,7 +358,7 @@ Always test on testnet first. To switch a working setup to mainnet, change only 
 
 **Passing a `Keypair` (or a network passphrase) to `createEd25519Signer`**
 - Symptom: `TypeError: encoded argument must be of type String`, or `Error: Unknown Stellar network: Test SDF Network ; September 2015`
-- Fix: the signer takes the raw `S...` secret string and a CAIP-2 network ID. Do **not** wrap with `Keypair.fromSecret` first, and do **not** pre-convert with `getNetworkPassphrase` — both are done internally.
+- Fix: the signer takes the raw `S...` secret string and a CAIP-2 network ID. Do **not** wrap with `Keypair.fromSecret` first, and do **not** pre-convert with `getNetworkPassphrase` - both are done internally.
   ```js
   // wrong
   const signer = createEd25519Signer(Keypair.fromSecret(s), getNetworkPassphrase("stellar:testnet"));
@@ -369,13 +368,13 @@ Always test on testnet first. To switch a working setup to mainnet, change only 
 
 ---
 
-# Part 2: MPP — Machine Payments Protocol (Charge + Channel)
+# Part 2: MPP - Machine Payments Protocol (Charge + Channel)
 
 
 ## When to use MPP
 MPP is the right choice when:
-- You want **no facilitator dependency** — payments settle directly on Stellar via Soroban SAC transfers
-- Your AI agent makes **many requests per session** — use channel mode to pay off-chain and settle once
+- You want **no facilitator dependency** - payments settle directly on Stellar via Soroban SAC transfers
+- Your AI agent makes **many requests per session** - use channel mode to pay off-chain and settle once
 - You're building a Stellar-native payment stack without relying on third-party infrastructure
 
 Two modes:
@@ -459,7 +458,7 @@ const mppx = Mppx.create({
   ],
 });
 
-// mppx wraps fetch — 402 handling is transparent
+// mppx wraps fetch - 402 handling is transparent
 const res = await mppx.fetch("http://localhost:3002/data");
 console.log(await res.json());
 ```
@@ -468,12 +467,12 @@ console.log(await res.json());
 **Env vars (client):** `STELLAR_SECRET_KEY`
 
 **`mode: "pull"` vs `"push"`:**
-- `"pull"` — client signs auth entries, server assembles + broadcasts (default; use with `feePayer`)
-- `"push"` — client builds and broadcasts the transaction directly (client must have XLM for fees)
+- `"pull"` - client signs auth entries, server assembles + broadcasts (default; use with `feePayer`)
+- `"push"` - client builds and broadcasts the transaction directly (client must have XLM for fees)
 
 ## Channel mode: high-frequency off-chain payments
 
-The client deploys a one-way payment channel contract, deposits USDC once, then signs **cumulative commitments** off-chain for each request. No transaction per request — only two on-chain txs total (deposit + close). Ideal for AI agents making hundreds of calls in a session.
+The client deploys a one-way payment channel contract, deposits USDC once, then signs **cumulative commitments** off-chain for each request. No transaction per request - only two on-chain txs total (deposit + close). Ideal for AI agents making hundreds of calls in a session.
 
 ### Channel lifecycle
 
@@ -505,7 +504,7 @@ const mppx = Mppx.create({
     stellar.channel({
       channel: process.env.CHANNEL_CONTRACT,       // C... contract address
       commitmentKey: process.env.COMMITMENT_PUBKEY, // 64-char hex ed25519 public key
-      store: Store.memory(), // dev only — use persistent store in production
+      store: Store.memory(), // dev only - use persistent store in production
       network: "stellar:testnet",
     }),
   ],
@@ -530,7 +529,7 @@ import { Mppx } from "mppx";
 import * as stellar from "@stellar/mpp/channel/client";
 import * as StellarSdk from "@stellar/stellar-sdk";
 
-// commitment key must be a raw ed25519 seed — NOT a standard Stellar secret key
+// commitment key must be a raw ed25519 seed - NOT a standard Stellar secret key
 const commitmentKey = StellarSdk.Keypair.fromRawEd25519Seed(
   Buffer.from(process.env.COMMITMENT_SECRET, "hex") // 64-char hex secret
 );
@@ -546,7 +545,7 @@ const mppx = Mppx.create({
   ],
 });
 
-// Make many requests — each signs a cumulative off-chain commitment
+// Make many requests - each signs a cumulative off-chain commitment
 for (let i = 0; i < 100; i++) {
   const res = await mppx.fetch("http://localhost:3003/data");
   console.log(i, await res.json());
@@ -581,10 +580,10 @@ npm install @stellar/mpp mppx @stellar/stellar-sdk
 
 | Import path | Recommended import pattern |
 |-------------|----------------------------|
-| `@stellar/mpp/charge/server` | `import * as stellar from "@stellar/mpp/charge/server"` — use `stellar.charge(...)` |
-| `@stellar/mpp/charge/client` | `import * as stellar from "@stellar/mpp/charge/client"` — use `stellar.charge(...)` |
-| `@stellar/mpp/channel/server` | `import * as stellar from "@stellar/mpp/channel/server"` — use `stellar.channel(...)`, `stellar.close(...)`, `stellar.getChannelState(...)`, `stellar.watchChannel(...)` |
-| `@stellar/mpp/channel/client` | `import * as stellar from "@stellar/mpp/channel/client"` — use `stellar.channel(...)` |
+| `@stellar/mpp/charge/server` | `import * as stellar from "@stellar/mpp/charge/server"` - use `stellar.charge(...)` |
+| `@stellar/mpp/charge/client` | `import * as stellar from "@stellar/mpp/charge/client"` - use `stellar.charge(...)` |
+| `@stellar/mpp/channel/server` | `import * as stellar from "@stellar/mpp/channel/server"` - use `stellar.channel(...)`, `stellar.close(...)`, `stellar.getChannelState(...)`, `stellar.watchChannel(...)` |
+| `@stellar/mpp/channel/client` | `import * as stellar from "@stellar/mpp/channel/client"` - use `stellar.channel(...)` |
 | `@stellar/mpp/channel` | Zod schema definitions for channel types |
 | `mppx` | `import { Mppx, Store } from "mppx"` |
 
@@ -607,7 +606,7 @@ npm install @stellar/mpp mppx @stellar/stellar-sdk
 
 **Channel: wrong commitment key format**
 - Symptom: `Keypair.fromRawEd25519Seed` throws or signatures fail to verify
-- Fix: the commitment key is a raw ed25519 seed as a 64-char hex string — not a Stellar `S...` secret key. Generate with `crypto.randomBytes(32).toString('hex')`.
+- Fix: the commitment key is a raw ed25519 seed as a 64-char hex string - not a Stellar `S...` secret key. Generate with `crypto.randomBytes(32).toString('hex')`.
 
 **Channel: non-cumulative amounts**
 - Symptom: server rejects commitments after the first request

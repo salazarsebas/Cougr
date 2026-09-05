@@ -23,16 +23,16 @@ Murdoku follows a decoupled design where all gameplay rules and state changes ar
 
 ```
 Browser (Vite + React)
-  └── Pollar (@pollar/react)       — embedded wallet, social login
-  └── contract.ts                  — Stellar SDK contract client
+  └── Pollar (@pollar/react) - embedded wallet, social login
+  └── contract.ts - Stellar SDK contract client
         │
         ▼
   Soroban Contract (examples/murdoku/src/)
-  ├── lib.rs       — entrypoints & GameApp wiring
-  ├── components.rs — ECS components (Board, Suspect, GameState)
-  ├── systems.rs   — validation, move execution, and completion systems
-  ├── types.rs     — domain types (Clues, Suspects, GridConfiguration)
-  └── auth.rs      — session keys, CougrAccount wiring
+  ├── lib.rs - entrypoints & GameApp wiring
+  ├── components.rs - ECS components (Board, Suspect, GameState)
+  ├── systems.rs - validation, move execution, and completion systems
+  ├── types.rs - domain types (Clues, Suspects, GridConfiguration)
+  └── auth.rs - session keys, CougrAccount wiring
         │
         ▼
   Stellar Testnet (Soroban RPC)
@@ -102,7 +102,7 @@ In ZK mode, the following additional storage keys are used:
 4. **Submit Puzzle** (ZK): The creator generates a Poseidon2 commitment of the solution and a Groth16 verifier key, then calls `submit_puzzle` with the commitment and key instead of the plaintext.
 5. **Contract Validation**:
    - **v1 mode**: The contract validates the Latin square constraints and clue consistency via ECS systems.
-   - **ZK mode**: The contract validates puzzle structure (grid size, suspects, clue bounds) but cannot verify solution correctness — the ZK proof catches cheating at solve time.
+   - **ZK mode**: The contract validates puzzle structure (grid size, suspects, clue bounds) but cannot verify solution correctness - the ZK proof catches cheating at solve time.
 6. **Publishing**: If checks pass, the contract assigns a puzzle ID, stores the puzzle in persistent storage, and activates it.
 
 ---
@@ -235,7 +235,7 @@ The Groth16 circuit proves the following statement without revealing the solutio
 
 ### Player Solve Flow (ZK mode)
 
-1. **Browse Puzzles**: Frontend calls `list_puzzles` and `get_puzzle` to fetch puzzle metadata (grid size, suspects, clues, solution **commitment** — not the plaintext solution).
+1. **Browse Puzzles**: Frontend calls `list_puzzles` and `get_puzzle` to fetch puzzle metadata (grid size, suspects, clues, solution **commitment** - not the plaintext solution).
 2. **Solve Off-Chain**: The player solves the puzzle manually, arriving at a candidate grid arrangement.
 3. **Generate Proof**: The frontend (or a backend prover service) generates a Groth16 proof that the player knows a valid arrangement consistent with the commitment.
 4. **Submit Proof**: The player calls `submit_proof(player, puzzle_id, proof, public_inputs)`. The contract verifies the Groth16 proof against the stored verifier key.
@@ -274,7 +274,7 @@ cargo test --features zk
 ## Known Limitations
 
 - **ZK trusted setup is development-only.** The Groth16 verifier keys shipped here come from a development setup and are not production-safe. See [Known Constraints](#known-constraints) above for the full ZK caveats (trusted setup, client-side proving, circuit size).
-- **Difficulty is unverified creator metadata.** The contract validates Latin-square correctness on submission but does not independently grade or rank difficulty — the `difficulty` field is taken from the creator at face value.
+- **Difficulty is unverified creator metadata.** The contract validates Latin-square correctness on submission but does not independently grade or rank difficulty - the `difficulty` field is taken from the creator at face value.
 - **No ranked leaderboard or rewards.** A per-puzzle solver count is tracked, but the example intentionally omits scoring, ranked leaderboards, and reward distribution to keep the reference focused on the ECS + auth + ZK pattern.
 - **Puzzle catalog grows without an on-chain cap.** Submissions increment `PUZZLE_COUNT` without an upper bound. Reads are paginated via `offset`/`limit`, but production deployments expecting very large catalogs should add submission limits and indexed lookups.
 

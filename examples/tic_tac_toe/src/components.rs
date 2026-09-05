@@ -39,7 +39,7 @@ pub struct Players {
 
 impl_rich_component!(Players, "players");
 
-/// Turn and game-over state — plain fixed-size fields; no XDR needed.
+/// Turn and game-over state - plain fixed-size fields; no XDR needed.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct TurnState {

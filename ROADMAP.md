@@ -8,7 +8,7 @@ This document is a living summary. The full planning rationale lives in [docs/st
 
 ---
 
-## Phase 0 — Governance hygiene ✅
+## Phase 0 - Governance hygiene ✅
 
 **Status:** complete
 
@@ -18,7 +18,7 @@ Add the contributor-facing scaffolding a project with an active external contrib
 
 ---
 
-## Phase 1 — Onboarding funnel
+## Phase 1 - Onboarding funnel
 
 **Status:** in progress · rough horizon: ~3 months of focused work
 
@@ -34,7 +34,7 @@ Add the contributor-facing scaffolding a project with an active external contrib
 
 ---
 
-## Phase 2 — Ecosystem depth
+## Phase 2 - Ecosystem depth
 
 **Status:** planned · gated on Phase 1 · rough horizon: 3 to 9 months out
 
@@ -50,7 +50,7 @@ Add the contributor-facing scaffolding a project with an active external contrib
 
 ---
 
-## Phase 3 — Trust and production readiness
+## Phase 3 - Trust and production readiness
 
 **Status:** planned · gated on real mainnet interest · rough horizon: 9 to 18 months out
 
@@ -64,7 +64,7 @@ Add the contributor-facing scaffolding a project with an active external contrib
 
 ---
 
-## Phase 4 — Platform infrastructure
+## Phase 4 - Platform infrastructure
 
 **Status:** planned · gated on sustained usage · 18+ months out, evidence-triggered
 
@@ -74,7 +74,7 @@ Package/asset registry, in-browser playground, analytics dashboard, and any host
 
 ## Metrics tracked across all phases
 
-These are read together as a funnel — visibility → trial → contribution → production — not as independent vanity metrics.
+These are read together as a funnel - visibility → trial → contribution → production - not as independent vanity metrics.
 
 | Metric | Baseline (2026-Q3) |
 |---|---|

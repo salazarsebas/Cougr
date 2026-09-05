@@ -22,7 +22,7 @@ activation_steps_append = []
 
 # Persistent facts the workflow keeps in mind for the whole run
 # (standards, compliance constraints, stylistic guardrails).
-# Distinct from the runtime memory sidecar — these are static context
+# Distinct from the runtime memory sidecar - these are static context
 # loaded on activation. Overrides append.
 #
 # Each entry is either:

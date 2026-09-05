@@ -190,7 +190,7 @@ fn test_session_ops_exhausted() {
     env.as_contract(&contract_id, || {
         // First validation succeeds
         auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
-        // Second should panic — no operations left
+        // Second should panic - no operations left
         auth::validate_session(&env, &player, soroban_sdk::symbol_short!("tap"));
     });
 }
@@ -514,7 +514,7 @@ fn test_combo_breaks_outside_window() {
         // Advance ledger far beyond combo window
         env.ledger().set_sequence_number(100);
 
-        // Combo should break — reset to 1
+        // Combo should break - reset to 1
         let r3 = game::process_tap(&env, &player);
         assert_eq!(r3.combo, 1);
         assert_eq!(r3.multiplier, 1);

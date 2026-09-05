@@ -1,4 +1,4 @@
-//! `cougr doctor` — validate the local development environment.
+//! `cougr doctor` - validate the local development environment.
 //!
 //! Checks that the toolchain, compilation targets, and external tools required
 //! to build and deploy a Cougr project are all present and meet the minimum
@@ -189,7 +189,7 @@ fn check_wasm_target() -> CheckResult {
             // rustup not found; the target cannot be verified.
             return CheckResult::warn(
                 "wasm32v1-none",
-                "rustup not found — cannot verify wasm32v1-none target",
+                "rustup not found - cannot verify wasm32v1-none target",
                 format!("Install rustup (https://rustup.rs) then: rustup target add {WASM_TARGET}"),
             );
         }
@@ -306,7 +306,7 @@ fn print_result(r: &CheckResult) {
 /// Returns `Ok(())` when every check passes, or an error summary when one or
 /// more checks fail.  Warnings do not cause a non-zero exit.
 pub fn run() -> Result<(), DoctorError> {
-    println!("cougr doctor — environment check");
+    println!("cougr doctor - environment check");
     println!();
 
     let results = [
@@ -330,7 +330,7 @@ pub fn run() -> Result<(), DoctorError> {
         println!("{passed}/{total} checks passed");
         Ok(())
     } else {
-        println!("{passed}/{total} checks passed — {failed} check(s) failed");
+        println!("{passed}/{total} checks passed - {failed} check(s) failed");
         Err(DoctorError(failed))
     }
 }

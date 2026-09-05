@@ -4,14 +4,14 @@ use crate::simple_world::EntityId;
 
 /// Marker trait for components that use Soroban's `#[contracttype]` XDR codec
 /// for storage, enabling `Vec`, `String`, `Option`, nested structs, and enums
-/// with data — types not supported by the primitive-only [`ComponentTrait`].
+/// with data - types not supported by the primitive-only [`ComponentTrait`].
 ///
 /// Implement via [`impl_rich_component!`]. The struct must derive
 /// `#[contracttype]` so that Soroban handles XDR serialization automatically.
 ///
 /// Rich components are stored in Soroban's **instance storage**, separate from
 /// the `Map`-backed ECS storage used by [`ComponentTrait`]. Entity IDs are
-/// shared — the same entity can hold both kinds simultaneously.
+/// shared - the same entity can hold both kinds simultaneously.
 ///
 /// # Example
 /// ```no_run

@@ -17,18 +17,18 @@ published as indexed Soroban events for off-chain clients.
 
 | Function | Parameters | Returns | Description |
 | --- | --- | --- | --- |
-| `spawn` | — | `u32` | Create a new entity at the origin and return its ID |
-| `move_entity` | `entity_id: u32`, `direction: u32` | — | Move one step; `0` N, `1` E, `2` S, `3` W |
+| `spawn` | - | `u32` | Create a new entity at the origin and return its ID |
+| `move_entity` | `entity_id: u32`, `direction: u32` | - | Move one step; `0` N, `1` E, `2` S, `3` W |
 | `position` | `entity_id: u32` | `Option<Position>` | Current position, or `None` if unspawned |
 | `moves` | `entity_id: u32` | `Option<Moves>` | Remaining move budget and last direction |
-| `entity_count` | — | `u32` | Number of entities spawned so far |
+| `entity_count` | - | `u32` | Number of entities spawned so far |
 
 ## Architecture overview
 
 ```
-lib.rs         contract entrypoints — load world, call a rule, save world
+lib.rs         contract entrypoints - load world, call a rule, save world
   ├─ components.rs   Position (observed), Moves (plain), direction constants
-  └─ systems.rs      step() — pure movement rule, no storage access
+  └─ systems.rs      step() - pure movement rule, no storage access
 ```
 
 Each entrypoint follows the same three beats: `load_world`, apply a pure rule
@@ -82,5 +82,5 @@ what you deploy with `stellar contract deploy`.
 
 * No authorization: any caller can move any entity. Add `require_auth` and an
   owner component before putting this on a public network.
-* The world is unbounded — entities can walk arbitrarily far from the origin.
+* The world is unbounded - entities can walk arbitrarily far from the origin.
 * The move budget is fixed at spawn and cannot be topped up.

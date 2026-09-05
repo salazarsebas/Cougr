@@ -24,7 +24,7 @@ activation_steps_append = []
 # Each entry is either a literal sentence, a skill prefixed with `skill:`, or a `file:`-prefixed path/glob
 # whose contents are loaded as facts.
 #
-# Default loads project-context.md if justin-analyst has produced one — this gives
+# Default loads project-context.md if justin-analyst has produced one - this gives
 # the facilitator persistent awareness of the project's tech, domain, and constraints without
 # re-asking. Common opt-ins (set in team/user override TOML):
 #   "skill:acme-co:terms-and-conditions"                                      # a skill that contains some relevant info
@@ -38,7 +38,7 @@ persistent_facts = [
 # or an array of instructions executed in order. Empty for none.
 on_complete = ""
 
-# Default PRD structure. Treated as a starting point — the LLM adapts it
+# Default PRD structure. Treated as a starting point - the LLM adapts it
 # to the product, project type, and domain. Override the path in team/user TOML
 # to enforce a different structure (e.g. regulated-industry, internal-tool, investor-input).
 prd_template = "assets/prd-template.md"
@@ -53,11 +53,11 @@ prd_template = "assets/prd-template.md"
 validation_checklist_template = "assets/prd-validation-checklist.md"
 
 # HTML skeleton the synthesis pass fills directly when consolidating reviewer
-# outputs into a validation report. No substitution engine — the parent LLM
+# outputs into a validation report. No substitution engine - the parent LLM
 # reads every {doc_workspace}/review-*.md, fills the skeleton's TEMPLATE_*
 # placeholders, and writes the result. Fully overridable to match org branding.
 # Uses inline CSS, no external dependencies, and native HTML <details> for
-# collapse — no JS.
+# collapse - no JS.
 validation_report_template = "assets/validation-report-template.html"
 
 # Run folder location. The PRD, optional addendum, decision log, and optional
@@ -89,8 +89,7 @@ doc_standards = [
 
 # External-source registry. Natural-language directives describing knowledge
 # bases, MCP tools, or internal systems the LLM may consult during the workflow
-# when a relevant need surfaces. The LLM does NOT query these preemptively —
-# it consults them on demand (during Discovery, validation, drafting, etc.).
+# when a relevant need surfaces. The LLM does NOT query these preemptively - # it consults them on demand (during Discovery, validation, drafting, etc.).
 # Each entry names the tool, the conditions for using it, and any fields the
 # tool needs. If a named MCP tool is unavailable at runtime, the LLM falls
 # back to standard behavior and notes the gap. Empty by default.
@@ -113,7 +112,7 @@ external_sources = []
 # and before the final user-facing message. URLs or IDs returned by the
 # destination are captured and surfaced to the user. If a named tool is
 # unavailable at runtime, the handoff is skipped and flagged in the JSON
-# status; local files always exist regardless. Fires automatically — users
+# status; local files always exist regardless. Fires automatically - users
 # can opt out in their prompt for a specific run. Empty by default.
 #
 # Lifecycle note: distinct from persistent_facts and external_sources.

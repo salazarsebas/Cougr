@@ -249,7 +249,7 @@ Provide final session wrap-up and forward guidance:
 **Ready to complete your session documentation?**
 [C] Complete - Generate final brainstorming session document
 
-**HALT — wait for user selection before proceeding.**
+**HALT - wait for user selection before proceeding.**
 
 ### 8. Handle Completion Selection
 

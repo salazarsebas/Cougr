@@ -1,4 +1,4 @@
-# Sudoku Match Log — Simulated Testnet Walkthrough
+# Sudoku Match Log - Simulated Testnet Walkthrough
 
 - **Contract:** `CCF5MENLO56M4S72BF4H5KMU7XYO45VTB7GJ2O3BZFG7EWY6X3X2DBQO`
 - **Network:** Testnet
@@ -152,5 +152,5 @@ stellar contract invoke --id $CONTRACT_ID --network testnet --source sudoku_play
 ## Notes
 
 - All 51 empty cells were filled in row-major order (top-left to bottom-right).
-- `submit_value` panics on any constraint violation — the transaction fails and the board is not updated.
+- `submit_value` panics on any constraint violation - the transaction fails and the board is not updated.
 - Move 51 at (8,6)=1 triggered `completion_system`, setting `status=1` (solved).

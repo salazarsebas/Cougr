@@ -1,5 +1,5 @@
 /**
- * Cougr Preview Generator — main CLI entry point.
+ * Cougr Preview Generator - main CLI entry point.
  *
  * Usage:
  *   node generate.js <game>
@@ -25,7 +25,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TOKENS_DIR = path.resolve(__dirname, '../../packages/tokens');
 const TOKENS_ENTRY = path.join(TOKENS_DIR, 'dist', 'tokens.js');
 
-// Renderer registry — add new games here.
+// Renderer registry - add new games here.
 // Loaded on demand, after the design tokens they depend on have been built.
 const RENDERERS = {
   tic_tac_toe: './renderers/tic_tac_toe.js',

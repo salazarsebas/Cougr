@@ -56,7 +56,7 @@ Freeport turns the sources you already trust (starting with Twitter) into a trad
 
 Ruvo is a global account for receiving, holding, and moving money between USD and BRL.
 
-We connect Pix, crypto, and Visa so you can receive USD from abroad, convert between USD and BRL in minutes, send money to the U.S., spend worldwide, and save in digital dollars with yield — all in one place.
+We connect Pix, crypto, and Visa so you can receive USD from abroad, convert between USD and BRL in minutes, send money to the U.S., spend worldwide, and save in digital dollars with yield - all in one place.
 
 Ruvo supports both personal (CPF) and business (CNPJ) accounts, with low fees, strong security, and direct Pix settlement.
 
@@ -98,7 +98,7 @@ BlindPay is a stablecoin API that enables companies to send and receive money wo
 
 **Batch:** F2024
 
-**One-liner:** Charm is the universal payments app — send money to anyone.
+**One-liner:** Charm is the universal payments app - send money to anyone.
 
 **Website:** [https://withcharm.app](https://withcharm.app)
 
@@ -110,7 +110,7 @@ BlindPay is a stablecoin API that enables companies to send and receive money wo
 
 **Tags:** messaging, payments, social-media, consumer, crypto-web3
 
-Charm makes sending money as easy as sending email. Most people juggle multiple payment apps and scattered balances. Charm lets you pay anyone — no matter what app they use — and earns you 5% interest on your balance, automatically.
+Charm makes sending money as easy as sending email. Most people juggle multiple payment apps and scattered balances. Charm lets you pay anyone - no matter what app they use - and earns you 5% interest on your balance, automatically.
 
 ## Blaze
 
@@ -188,7 +188,7 @@ Polar helps remote workers, freelancers, and ship crew manage their USD earnings
 
 **Tags:** api, b2b, crypto-web3, developer-tools, infrastructure
 
-Glide lets apps accept crypto deposits from any chain, wallet, or exchange using pre-built wallet funding flows. Users can fund wallets directly — no bridges, no swaps, no repeated KYC.
+Glide lets apps accept crypto deposits from any chain, wallet, or exchange using pre-built wallet funding flows. Users can fund wallets directly - no bridges, no swaps, no repeated KYC.
 
 ## Theya
 
@@ -260,7 +260,7 @@ We provide simple, well-documented, and fully compliant payments APIs and interf
 
 **Tags:** fintech, crypto-web3
 
-ARQ opens the world’s strongest assets and markets to travelers, investors and professionals across the Americas—so they can spend, receive, send and grow their money wherever they are.
+ARQ opens the world’s strongest assets and markets to travelers, investors and professionals across the Americas - so they can spend, receive, send and grow their money wherever they are.
 
 Formerly known as DolarApp.
 
@@ -443,7 +443,7 @@ Lyra is a crypto-native virtual card provider that allows users to easily create
 
 **Tags:** open-source, developer-tools, saas, crypto-web3, b2b
 
-Stackup is transforming how businesses manage their on-chain operations by offering a smart account platform designed to simplify and automate complex blockchain tasks. As the need for seamless, secure, and efficient crypto transactions grows, Stackup provides centralized control over decentralized assets, allowing businesses to take charge of every detail of their operations with ease. Our platform integrates advanced security and adaptive features to eliminate the chaos of traditional crypto wallets, empowering businesses to manage their crypto stack in real-time. Whether you’re orchestrating large-scale transactions or ensuring complete transparency, Stackup’s solution brings order and precision to blockchain management—turning crypto chaos into structured, seamless business flow.
+Stackup is transforming how businesses manage their on-chain operations by offering a smart account platform designed to simplify and automate complex blockchain tasks. As the need for seamless, secure, and efficient crypto transactions grows, Stackup provides centralized control over decentralized assets, allowing businesses to take charge of every detail of their operations with ease. Our platform integrates advanced security and adaptive features to eliminate the chaos of traditional crypto wallets, empowering businesses to manage their crypto stack in real-time. Whether you’re orchestrating large-scale transactions or ensuring complete transparency, Stackup’s solution brings order and precision to blockchain management - turning crypto chaos into structured, seamless business flow.
 
 ## Argument Computer Corporation
 
@@ -823,7 +823,7 @@ Quicknode is an enterprise-grade blockchain development platform that helps team
 
 Dialect is on a mission to organize the internet’s experiences and make them distributable and actionable everywhere. We’re doing this with blockchain links, or blinks, a new technology that lets businesses unbundle their product experiences from their apps and sites, allowing users to take instant, no-redirect actions wherever they are.
 
-This technology is unique to blockchain today, but as the world moves onchain, it will redefine how we interact with the internet—everywhere.
+This technology is unique to blockchain today, but as the world moves onchain, it will redefine how we interact with the internet - everywhere.
 
 ## Peg (formerly Paymobil)
 
@@ -922,7 +922,7 @@ Coco Wallet is a global money app that lets users send, spend, save, and earn in
 
 **Tags:** crypto-web3, machine-learning, data-engineering, fintech
 
-TRM is on a mission to build a safer financial system for billions of people. We deliver a blockchain intelligence data platform to financial institutions, crypto companies, and governments to fight cryptocurrency fraud and financial crime. We consider our business — and our profit — as a way to move towards our mission sustainably and at scale.
+TRM is on a mission to build a safer financial system for billions of people. We deliver a blockchain intelligence data platform to financial institutions, crypto companies, and governments to fight cryptocurrency fraud and financial crime. We consider our business - and our profit - as a way to move towards our mission sustainably and at scale.
 
 Join our mission ➔ www.trmlabs.com/careers
 

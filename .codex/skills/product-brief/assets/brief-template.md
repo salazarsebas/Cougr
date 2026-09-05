@@ -9,7 +9,7 @@ A flexible starting structure for the executive product brief. Adapt aggressivel
 
 ## Executive Summary
 
-[2-3 paragraph narrative: what this is, what problem it solves, why it matters, why now. Compelling enough to stand alone — if someone reads only this section, they should understand the vision.]
+[2-3 paragraph narrative: what this is, what problem it solves, why it matters, why now. Compelling enough to stand alone - if someone reads only this section, they should understand the vision.]
 
 ## The Problem
 
@@ -25,7 +25,7 @@ A flexible starting structure for the executive product brief. Adapt aggressivel
 
 ## Who This Serves
 
-[Primary users — vivid but brief. Who they are, what they need, what success looks like for them. Secondary users if relevant.]
+[Primary users - vivid but brief. Who they are, what they need, what success looks like for them. Secondary users if relevant.]
 
 ## Success Criteria
 
@@ -33,7 +33,7 @@ A flexible starting structure for the executive product brief. Adapt aggressivel
 
 ## Scope
 
-[What is in for the first version. What is explicitly out. Keep this tight — boundary document, not a feature list.]
+[What is in for the first version. What is explicitly out. Keep this tight - boundary document, not a feature list.]
 
 ## Vision
 

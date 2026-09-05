@@ -1,6 +1,6 @@
 //! Strategy commitment and resolution systems for Guild Treasury Wars.
 //!
-//! This module implements the **stellar-zk** integration — the core ZK
+//! This module implements the **stellar-zk** integration - the core ZK
 //! mechanic of the game. Players submit sealed war plans as SHA256
 //! commitments (hiding their strategic intent), then reveal them later
 //! for deterministic on-chain resolution.
@@ -19,7 +19,7 @@
 //!    and verifies it matches the stored commitment.
 //!
 //! 3. **Nullifier** (anti-replay): Once revealed, the commitment hash is
-//!    marked as used. This prevents double-execution — the same mechanism
+//!    marked as used. This prevents double-execution - the same mechanism
 //!    used in stellar-zk verifier contracts for anti-replay protection.
 //!
 //! 4. **Resolution**: After both guilds reveal, the game deterministically
@@ -30,7 +30,7 @@ use soroban_sdk::{Address, Bytes, Env};
 use crate::types::*;
 
 // ============================================================================
-// StrategyProofSystem — Commit-reveal for sealed war plans
+// StrategyProofSystem - Commit-reveal for sealed war plans
 // ============================================================================
 
 /// Submit a sealed strategy commitment (stellar-zk commit phase).
@@ -61,7 +61,7 @@ pub fn submit_strategy_commitment(env: &Env, guild_member: &Address, proof_input
         .unwrap_or(false);
     assert!(is_member, "not a guild member");
 
-    // Nullifier check — ensure this commitment hash hasn't been used before
+    // Nullifier check - ensure this commitment hash hasn't been used before
     let nullifier_used: bool = env
         .storage()
         .persistent()
@@ -111,7 +111,7 @@ pub fn reveal_strategy(env: &Env, guild_member: &Address, guild_id: u32, reveal:
         .get(&DataKey::Commitment(guild_id, guild_member.clone()))
         .expect("no commitment found");
 
-    // Check nullifier — commitment must not have been revealed
+    // Check nullifier - commitment must not have been revealed
     assert!(!commitment.revealed, "commitment already revealed");
 
     // Recompute the commitment hash from revealed preimage
@@ -124,7 +124,7 @@ pub fn reveal_strategy(env: &Env, guild_member: &Address, guild_id: u32, reveal:
         &reveal.salt,
     );
 
-    // Verify the hash matches — this is the proof verification step
+    // Verify the hash matches - this is the proof verification step
     assert!(
         computed_hash == commitment.commitment_hash,
         "reveal does not match commitment"
@@ -145,7 +145,7 @@ pub fn reveal_strategy(env: &Env, guild_member: &Address, guild_id: u32, reveal:
 }
 
 // ============================================================================
-// ResolutionSystem — Deterministic battle outcome resolution
+// ResolutionSystem - Deterministic battle outcome resolution
 // ============================================================================
 
 /// Resolve a battle between two guilds after strategies are revealed.
@@ -220,7 +220,7 @@ pub fn resolve_battle(
     // Resolution: attacker wins if attack_power > total_defense
     let plunder_amount: u64 = 50; // Fixed plunder on successful attack
     if attack_power > total_defense {
-        // Attacker wins — transfer resources
+        // Attacker wins - transfer resources
         let transfer = if defender_guild.treasury >= plunder_amount {
             plunder_amount
         } else {

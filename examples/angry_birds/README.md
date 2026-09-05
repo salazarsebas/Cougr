@@ -83,7 +83,7 @@ Resets the current level to initial state:
 ## Building and Testing
 
 ### Prerequisites
-- Rust 1.70+ with wasm32 target
+- Rust 1.88+ with wasm32 target
 - Stellar CLI for contract deployment
 - Git for cloning the repository
 

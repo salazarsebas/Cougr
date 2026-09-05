@@ -33,7 +33,7 @@ After every outcome, present what was learned and pause for the user before cont
   hunt for support. When evidence is sparse, switch to evidence-light mode (Outcome 1 branch).
 - **Challenge the premise.** The user's description is a hypothesis, not a fact. Verify independently; if evidence
   contradicts, say so.
-- **Follow the evidence, not the narrative.** When evidence contradicts the working theory, update the theory — never
+- **Follow the evidence, not the narrative.** When evidence contradicts the working theory, update the theory - never
   the other way around. Resist confirmation bias even when the user is convinced.
 - **Hypotheses are never deleted.** Update Status (Open / Confirmed / Refuted) and add a Resolution. Wrong turns are
   part of the deliverable.
@@ -43,7 +43,7 @@ After every outcome, present what was learned and pause for the user before cont
 - **Path:line citations** use CWD-relative format, no leading `/`, so they're clickable in IDE-embedded terminals.
 - **Delegation discipline.** When a step requires reading 5+ files or any file >10K tokens, delegate to a subagent
   that returns structured JSON only. Cite `path:line` from the result; don't re-read in the parent.
-- **Issue independent operations in parallel** (multi-grep, multi-read, parallel inventories) — one message, multiple
+- **Issue independent operations in parallel** (multi-grep, multi-read, parallel inventories) - one message, multiple
   tool calls.
 - **Communication.** Evidence-first language ("the evidence shows", "unconfirmed, requires X to verify"). No hedging,
   no narrative.
@@ -94,7 +94,7 @@ evidence opens a new `## Follow-up: {YYYY-MM-DD}` block (append `#2`, `#3` on sa
 
 ### Outcome 1: Scope and stronghold are established
 
-Acknowledge each input shape — record location, scope, time window only; bulk reads happen in Outcome 2.
+Acknowledge each input shape - record location, scope, time window only; bulk reads happen in Outcome 2.
 
 - **Issue tracker ticket.** Fetch full details via available MCP tools.
 - **Diagnostic archive.** Record path, file count, time window.
@@ -127,7 +127,7 @@ Survey the scene: inventory available evidence in parallel across these independ
 issue tracker; version control; test results; static analysis; source code. For any category exceeding ~10K tokens,
 delegate to a subagent that returns a JSON manifest (paths, sizes, time windows, key fragments cited as `path:line`).
 
-Classify each Available, Partial, or Missing — Missing is itself a finding. Update Evidence Inventory and Investigation
+Classify each Available, Partial, or Missing - Missing is itself a finding. Update Evidence Inventory and Investigation
 Backlog. Pause for user with the recap above; wait for direction.
 
 ### Outcome 3: Cause is reasoned about with discipline
@@ -158,8 +158,8 @@ Lean by case type:
 
 - **Exploration:** I/O mapping (triggers, outputs, dependencies); frequent-terms scan; control-flow filtering
   (branches, loops, error handling, state-machine transitions).
-- **Symptom-driven:** depth assessment — is the root cause reachable from local context, or is a broader area model
-  required? Surface escalations; never silently expand scope. Trivial-fix assessment — off-by-one, missing null check,
+- **Symptom-driven:** depth assessment - is the root cause reachable from local context, or is a broader area model
+  required? Surface escalations; never silently expand scope. Trivial-fix assessment - off-by-one, missing null check,
   swapped argument → one-line code suggestion or draft diff in the report; non-trivial → stop at the root cause area.
 
 Investigation stops at the diagnosis; implementation is out of scope. Update Source Code Trace (Error origin, Trigger,
@@ -179,7 +179,7 @@ Update `{case_file}`:
 
 Present the conclusion, then a concrete next-steps menu: trivial fix → `dev-story`; scope/plan adjustment →
 `dev-story`; tracked story → `create-epics-and-stories`; fresh review → `code-review`. Recommend the
-highest-value action. Mitigations and workarounds are generated only on explicit request — investigation stops at the
+highest-value action. Mitigations and workarounds are generated only on explicit request - investigation stops at the
 diagnosis. Execute `{workflow.on_complete}` if non-empty. Pause for user with the recap above; wait for direction.
 
 ## Follow-up Iterations

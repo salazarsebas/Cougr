@@ -202,7 +202,7 @@ impl BombermanContract {
         symbol_short!("bomb_plc")
     }
 
-    /// Advance the game tick — handle timers, explosions, and collisions.
+    /// Advance the game tick - handle timers, explosions, and collisions.
     pub fn update_tick(env: Env) -> Symbol {
         let mut world = Self::get_world(&env);
 

@@ -1,4 +1,4 @@
-//! dice_duel — canonical Cougr ZK circuits example for verifiable dice rolls.
+//! dice_duel - canonical Cougr ZK circuits example for verifiable dice rolls.
 
 #![no_std]
 

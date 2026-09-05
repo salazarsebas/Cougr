@@ -29,32 +29,32 @@ pub fn run(ctx: &CheckContext) -> Result<()> {
 
     let mut failures: Vec<String> = Vec::new();
 
-    // Root-level checks always run — tracked artifacts and root .gitignore
+    // Root-level checks always run - tracked artifacts and root .gitignore
     // issues would fail CI regardless of which example is being checked.
 
-    // Check 1 — root .gitignore must NOT ignore Cargo.lock
+    // Check 1 - root .gitignore must NOT ignore Cargo.lock
     check_root_gitignore_cargo_lock(&ctx.repo_root, &mut failures);
 
-    // Check 2 & 3 — no tracked build artifacts (git ls-files)
+    // Check 2 & 3 - no tracked build artifacts (git ls-files)
     check_tracked_artifacts(&ctx.repo_root, &mut failures);
 
     // Per-example checks
     for ex in &ctx.examples {
         let dir = example_dir(&ctx.repo_root, &ex.name);
 
-        // Check 4 — no hardcoded contract IDs in README
+        // Check 4 - no hardcoded contract IDs in README
         check_readme_contract_ids(&dir, &ex.name, &mut failures);
 
-        // Check 5 — .gitignore exists and has target/
+        // Check 5 - .gitignore exists and has target/
         check_example_gitignore(&dir, &ex.name, &mut failures);
 
-        // Check 6 — .gitignore must NOT ignore Cargo.lock
+        // Check 6 - .gitignore must NOT ignore Cargo.lock
         check_example_gitignore_cargo_lock(&dir, &ex.name, &mut failures);
 
-        // Check 7 — Cargo.toml has description
+        // Check 7 - Cargo.toml has description
         check_cargo_toml_description(&dir, &ex.name, &mut failures);
 
-        // Check 8 — cargo metadata --no-deps
+        // Check 8 - cargo metadata --no-deps
         check_cargo_metadata(&dir, &ex.name, &mut failures);
     }
 

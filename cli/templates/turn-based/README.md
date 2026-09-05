@@ -19,10 +19,10 @@ validated before it is written to storage.
 | --- | --- | --- | --- |
 | `init_game` | `player_x: Address`, `player_o: Address` | `GameState` | Start a fresh match, discarding previous state |
 | `make_move` | `player: Address`, `position: u32` | `MoveResult` | Place the caller's mark at `0`–`8` |
-| `get_state` | — | `GameState` | Full board, players, turn, and status |
+| `get_state` | - | `GameState` | Full board, players, turn, and status |
 | `is_valid_move` | `position: u32` | `bool` | Whether that cell is playable right now |
-| `get_winner` | — | `Option<Address>` | Winner's address, or `None` while running or drawn |
-| `reset_game` | — | `GameState` | Clear the board, keep the same players |
+| `get_winner` | - | `Option<Address>` | Winner's address, or `None` while running or drawn |
+| `reset_game` | - | `GameState` | Clear the board, keep the same players |
 
 `MoveResult.status` and `GameState.status` use the constants in
 `components.rs`: `0` in progress, `1` X wins, `2` O wins, `3` draw.
@@ -30,9 +30,9 @@ validated before it is written to storage.
 ## Architecture overview
 
 ```
-lib.rs         contract entrypoints — load world, validate, write, save world
+lib.rs         contract entrypoints - load world, validate, write, save world
   ├─ components.rs   Board + Players (rich), TurnState (plain), status constants
-  └─ systems.rs      validate_move(), advance(), detect_status() — pure rules
+  └─ systems.rs      validate_move(), advance(), detect_status() - pure rules
 ```
 
 `make_move` never applies a rule itself: it loads the world, asks
@@ -53,7 +53,7 @@ cheaper `impl_component!`.
 
 ## Main gameplay flow
 
-1. Someone calls `init_game` with both player addresses — X moves first.
+1. Someone calls `init_game` with both player addresses - X moves first.
 2. X calls `make_move`; the contract checks the match is running, the cell is in
    range and empty, and the caller owns the turn.
 3. The mark is written, the move count increases, and `detect_status` re-checks
@@ -67,7 +67,7 @@ cheaper `impl_component!`.
 | API | Why |
 | --- | --- |
 | `impl_rich_component!` | `Board` (`Vec<u32>`) and `Players` (`Address`) need XDR storage |
-| `impl_component!` | `TurnState` is three scalars — no codec required |
+| `impl_component!` | `TurnState` is three scalars - no codec required |
 | `SorobanGame` / `impl_soroban_game!` | Removes hand-written world load/save boilerplate |
 | `SimpleWorld` | Holds all three components under one entity |
 | `test::GameHarness`, `Scenario` | Drives alternating turns in an integration test |
@@ -92,7 +92,7 @@ what you deploy with `stellar contract deploy`.
 ## Known limitations
 
 * `make_move` calls `require_auth` on the acting player, but `init_game` and
-  `reset_game` are open to any caller — add access control before deploying.
+  `reset_game` are open to any caller - add access control before deploying.
 * One match per contract instance. A lobby of concurrent games needs one entity
   per match instead of the fixed `GAME_ENTITY`.
 * No draw offers, resignations, timeouts, or stakes.

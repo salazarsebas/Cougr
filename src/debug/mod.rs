@@ -3,9 +3,9 @@
 //! Behind the `debug` feature flag to avoid bloating WASM builds.
 //!
 //! # Modules
-//! - `introspect` — Entity and world inspection utilities
-//! - `metrics` — Storage statistics and component counts
-//! - `snapshot` — State snapshots and diffing
+//! - `introspect` - Entity and world inspection utilities
+//! - `metrics` - Storage statistics and component counts
+//! - `snapshot` - State snapshots and diffing
 
 pub mod introspect;
 pub mod metrics;
