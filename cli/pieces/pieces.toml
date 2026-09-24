@@ -37,3 +37,12 @@ target = "src/fair_dice.rs"
 [[piece.file]]
 source = "fair-dice/README.md"
 target = "README-fair-dice.md"
+
+[[piece]]
+name = "account-kernel"
+description = "Account-kernel session glue over cougr-core: scoped sessions, expiry and replay tests."
+wiring = ["pub mod account_kernel;"]
+
+[[piece.file]]
+source = "account-kernel/account_kernel.rs"
+target = "src/account_kernel.rs"
