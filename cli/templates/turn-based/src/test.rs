@@ -23,7 +23,22 @@ fn started_game() -> (GameHarness, Address, Address) {
     let player_o = harness.player(PlayerSlot(1)).clone();
 
     let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
-    client.init_game(&player_x, &player_o);
+    client.init_game(&player_x, &player_o, &None);
+
+    (harness, player_x, player_o)
+}
+
+fn started_game_with_config(config: &crate::components::TurnBasedConfig) -> (GameHarness, Address, Address) {
+    let env = Env::default();
+    let mut harness = GameHarness::new(env, {{ContractName}});
+    harness.mock_players(2);
+    harness.mock_all_auths();
+
+    let player_x = harness.player(PlayerSlot(0)).clone();
+    let player_o = harness.player(PlayerSlot(1)).clone();
+
+    let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
+    client.init_game(&player_x, &player_o, &Some(config.clone()));
 
     (harness, player_x, player_o)
 }
@@ -39,6 +54,31 @@ fn init_game_starts_with_an_empty_board() {
     assert_eq!(state.player_x, player_x);
     assert!(state.is_x_turn);
     assert_eq!(state.status, IN_PROGRESS);
+}
+
+#[test]
+fn init_game_rejects_illegal_configs() {
+    let env = Env::default();
+    let mut harness = GameHarness::new(env, {{ContractName}});
+    harness.mock_players(2);
+    let player_x = harness.player(PlayerSlot(0)).clone();
+    let player_o = harness.player(PlayerSlot(1)).clone();
+    let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
+
+    let mut config = crate::components::TurnBasedConfig {
+        board_width: 2,
+        board_height: 3,
+        win_length: 3,
+        first_player: symbol_short!("x"),
+    };
+
+    let result = client.try_init_game(&player_x, &player_o, &Some(config.clone()));
+    assert!(result.is_err());
+
+    config.board_width = 3;
+    config.win_length = 4;
+    let result = client.try_init_game(&player_x, &player_o, &Some(config));
+    assert!(result.is_err());
 }
 
 #[test]
@@ -119,6 +159,35 @@ fn scenario_plays_a_winning_column_for_x() {
 }
 
 #[test]
+fn scenario_plays_a_winning_diagonal_on_large_board() {
+    let config = crate::components::TurnBasedConfig {
+        board_width: 5,
+        board_height: 4,
+        win_length: 4,
+        first_player: symbol_short!("x"),
+    };
+    let (harness, _, _) = started_game_with_config(&config);
+
+    // X plays diagonal 0, 6, 12, 18. O plays 1, 2, 3.
+    let moves = [0u32, 1, 6, 2, 12, 3, 18];
+    Scenario::new("x wins on large board")
+        .players(2)
+        .turns(moves.len() as u32)
+        .run(&harness, |slot, turn, h| {
+            let client = {{ContractName}}Client::new(h.env(), h.contract_id());
+            let player = h.player(slot).clone();
+            let result = client.make_move(&player, &moves[turn.0 as usize]);
+            assert!(result.success, "move {} was rejected", turn.0);
+        });
+
+    let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
+    let winner = client.get_winner();
+
+    assert_eq!(client.get_state().status, X_WINS);
+    assert_eq!(winner, Some(harness.player(PlayerSlot(0)).clone()));
+}
+
+#[test]
 fn moves_after_the_game_ends_are_rejected() {
     let (harness, player_x, player_o) = started_game();
     let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
@@ -155,17 +224,30 @@ fn detect_status_reports_a_full_board_as_a_draw() {
     // X O X / X O O / O X X - full board with no line.
     let cells = soroban_sdk::vec![&env, 1, 2, 1, 1, 2, 2, 2, 1, 1];
 
-    assert_eq!(detect_status(&cells, 9), DRAW);
+    let config = crate::components::TurnBasedConfig {
+        board_width: 3,
+        board_height: 3,
+        win_length: 3,
+        first_player: symbol_short!("x"),
+    };
+
+    assert_eq!(detect_status(&cells, 9, &config), DRAW);
 }
 
 #[test]
 fn validate_move_rejects_a_non_player() {
     let env = Env::default();
-    let board = crate::components::Board::new(&env);
-    let turn = crate::components::TurnState::opening();
+    let board = crate::components::Board::new(&env, 3, 3);
+    let turn = crate::components::TurnState::opening(true);
+    let config = crate::components::TurnBasedConfig {
+        board_width: 3,
+        board_height: 3,
+        win_length: 3,
+        first_player: symbol_short!("x"),
+    };
 
     assert_eq!(
-        validate_move(&board, &turn, 0, false, false),
+        validate_move(&board, &turn, &config, 0, false, false),
         Err(MoveError::NotAPlayer)
     );
 }

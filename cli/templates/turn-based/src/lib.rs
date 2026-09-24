@@ -18,7 +18,7 @@ pub mod systems;
 #[cfg(test)]
 mod test;
 
-use components::{Board, Players, TurnState, GAME_ENTITY, O_WINS, X_WINS};
+use components::{Board, ConfigError, Players, TurnBasedConfig, TurnState, GAME_ENTITY, O_WINS, X_WINS};
 use systems::{advance, mark_for_turn, validate_move, MoveError};
 
 use cougr_core::game::SorobanGame;
@@ -38,6 +38,7 @@ pub struct GameState {
     pub is_x_turn: bool,
     pub move_count: u32,
     pub status: u32,
+    pub config: TurnBasedConfig,
 }
 
 /// Result of a `make_move` call: whether it landed, the resulting state, and a
@@ -63,17 +64,31 @@ impl_soroban_game!({{ContractName}}, "world");
 impl {{ContractName}} {
     /// Start a new match between `player_x` and `player_o`, discarding any
     /// previous state.
-    pub fn init_game(env: Env, player_x: Address, player_o: Address) -> GameState {
+    pub fn init_game(
+        env: Env,
+        player_x: Address,
+        player_o: Address,
+        config: Option<TurnBasedConfig>,
+    ) -> Result<GameState, ConfigError> {
         let mut world = SimpleWorld::new(&env);
         let entity = world.spawn_entity();
         debug_assert_eq!(entity, GAME_ENTITY);
 
-        world.set_rich(&env, GAME_ENTITY, &Board::new(&env));
+        let config = config.unwrap_or_else(|| TurnBasedConfig {
+            board_width: 3,
+            board_height: 3,
+            win_length: 3,
+            first_player: symbol_short!("x"),
+        });
+        config.validate()?;
+
+        world.set_rich(&env, GAME_ENTITY, &config);
+        world.set_rich_observed(&env, GAME_ENTITY, &Board::new(&env, config.board_width, config.board_height));
         world.set_rich(&env, GAME_ENTITY, &Players { player_x, player_o });
-        world.set_typed(&env, GAME_ENTITY, &TurnState::opening());
+        world.set_typed_observed(&env, GAME_ENTITY, &TurnState::opening(config.first_player == symbol_short!("x")));
 
         {{ContractName}}::save_world(&env, &world);
-        Self::read_state(&env, &world)
+        Ok(Self::read_state(&env, &world))
     }
 
     /// Place the caller's mark at `position` (`0`–`8`).
@@ -84,6 +99,7 @@ impl {{ContractName}} {
         player.require_auth();
 
         let mut world = {{ContractName}}::load_world(&env);
+        let config = Self::config(&env, &world);
         let players = Self::players(&env, &world);
         let turn = Self::turn(&env, &world);
         let mut board = Self::board(&env, &world);
@@ -91,15 +107,15 @@ impl {{ContractName}} {
         let is_player_x = player == players.player_x;
         let is_player_o = player == players.player_o;
 
-        if let Err(err) = validate_move(&board, &turn, position, is_player_x, is_player_o) {
+        if let Err(err) = validate_move(&board, &turn, &config, position, is_player_x, is_player_o) {
             return Self::rejected(&env, &world, err);
         }
 
         board.cells.set(position, mark_for_turn(&turn));
-        let turn = advance(&turn, &board.cells);
+        let turn = advance(&turn, &board.cells, &config);
 
-        world.set_rich(&env, GAME_ENTITY, &board);
-        world.set_typed(&env, GAME_ENTITY, &turn);
+        world.set_rich_observed(&env, GAME_ENTITY, &board);
+        world.set_typed_observed(&env, GAME_ENTITY, &turn);
         {{ContractName}}::save_world(&env, &world);
 
         MoveResult {
@@ -118,6 +134,10 @@ impl {{ContractName}} {
     /// Whether `position` is playable right now, ignoring who is calling.
     pub fn is_valid_move(env: Env, position: u32) -> bool {
         let world = {{ContractName}}::load_world(&env);
+        let config = match world.get_rich::<TurnBasedConfig>(&env, GAME_ENTITY) {
+            Some(config) => config,
+            None => return false,
+        };
         let turn = match world.get_typed::<TurnState>(&env, GAME_ENTITY) {
             Some(turn) => turn,
             None => return false,
@@ -128,7 +148,7 @@ impl {{ContractName}} {
         };
         // The turn owner is the only caller who could legally play, so checking
         // against them answers "is this cell playable" without an address.
-        validate_move(&board, &turn, position, turn.is_x_turn, !turn.is_x_turn).is_ok()
+        validate_move(&board, &turn, &config, position, turn.is_x_turn, !turn.is_x_turn).is_ok()
     }
 
     /// The winner's address, or `None` while the match is running or drawn.
@@ -146,11 +166,19 @@ impl {{ContractName}} {
     /// Clear the board and keep the same two players.
     pub fn reset_game(env: Env) -> GameState {
         let world = {{ContractName}}::load_world(&env);
+        let config = Self::config(&env, &world);
         let players = Self::players(&env, &world);
-        Self::init_game(env, players.player_x, players.player_o)
+        // We know config is valid because it was validated in init_game
+        Self::init_game(env, players.player_x, players.player_o, Some(config)).unwrap()
     }
 
     // ─── Internal helpers ─────────────────────────────────────────────────────
+
+    fn config(env: &Env, world: &SimpleWorld) -> TurnBasedConfig {
+        world
+            .get_rich::<TurnBasedConfig>(env, GAME_ENTITY)
+            .unwrap_or_else(|| panic!("game not initialised"))
+    }
 
     fn board(env: &Env, world: &SimpleWorld) -> Board {
         world
@@ -171,6 +199,7 @@ impl {{ContractName}} {
     }
 
     fn read_state(env: &Env, world: &SimpleWorld) -> GameState {
+        let config = Self::config(env, world);
         let board = Self::board(env, world);
         let players = Self::players(env, world);
         let turn = Self::turn(env, world);
@@ -182,6 +211,7 @@ impl {{ContractName}} {
             is_x_turn: turn.is_x_turn,
             move_count: turn.move_count,
             status: turn.status,
+            config,
         }
     }
 
