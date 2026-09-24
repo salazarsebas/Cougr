@@ -1,7 +1,7 @@
 [workspace]
 members = [
     ".",
-    "cli",
+    "cli", "clients/godot/rust_tests",
     "internal/cougr-core-circuits",
     "internal/cougr-core-session",
     "internal/cougr-core-test",

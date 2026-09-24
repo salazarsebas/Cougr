@@ -1,0 +1,1 @@
+[package]`nname = "rust_tests"`nversion = "0.1.0"`nedition = "2021"`n`n[dependencies]`nsoroban-sdk = "22.0.1"
