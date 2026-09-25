@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isGameState, moveRejection, statusLabel } from "./game";
+import type { GameState } from "./game";
 
 describe("turn-based client state handling", () => {
   it("maps contract move rejection codes to safe UI messages", () => {
@@ -9,7 +10,7 @@ describe("turn-based client state handling", () => {
   });
 
   it("accepts a nine-cell fixture state and its win status", () => {
-    const fixture = {
+    const fixture: GameState = {
       cells: [1, 2, 1, 0, 1, 2, 0, 0, 1],
       player_x: "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
       player_o: "GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
