@@ -24,3 +24,16 @@ wiring = ["pub mod pausable;"]
 [[piece.file]]
 source = "standards/pausable.rs"
 target = "src/pausable.rs"
+
+[[piece]]
+name = "fair-dice"
+description = "Fair dice roll verification using Cougr's ZK circuit suite."
+wiring = ["pub mod fair_dice;"]
+
+[[piece.file]]
+source = "fair-dice/fair_dice.rs"
+target = "src/fair_dice.rs"
+
+[[piece.file]]
+source = "fair-dice/README.md"
+target = "README-fair-dice.md"
