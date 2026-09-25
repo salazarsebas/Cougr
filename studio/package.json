@@ -1,0 +1,24 @@
+{
+  "name": "cougr-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cougr studio sandbox view: renders any legal TurnBasedConfig board, the Soroban finality wait, and RPC/friendbot error states against recorded fixtures.",
+  "type": "module",
+  "exports": {
+    ".": "./src/view.js",
+    "./board": "./src/board.js",
+    "./config": "./src/config.js",
+    "./run": "./src/run.js",
+    "./read-path": "./src/readPath.js"
+  },
+  "scripts": {
+    "build:tokens": "node ../packages/tokens/build.js",
+    "validate:fixtures": "node tools/validate-fixtures.js",
+    "render:fixtures": "node tools/render-fixtures.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

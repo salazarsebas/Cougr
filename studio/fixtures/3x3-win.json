@@ -1,0 +1,34 @@
+{
+  "id": "3x3-win",
+  "description": "Tic-tac-toe, first player wins on the top row after 5 moves. The smallest legal board, and the canonical win fixture.",
+  "_source": "Shape from cli/templates/turn-based/src/lib.rs :: GameState; move sequence X→0, O→3, X→1, O→4, X→2 mirrors the template's win test.",
+  "config": {
+    "id": "tic_tac_toe",
+    "label": "Tic-tac-toe",
+    "board": { "width": 3, "height": 3 },
+    "winLength": 3,
+    "marks": { "1": "X", "2": "O" },
+    "statusMap": { "inProgress": 0, "firstWins": 1, "secondWins": 2, "draw": 3 }
+  },
+  "state": {
+    "cells": [1, 1, 1, 2, 2, 0, 0, 0, 0],
+    "status": 1,
+    "is_x_turn": false,
+    "move_count": 5
+  },
+  "run": {
+    "phase": "settled",
+    "txHash": "3f9c1d2ab47e5c8f0a6b3d9e1c4f7a2b8d5e0c3f6a9b2d4e7c0f1a3b5d8e2c4",
+    "elapsedMs": 6400,
+    "polls": 4
+  },
+  "expect": {
+    "rows": 3,
+    "cols": 3,
+    "cellCount": 9,
+    "filledCells": 5,
+    "statusLabel": "X wins",
+    "winningCells": [0, 1, 2],
+    "terminal": true
+  }
+}

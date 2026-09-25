@@ -1,0 +1,34 @@
+{
+  "id": "3x3-draw",
+  "description": "Tic-tac-toe, board full with no line: a draw after 9 moves.",
+  "_source": "Draw branch of the template's status map (0 in progress, 1 first wins, 2 second wins, 3 draw).",
+  "config": {
+    "id": "tic_tac_toe",
+    "label": "Tic-tac-toe",
+    "board": { "width": 3, "height": 3 },
+    "winLength": 3,
+    "marks": { "1": "X", "2": "O" },
+    "statusMap": { "inProgress": 0, "firstWins": 1, "secondWins": 2, "draw": 3 }
+  },
+  "state": {
+    "cells": [1, 2, 1, 1, 2, 2, 2, 1, 1],
+    "status": 3,
+    "is_x_turn": false,
+    "move_count": 9
+  },
+  "run": {
+    "phase": "settled",
+    "txHash": "b1e4d7c0a3f6b9d2e5c8a1f4b7d0e3c6a9f2b5d8e1c4a7f0b3d6e9c2a5f8b1d",
+    "elapsedMs": 5200,
+    "polls": 3
+  },
+  "expect": {
+    "rows": 3,
+    "cols": 3,
+    "cellCount": 9,
+    "filledCells": 9,
+    "statusLabel": "Draw",
+    "winningCells": [],
+    "terminal": true
+  }
+}
