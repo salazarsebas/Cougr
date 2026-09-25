@@ -9,7 +9,7 @@ import {
   StrKey,
   xdr
 } from "@stellar/stellar-sdk";
-import { assembleTransaction, Server } from "@stellar/stellar-sdk/rpc";
+import { Api, assembleTransaction, Server } from "@stellar/stellar-sdk/rpc";
 import { getAddress, getNetwork, signTransaction } from "@stellar/freighter-api";
 import type { GameState } from "./game";
 import { isGameState } from "./game";
@@ -86,6 +86,9 @@ async function invoke(address: string, method: string, args: xdr.ScVal[]): Promi
 
 async function simulateGetter(address: string): Promise<unknown> {
   const { simulation } = await buildAndSimulate(address, "get_state", []);
+  if (!Api.isSimulationSuccess(simulation)) {
+    throw new ClientError("Contract getter simulation failed.");
+  }
   const result = simulation.result?.retval;
   if (!result) throw new ClientError("Contract getter returned no value.");
   return scValToNative(result);
