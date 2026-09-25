@@ -23,12 +23,8 @@ const server = new Server(TESTNET_RPC_URL);
 export class ClientError extends Error {}
 
 function assertConfigured(): void {
-  if (!CONTRACT_ID) {
-    throw new ClientError("Set VITE_CONTRACT_ID to the deployed turn-based contract ID.");
-  }
-  if (!StrKey.isValidContract(CONTRACT_ID)) {
-    throw new ClientError("VITE_CONTRACT_ID is not a valid Soroban contract ID.");
-  }
+  if (!CONTRACT_ID) throw new ClientError("Set VITE_CONTRACT_ID to the deployed turn-based contract ID.");
+  if (!StrKey.isValidContract(CONTRACT_ID)) throw new ClientError("VITE_CONTRACT_ID is not a valid Soroban contract ID.");
 }
 
 async function connectedAddress(): Promise<string> {
@@ -40,19 +36,13 @@ async function connectedAddress(): Promise<string> {
 
 export async function requireTestnet(): Promise<string> {
   const network = await getNetwork();
-  if (network.networkPassphrase !== TESTNET_PASSPHRASE) {
-    throw new ClientError(
-      "Freighter must be connected to Stellar Testnet. Mainnet is not supported by this client."
-    );
+  if (network.passphrase !== TESTNET_PASSPHRASE) {
+    throw new ClientError("Freighter must be connected to Stellar Testnet. Mainnet is not supported by this client.");
   }
   return connectedAddress();
 }
 
-async function buildAndSimulate(
-  address: string,
-  method: string,
-  args: xdr.ScVal[]
-) {
+async function buildAndSimulate(address: string, method: string, args: xdr.ScVal[]) {
   assertConfigured();
   const account = await server.getAccount(address);
   const contract = new Contract(CONTRACT_ID);
@@ -65,21 +55,17 @@ async function buildAndSimulate(
     .build();
 
   const simulation = await server.simulateTransaction(tx);
-  if ("error" in simulation && simulation.error) {
-    throw new ClientError(simulation.error);
-  }
+  if ("error" in simulation && simulation.error) throw new ClientError(simulation.error);
   return { tx, simulation };
 }
 
 async function signAndSubmit(tx: Transaction): Promise<string> {
-  const signed = await signTransaction(tx.toXDR(), {
-    networkPassphrase: TESTNET_PASSPHRASE
-  });
+  const signed = await signTransaction(tx.toXdr(), { networkPassphrase: TESTNET_PASSPHRASE });
   if ("error" in signed && signed.error) throw new ClientError(signed.error);
   if (!signed.signedTxXdr) throw new ClientError("Freighter did not return a signed transaction.");
 
   const submitted = await server.sendTransaction(
-    TransactionBuilder.fromXDR(signed.signedTxXdr, TESTNET_PASSPHRASE)
+    TransactionBuilder.fromXdr(signed.signedTxXdr, TESTNET_PASSPHRASE)
   );
   if (submitted.status !== "PENDING") {
     throw new ClientError(`Transaction was not accepted by Soroban RPC: ${submitted.status}.`);
@@ -89,34 +75,33 @@ async function signAndSubmit(tx: Transaction): Promise<string> {
     sleepStrategy: () => 500,
     attempts: 30
   });
-  if (result.status !== "SUCCESS") {
-    throw new ClientError(`Transaction failed: ${result.status}.`);
-  }
+  if (result.status !== "SUCCESS") throw new ClientError(`Transaction failed: ${result.status}.`);
   return submitted.hash;
 }
 
 async function invoke(address: string, method: string, args: xdr.ScVal[]): Promise<string> {
   const { tx, simulation } = await buildAndSimulate(address, method, args);
-  const assembled = assembleTransaction(tx, simulation).build();
-  return signAndSubmit(assembled);
+  return signAndSubmit(assembleTransaction(tx, simulation).build());
 }
 
 async function simulateGetter(address: string): Promise<unknown> {
   const { simulation } = await buildAndSimulate(address, "get_state", []);
   const result = simulation.result?.[0]?.xdr;
   if (!result) throw new ClientError("Contract getter returned no value.");
-  return scValToNative(xdr.ScVal.fromXDR(result, "base64"));
+  return scValToNative(xdr.ScVal.fromXdr(result, "base64"));
 }
 
 export async function initGame(playerO: string): Promise<string> {
   const playerX = await requireTestnet();
   assertConfigured();
 
-  let playerOAddress: Address;
-  try {
-    playerOAddress = Address.fromString(playerO.trim());
-  } catch {
-    throw new ClientError("Enter a valid Stellar address for player O.");
+  if (!StrKey.isValidEd25519PublicKey(playerO.trim())) {
+    throw new ClientError("Player O must be a valid Stellar account address.");
+  }
+
+  const playerOAddress = Address.fromString(playerO.trim());
+  if (playerO.trim() === playerX) {
+    throw new ClientError("Player O must be different from the connected wallet.");
   }
 
   return invoke(playerX, "init_game", [
@@ -142,8 +127,6 @@ export async function makeMove(position: number): Promise<string> {
 export async function getState(): Promise<GameState> {
   const player = await requireTestnet();
   const raw = await simulateGetter(player);
-  if (!isGameState(raw)) {
-    throw new ClientError("The contract returned an unexpected game state.");
-  }
+  if (!isGameState(raw)) throw new ClientError("The contract returned an unexpected game state.");
   return raw;
 }
