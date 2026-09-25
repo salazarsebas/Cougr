@@ -84,6 +84,31 @@ impl<'a> SessionBuilder<'a> {
     }
 }
 
+/// Deterministic session key id for a scope.
+///
+/// The layout is big-endian and exactly 32 bytes:
+/// `timestamp (u64) | sequence (u32) | existing_sessions (u32)` followed by
+/// `allowed_actions.len() (u32) | max_operations (u32) | expires_at (u64)`.
+///
+/// This is the single source of truth for the id a contract account creates and
+/// for the committed cross-language vectors in
+/// `packages/sdk-session/vectors/session-vectors.json`.
+pub fn derive_session_key_id(
+    timestamp: u64,
+    sequence: u32,
+    existing_sessions: u32,
+    scope: &SessionScope,
+) -> [u8; 32] {
+    let mut bytes = [0u8; 32];
+    bytes[0..8].copy_from_slice(&timestamp.to_be_bytes());
+    bytes[8..12].copy_from_slice(&sequence.to_be_bytes());
+    bytes[12..16].copy_from_slice(&existing_sessions.to_be_bytes());
+    bytes[16..20].copy_from_slice(&(scope.allowed_actions.len()).to_be_bytes());
+    bytes[20..24].copy_from_slice(&scope.max_operations.to_be_bytes());
+    bytes[24..32].copy_from_slice(&scope.expires_at.to_be_bytes());
+    bytes
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

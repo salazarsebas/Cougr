@@ -116,14 +116,15 @@ impl SessionKeyProvider for ContractAccount {
 }
 
 fn session_key_id(env: &Env, existing_sessions: u32, scope: &SessionScope) -> BytesN<32> {
-    let mut bytes = [0u8; 32];
-    bytes[0..8].copy_from_slice(&env.ledger().timestamp().to_be_bytes());
-    bytes[8..12].copy_from_slice(&env.ledger().sequence().to_be_bytes());
-    bytes[12..16].copy_from_slice(&existing_sessions.to_be_bytes());
-    bytes[16..20].copy_from_slice(&(scope.allowed_actions.len()).to_be_bytes());
-    bytes[20..24].copy_from_slice(&scope.max_operations.to_be_bytes());
-    bytes[24..32].copy_from_slice(&scope.expires_at.to_be_bytes());
-    BytesN::from_array(env, &bytes)
+    BytesN::from_array(
+        env,
+        &super::session_builder::derive_session_key_id(
+            env.ledger().timestamp(),
+            env.ledger().sequence(),
+            existing_sessions,
+            scope,
+        ),
+    )
 }
 
 #[cfg(test)]

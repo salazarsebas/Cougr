@@ -1,0 +1,37 @@
+name: SDK Session
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-session/**'
+      - '.github/workflows/sdk-session.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-session/**'
+      - '.github/workflows/sdk-session.yml'
+
+concurrency:
+  group: sdk-session-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sdk-session:
+    name: Test sdk-session
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      # The package ships TypeScript sources and runs them directly on Node, so
+      # this job needs no install step and deliberately does not run the Rust
+      # clippy -D warnings gate.
+      - name: Run package tests
+        working-directory: ./packages/sdk-session
+        run: node --test test/session.test.ts test/vectors.test.ts
