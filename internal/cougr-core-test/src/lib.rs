@@ -3,4 +3,4 @@
 //   cargo test -p cougr-core --features testutils
 
 /// Mirrors [`cougr_core::test::MODULE_VERSION`].
-pub const MODULE_VERSION: &str = "0.1.0-sandbox";
+pub const MODULE_VERSION: &str = "0.1.1-sandbox";
