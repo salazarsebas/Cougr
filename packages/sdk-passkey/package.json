@@ -1,0 +1,30 @@
+{
+  "name": "cougr-sdk-passkey",
+  "version": "0.1.0",
+  "description": "WebAuthn/passkey registration and assertion mapping for cougr-core's secp256r1 storage and verify_secp256r1, pinned against cross-language vectors.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vectors": "./vectors/passkey-vectors.json"
+  },
+  "files": [
+    "src/",
+    "vectors/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/bytes.test.ts test/der.test.ts test/cbor.test.ts test/mapper.test.ts test/registration.test.ts test/vectors.test.ts"
+  },
+  "keywords": [
+    "cougr",
+    "soroban",
+    "passkey",
+    "webauthn",
+    "secp256r1",
+    "stellar"
+  ],
+  "engines": {
+    "node": ">=22.6"
+  },
+  "license": "MIT"
+}

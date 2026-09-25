@@ -1,0 +1,39 @@
+name: SDK Passkey
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-passkey/**'
+      - '.github/workflows/sdk-passkey.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-passkey/**'
+      - '.github/workflows/sdk-passkey.yml'
+
+concurrency:
+  group: sdk-passkey-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sdk-passkey:
+    name: Test sdk-passkey
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      # The package ships TypeScript sources and runs them directly on Node, so
+      # this job needs no install step and deliberately does not run the Rust
+      # clippy -D warnings gate.
+      - name: Run package tests
+        working-directory: ./packages/sdk-passkey
+        run: >-
+          node --test test/bytes.test.ts test/der.test.ts test/cbor.test.ts
+          test/mapper.test.ts test/registration.test.ts test/vectors.test.ts
