@@ -1,0 +1,62 @@
+{
+  "generatedBy": "packages/sdk-events/fixtures (cougr-core events on soroban-sdk Env::default(), no network)",
+  "events": [
+    {
+      "kind": "set",
+      "event": {
+        "type": "contract",
+        "ledger": 100,
+        "ledgerClosedAt": "2026-09-24T20:38:03Z",
+        "contractId": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "id": "100-set",
+        "pagingToken": "100-set",
+        "inSuccessfulContractCall": true,
+        "txHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "topic": [
+          "AAAADwAAAAVDT1VHUgAAAA==",
+          "AAAADwAAAANzZXQA",
+          "AAAADwAAAAhwb3NpdGlvbg=="
+        ],
+        "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAQBAgMEAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAABw=="
+      }
+    },
+    {
+      "kind": "del",
+      "event": {
+        "type": "contract",
+        "ledger": 100,
+        "ledgerClosedAt": "2026-09-24T20:38:03Z",
+        "contractId": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "id": "100-del",
+        "pagingToken": "100-del",
+        "inSuccessfulContractCall": true,
+        "txHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "topic": [
+          "AAAADwAAAAVDT1VHUgAAAA==",
+          "AAAADwAAAANkZWwA",
+          "AAAADwAAAAhwb3NpdGlvbg=="
+        ],
+        "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAABw=="
+      }
+    },
+    {
+      "kind": "rich",
+      "event": {
+        "type": "contract",
+        "ledger": 100,
+        "ledgerClosedAt": "2026-09-24T20:38:03Z",
+        "contractId": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "id": "100-rich",
+        "pagingToken": "100-rich",
+        "inSuccessfulContractCall": true,
+        "txHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "topic": [
+          "AAAADwAAAAVDT1VHUgAAAA==",
+          "AAAADwAAAARyaWNo",
+          "AAAADwAAAA5wbGF5ZXJfcHJvZmlsZQAA"
+        ],
+        "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAABw=="
+      }
+    }
+  ]
+}

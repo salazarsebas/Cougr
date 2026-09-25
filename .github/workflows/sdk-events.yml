@@ -1,0 +1,54 @@
+name: SDK Events CI
+
+# Path-scoped to the TypeScript events SDK. Like cougr-site.yml, this workflow
+# only runs for its own tree and its own file, and it never runs the Rust
+# clippy gate: a Rust-only change must not trigger it.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-events/**'
+      - '.github/workflows/sdk-events.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-events/**'
+      - '.github/workflows/sdk-events.yml'
+
+concurrency:
+  group: sdk-events-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sdk-events:
+    name: Build and test sdk-events
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: packages/sdk-events
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: packages/sdk-events/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test decoders
+        run: npm test
+
+      - name: Build
+        run: npm run build
