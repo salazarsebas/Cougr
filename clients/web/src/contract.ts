@@ -86,9 +86,9 @@ async function invoke(address: string, method: string, args: xdr.ScVal[]): Promi
 
 async function simulateGetter(address: string): Promise<unknown> {
   const { simulation } = await buildAndSimulate(address, "get_state", []);
-  const result = simulation.result?.[0]?.xdr;
+  const result = simulation.result?.retval;
   if (!result) throw new ClientError("Contract getter returned no value.");
-  return scValToNative(xdr.ScVal.fromXdr(result, "base64"));
+  return scValToNative(result);
 }
 
 export async function initGame(playerO: string): Promise<string> {
