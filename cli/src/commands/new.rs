@@ -9,9 +9,34 @@ use std::path::Path;
 
 use crate::error::CliError;
 use crate::name::ProjectName;
-use crate::template::{RenderedFile, Template};
+use crate::template::{RenderedFile, Template, TurnBasedConfig};
 
 pub fn run(raw_name: &str, template: Template, parent: Option<&Path>) -> Result<(), CliError> {
+    run_with_config(raw_name, template, None, parent)
+}
+
+/// Export a studio config through the same renderer and writer as `cougr new`.
+pub fn export(raw_name: &str, config_path: &Path, parent: Option<&Path>) -> Result<(), CliError> {
+    let source = fs::read_to_string(config_path)
+        .map_err(|err| CliError::io("read the config", config_path, err))?;
+    let config: TurnBasedConfig =
+        serde_json::from_str(&source).map_err(|err| CliError::InvalidConfig {
+            reason: err.to_string(),
+        })?;
+    run_with_config(
+        raw_name,
+        Template::TurnBased,
+        Some(config.validate()?),
+        parent,
+    )
+}
+
+fn run_with_config(
+    raw_name: &str,
+    template: Template,
+    config: Option<TurnBasedConfig>,
+    parent: Option<&Path>,
+) -> Result<(), CliError> {
     let name = ProjectName::parse(raw_name)?;
 
     let parent = match parent {
@@ -29,7 +54,10 @@ pub fn run(raw_name: &str, template: Template, parent: Option<&Path>) -> Result<
     // usage errors (bad name, target exists) stay free of doctor output.
     super::doctor::run_as_warning();
 
-    let files = template.render(&name)?;
+    let files = match config {
+        Some(config) => template.render_with_config(&name, Some(config))?,
+        None => template.render(&name)?,
+    };
 
     fs::create_dir_all(&target)
         .map_err(|err| CliError::io("create the project directory", &target, err))?;

@@ -72,6 +72,58 @@ pub fn run(ctx: &CheckContext) -> Result<()> {
     }
 }
 
+/// Check a standalone project produced by `cougr new` or `cougr export`.
+/// Repository-only tracked-artifact checks do not apply outside a checkout.
+pub fn run_generated(project: &Path) -> Result<()> {
+    for required in [
+        "Cargo.toml",
+        "README.md",
+        ".gitignore",
+        "src/lib.rs",
+        "src/components.rs",
+        "src/systems.rs",
+        "src/test.rs",
+    ] {
+        if !project.join(required).is_file() {
+            anyhow::bail!("generated project is missing {required}");
+        }
+    }
+
+    let gitignore = fs::read_to_string(project.join(".gitignore"))?;
+    if !gitignore.lines().any(|line| line.trim() == "target/") {
+        anyhow::bail!("generated project .gitignore must ignore target/");
+    }
+    if gitignore.lines().any(|line| line.trim() == "Cargo.lock") {
+        anyhow::bail!("generated project .gitignore must not ignore Cargo.lock");
+    }
+
+    let manifest = fs::read_to_string(project.join("Cargo.toml"))?;
+    let description = Regex::new(r#"(?m)^description\s*=\s*"([^"]+)""#).unwrap();
+    if !description.is_match(&manifest) {
+        anyhow::bail!("generated project Cargo.toml needs a non-empty description");
+    }
+
+    let readme = fs::read_to_string(project.join("README.md"))?;
+    if Regex::new(r"C[A-Z2-7]{55}").unwrap().is_match(&readme) {
+        anyhow::bail!("generated project README contains a hardcoded contract ID");
+    }
+
+    let metadata = Command::new("cargo")
+        .args(["metadata", "--no-deps", "--format-version", "1"])
+        .current_dir(project)
+        .output()
+        .context("cannot run cargo metadata for generated project")?;
+    if !metadata.status.success() {
+        anyhow::bail!(
+            "generated project cargo metadata failed: {}",
+            String::from_utf8_lossy(&metadata.stderr).trim()
+        );
+    }
+
+    println!("=== ALL CHECKS PASSED (generated project) ===");
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // Individual checks
 // ---------------------------------------------------------------------------

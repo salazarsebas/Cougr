@@ -1,6 +1,6 @@
 //! `cougr` - command-line tooling for the Cougr ECS framework.
 //!
-//! Currently exposes four commands:
+//! Exposes the project, export, check, and environment commands:
 //!
 //! - [`cougr new`] - scaffold a Soroban game contract wired to `cougr-core` from
 //!   one of four embedded templates.
@@ -108,6 +108,20 @@ enum Command {
         path: Option<std::path::PathBuf>,
     },
 
+    /// Export a studio turn-based config using the `cougr new` template path.
+    Export {
+        /// Name of the generated project.
+        name: String,
+
+        /// JSON file containing board_width, board_height, and win_length.
+        #[arg(long, value_name = "FILE")]
+        config: std::path::PathBuf,
+
+        /// Directory to create the project in.
+        #[arg(long, value_name = "DIR")]
+        path: Option<std::path::PathBuf>,
+    },
+
     /// Add an embedded capability to the current Cougr project.
     Add {
         /// Piece name, such as `session-auth` or `standards/pausable`.
@@ -131,6 +145,10 @@ fn main() -> ExitCode {
             path,
         } => commands::new::run(&name, template, path.as_deref()).map_err(anyhow::Error::from),
 
+        Command::Export { name, config, path } => {
+            commands::new::export(&name, &config, path.as_deref()).map_err(anyhow::Error::from)
+        }
+
         Command::Add { piece, list } => {
             pieces::run(piece.as_deref(), list).map_err(anyhow::Error::from)
         }
@@ -145,18 +163,28 @@ fn main() -> ExitCode {
             output,
         } => (|| -> Result<()> {
             let cwd = std::env::current_dir()?;
-            let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
+            let candidate = path.as_deref().map(std::path::Path::new).unwrap_or(&cwd);
+            let is_generated_project = candidate.join("Cargo.toml").is_file()
+                && candidate.join("src/lib.rs").is_file()
+                && !candidate.join("examples").is_dir()
+                && candidate.parent().and_then(|parent| parent.file_name())
+                    != Some(std::ffi::OsStr::new("examples"));
 
-            if verified {
-                verify::run(
-                    &ctx,
-                    json || output.is_some(),
-                    full,
-                    canonical_only,
-                    output.as_deref(),
-                )?;
+            if is_generated_project && !verified && example.is_none() {
+                check::run_generated(candidate)?;
             } else {
-                check::run(&ctx)?;
+                let ctx = context::resolve(&cwd, path.as_deref(), example.as_deref())?;
+                if verified {
+                    verify::run(
+                        &ctx,
+                        json || output.is_some(),
+                        full,
+                        canonical_only,
+                        output.as_deref(),
+                    )?;
+                } else {
+                    check::run(&ctx)?;
+                }
             }
             Ok(())
         })(),

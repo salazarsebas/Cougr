@@ -8,7 +8,7 @@ example.
 
 ## Purpose and pattern
 
-Two players alternate placing marks on a 3×3 board until one lines up three or
+Two players alternate placing marks on a {{board_width}}×{{board_height}} board until one lines up {{win_length}} or
 the board fills. It is the reference shape for any turn-based game on Cougr:
 exactly one match per contract instance, an explicit turn owner, and every move
 validated before it is written to storage.
@@ -18,13 +18,13 @@ validated before it is written to storage.
 | Function | Parameters | Returns | Description |
 | --- | --- | --- | --- |
 | `init_game` | `player_x: Address`, `player_o: Address` | `GameState` | Start a fresh match, discarding previous state |
-| `make_move` | `player: Address`, `position: u32` | `MoveResult` | Place the caller's mark at `0`–`8` |
+| `make_move` | `player: Address`, `position: u32` | `MoveResult` | Place the caller's mark at a zero-based, row-major cell index |
 | `get_state` | - | `GameState` | Full board, players, turn, and status |
 | `is_valid_move` | `position: u32` | `bool` | Whether that cell is playable right now |
 | `get_winner` | - | `Option<Address>` | Winner's address, or `None` while running or drawn |
 | `reset_game` | - | `GameState` | Clear the board, keep the same players |
 
-`MoveResult.status` and `GameState.status` use the constants in
+`MoveResult.game_state.status` and `GameState.status` use the constants in
 `components.rs`: `0` in progress, `1` X wins, `2` O wins, `3` draw.
 
 ## Architecture overview
@@ -57,7 +57,7 @@ cheaper `impl_component!`.
 2. X calls `make_move`; the contract checks the match is running, the cell is in
    range and empty, and the caller owns the turn.
 3. The mark is written, the move count increases, and `detect_status` re-checks
-   all eight lines.
+   possible lines of the configured win length.
 4. Turn ownership flips while the status is still "in progress"; once a player
    wins or the board fills, further moves are rejected with `gameover`.
 5. `reset_game` clears the board and keeps both players for a rematch.
@@ -74,7 +74,10 @@ cheaper `impl_component!`.
 
 ## Build and test
 
+This project uses width {{board_width}}, height {{board_height}}, and win length {{win_length}}. The default `cougr new --template turn-based` project uses 3×3 and a win length of 3.
+
 ```bash
+cougr check
 cargo test
 stellar contract build
 ```

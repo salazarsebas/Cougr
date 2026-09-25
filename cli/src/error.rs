@@ -12,6 +12,9 @@ pub enum CliError {
     /// The project name is not usable as a Rust crate name.
     InvalidName { name: String, reason: String },
 
+    /// The studio turn-based configuration is malformed or outside its bounds.
+    InvalidConfig { reason: String },
+
     /// The target directory already exists.
     TargetExists { path: PathBuf },
 
@@ -59,6 +62,9 @@ impl CliError {
                  (for example: `my-game` or `dungeon_crawl`)"
                     .to_string(),
             ),
+            CliError::InvalidConfig { .. } => Some(
+                "use board_width and board_height in 3..=8, and win_length in 3..=min(width, height)".to_string(),
+            ),
             CliError::TargetExists { path } => Some(format!(
                 "pick a different name, or remove `{}` first",
                 path.display()
@@ -87,6 +93,7 @@ impl fmt::Display for CliError {
             CliError::InvalidName { name, reason } => {
                 write!(f, "`{name}` is not a valid project name: {reason}")
             }
+            CliError::InvalidConfig { reason } => write!(f, "invalid turn-based config: {reason}"),
             CliError::TargetExists { path } => {
                 write!(f, "target directory `{}` already exists", path.display())
             }

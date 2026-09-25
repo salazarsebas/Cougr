@@ -18,6 +18,7 @@ use std::borrow::Cow;
 
 use clap::ValueEnum;
 use rust_embed::RustEmbed;
+use serde::{Deserialize, Serialize};
 
 use crate::error::CliError;
 use crate::name::ProjectName;
@@ -34,6 +35,42 @@ pub const COUGR_CORE_VERSION: &str = "1.1";
 
 /// The `soroban-sdk` release every canonical example is validated against.
 pub const SOROBAN_SDK_VERSION: &str = "25.1.0";
+
+/// The studio export schema. This is the sole integration point for the
+/// parameterized turn-based template when that prerequisite lands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct TurnBasedConfig {
+    pub board_width: u32,
+    pub board_height: u32,
+    pub win_length: u32,
+}
+
+impl Default for TurnBasedConfig {
+    fn default() -> Self {
+        Self {
+            board_width: 3,
+            board_height: 3,
+            win_length: 3,
+        }
+    }
+}
+
+impl TurnBasedConfig {
+    pub fn validate(self) -> Result<Self, CliError> {
+        if !(3..=8).contains(&self.board_width) || !(3..=8).contains(&self.board_height) {
+            return Err(CliError::InvalidConfig {
+                reason: "board dimensions must be in 3..=8".into(),
+            });
+        }
+        if !(3..=self.board_width.min(self.board_height)).contains(&self.win_length) {
+            return Err(CliError::InvalidConfig {
+                reason: "win_length must be in 3..=min(board_width, board_height)".into(),
+            });
+        }
+        Ok(self)
+    }
+}
 
 /// A curated starting point, each backed by one canonical example.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
@@ -81,6 +118,17 @@ impl Template {
 
     /// Every file in this template, sorted, as `(output path, rendered bytes)`.
     pub fn render(self, name: &ProjectName) -> Result<Vec<RenderedFile>, CliError> {
+        self.render_with_config(name, None)
+    }
+
+    /// Render the same embedded assets used by `cougr new`, optionally applying
+    /// the studio match configuration to the turn-based template.
+    pub fn render_with_config(
+        self,
+        name: &ProjectName,
+        config: Option<TurnBasedConfig>,
+    ) -> Result<Vec<RenderedFile>, CliError> {
+        let config = config.unwrap_or_default().validate()?;
         let prefix = format!("{}/", self.id());
 
         let mut sources: Vec<Cow<'static, str>> = Assets::iter()
@@ -108,7 +156,7 @@ impl Template {
 
             files.push(RenderedFile {
                 path: output_path(relative),
-                contents: self.substitute(&String::from_utf8_lossy(&asset.data), name),
+                contents: self.substitute(&String::from_utf8_lossy(&asset.data), name, config),
             });
         }
 
@@ -116,7 +164,7 @@ impl Template {
     }
 
     /// Replace every `{{placeholder}}` a template may contain.
-    fn substitute(self, body: &str, name: &ProjectName) -> String {
+    fn substitute(self, body: &str, name: &ProjectName, config: TurnBasedConfig) -> String {
         body.replace("{{crate_name}}", name.crate_name())
             .replace("{{module_name}}", name.module_name())
             .replace("{{ContractName}}", name.type_name())
@@ -125,6 +173,9 @@ impl Template {
             .replace("{{source_example}}", self.source_example())
             .replace("{{cougr_core_version}}", COUGR_CORE_VERSION)
             .replace("{{soroban_sdk_version}}", SOROBAN_SDK_VERSION)
+            .replace("{{board_width}}", &config.board_width.to_string())
+            .replace("{{board_height}}", &config.board_height.to_string())
+            .replace("{{win_length}}", &config.win_length.to_string())
     }
 }
 
