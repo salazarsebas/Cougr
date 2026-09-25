@@ -9,12 +9,13 @@ export interface GameState {
   status: GameStatus;
 }
 
-export const STATUS = {
-  IN_PROGRESS: 0,
-  X_WINS: 1,
-  O_WINS: 2,
-  DRAW: 3
-} as const;
+export interface MoveResult {
+  success: boolean;
+  game_state: GameState;
+  message: string;
+}
+
+export const STATUS = { IN_PROGRESS: 0, X_WINS: 1, O_WINS: 2, DRAW: 3 } as const;
 
 export function moveRejection(message: string): string {
   switch (message) {
@@ -43,14 +44,15 @@ export function cellLabel(value: number): string {
 export function isGameState(value: unknown): value is GameState {
   if (!value || typeof value !== "object") return false;
   const state = value as Partial<GameState>;
-  return (
-    Array.isArray(state.cells) &&
-    state.cells.length === 9 &&
+  return Array.isArray(state.cells) && state.cells.length === 9 &&
     state.cells.every((cell) => cell === 0 || cell === 1 || cell === 2) &&
-    typeof state.player_x === "string" &&
-    typeof state.player_o === "string" &&
-    typeof state.is_x_turn === "boolean" &&
-    typeof state.move_count === "number" &&
-    [0, 1, 2, 3].includes(state.status ?? -1)
-  );
+    typeof state.player_x === "string" && typeof state.player_o === "string" &&
+    typeof state.is_x_turn === "boolean" && typeof state.move_count === "number" &&
+    [0, 1, 2, 3].includes(state.status ?? -1);
+}
+
+export function isMoveResult(value: unknown): value is MoveResult {
+  if (!value || typeof value !== "object") return false;
+  const result = value as Partial<MoveResult>;
+  return typeof result.success === "boolean" && typeof result.message === "string" && isGameState(result.game_state);
 }
