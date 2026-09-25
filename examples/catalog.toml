@@ -71,3 +71,9 @@ name = "guild_arena"
 category = "other"
 maturity = "canonical"
 cougr_features = ["auth", "standards", "game-app"]
+
+[example.staked_match]
+name = "staked_match"
+category = "other"
+maturity = "canonical"
+cougr_features = ["auth", "standards"]
