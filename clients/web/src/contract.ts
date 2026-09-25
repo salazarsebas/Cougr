@@ -36,7 +36,7 @@ async function connectedAddress(): Promise<string> {
 
 export async function requireTestnet(): Promise<string> {
   const network = await getNetwork();
-  if (network.passphrase !== TESTNET_PASSPHRASE) {
+  if (network.networkPassphrase !== TESTNET_PASSPHRASE) {
     throw new ClientError("Freighter must be connected to Stellar Testnet. Mainnet is not supported by this client.");
   }
   return connectedAddress();
