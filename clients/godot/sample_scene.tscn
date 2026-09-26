@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3 uid="uid://sample3x3board"]
+
+[node name="Node2D" type="Node2D"]
+

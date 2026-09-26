@@ -1,0 +1,27 @@
+name: Godot Client
+on:
+  push:
+    paths:
+      - "clients/godot/**"
+  pull_request:
+    paths:
+      - "clients/godot/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot
+        run: |
+          wget https://github.com/godotengine/godot/releases/download/4.2.2-stable/Godot_v4.2.2-stable_linux.x86_64.zip
+          unzip Godot_v4.2.2-stable_linux.x86_64.zip
+          sudo mv Godot_v4.2.2-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+      - name: Run Godot Tests
+        working-directory: clients/godot
+        run: godot --headless --script addons/cougr_turn_based/tests/run_tests.gd
+      - name: Run Rust Vector Tests
+        working-directory: clients/godot/rust_tests
+        run: cargo test
+
