@@ -1,0 +1,47 @@
+name: Turn-Based Web Client CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'clients/web/**'
+      - '.github/workflows/turn-based-client.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'clients/web/**'
+      - '.github/workflows/turn-based-client.yml'
+
+concurrency:
+  group: turn-based-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client:
+    name: Build and test turn-based web client
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: clients/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          check-latest: true
+          cache: npm
+          cache-dependency-path: clients/web/package.json
+
+      - name: Upgrade npm
+        run: npm install --global npm@11
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
