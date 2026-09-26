@@ -1,1 +1,7 @@
-[package]`nname = "rust_tests"`nversion = "0.1.0"`nedition = "2021"`n`n[dependencies]`nsoroban-sdk = "22.0.1"
+[package]
+name = "rust_tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Internal XDR cross-check vectors for the Cougr Godot addon - not published"
+license = "MIT"
