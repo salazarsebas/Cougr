@@ -71,3 +71,9 @@ name = "guild_arena"
 category = "other"
 maturity = "canonical"
 cougr_features = ["auth", "standards", "game-app"]
+
+[example.season_ladder]
+name = "season_ladder"
+category = "other"
+maturity = "canonical"
+cougr_features = ["standards"]

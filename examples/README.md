@@ -58,6 +58,7 @@ These are the maintained reference architectures. They are held to the full stan
 | `snake` | **Arcade (GameApp) / canonical** | Arcade loop, `GameApp` tick model, basic ECS | - |
 | `battleship` | **Hidden information / canonical** | Commit-reveal and selective state disclosure using `privacy::stable` | [preview.svg](./battleship/preview.svg) |
 | `guild_arena` | **Authentication & recovery / canonical** | Account abstraction, social recovery, multi-device authorization | - |
+| `season_ladder` | **Standards layer / canonical** | Season standings with integer-only ratings, `Ownable` admin, and a `Pausable` emergency stop | - |
 
 ### Transitional examples
 
