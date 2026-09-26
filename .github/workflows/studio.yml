@@ -1,0 +1,40 @@
+name: Studio
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'studio/**'
+      - '.github/workflows/studio.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'studio/**'
+      - '.github/workflows/studio.yml'
+
+concurrency:
+  group: studio-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test studio
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./studio
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./studio
+        run: npm test

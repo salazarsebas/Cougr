@@ -15,10 +15,18 @@
     "build:tokens": "node ../packages/tokens/build.js",
     "validate:fixtures": "node tools/validate-fixtures.js",
     "render:fixtures": "node tools/render-fixtures.js",
-    "test": "node --test"
+    "test": "npm run build:tokens && node --test && vitest run tests/"
+
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "MIT",
+    "devDependencies": {
+    "@types/node": "^26.6.2",
+    "msw": "^2.15.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+
 }
