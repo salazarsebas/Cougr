@@ -174,6 +174,7 @@ mod tests {
             Template::TurnBased,
             Template::HiddenInfo,
             Template::SessionAuth,
+            Template::Checkpoint,
         ] {
             let dir = tempdir();
             run("demo", template, Some(dir.path())).unwrap();

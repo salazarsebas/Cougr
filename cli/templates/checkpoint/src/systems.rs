@@ -6,8 +6,7 @@
 //! unit-testable without an `Env`.
 
 use crate::components::{
-    CheckpointState, MatchRecord, STATUS_DISPUTED, STATUS_FINALISED, STATUS_RUNNING,
-    DISPUTE_WINDOW_LEDGERS,
+    CheckpointState, MatchRecord, STATUS_RUNNING, DISPUTE_WINDOW_LEDGERS,
 };
 
 // ─── Error types ──────────────────────────────────────────────────────────────
@@ -30,7 +29,7 @@ pub enum DisputeError {
     TickMismatch,
     /// The dispute window for this checkpoint has already closed.
     WindowClosed,
-    /// The challenger's hash matches the committed hash — nothing to dispute.
+    /// The challenger's hash matches the committed hash - nothing to dispute.
     HashMatches,
 }
 

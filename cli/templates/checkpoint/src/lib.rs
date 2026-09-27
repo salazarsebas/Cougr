@@ -1,4 +1,4 @@
-//! {{crate_name}} — a Cougr game contract generated from the `{{template_id}}` template.
+//! {{crate_name}}: a Cougr game contract generated from the `{{template_id}}` template.
 //!
 //! Real-time games cannot put every frame on chain. This contract demonstrates
 //! the honest alternative: simulate off chain, commit a state hash and score
@@ -6,10 +6,10 @@
 //! is finalised.
 //!
 //! Demonstrates:
-//!   - `impl_rich_component!` — components holding `Address` fields
-//!   - `impl_component!` — fixed-size tick counter
-//!   - `SorobanGame` — standard world load/save
-//!   - `impl_soroban_game!` — wires the trait to a `#[contract]` struct
+//!   - `impl_rich_component!`: components holding `Address` fields
+//!   - `impl_component!`: fixed-size tick counter
+//!   - `SorobanGame`: standard world load/save
+//!   - `impl_soroban_game!`: wires the trait to a `#[contract]` struct
 
 #![no_std]
 

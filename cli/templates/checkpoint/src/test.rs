@@ -10,12 +10,14 @@
 //!   - a late dispute that is rejected (window expired)
 //!   - state consistency across the full match lifecycle
 
-use crate::components::{DISPUTE_WINDOW_LEDGERS, STATUS_DISPUTED, STATUS_FINALISED, STATUS_RUNNING};
+use crate::components::{
+    CheckpointState, MatchRecord, DISPUTE_WINDOW_LEDGERS, STATUS_DISPUTED, STATUS_FINALISED,
+    STATUS_RUNNING,
+};
 use crate::systems::{
     validate_commit, validate_dispute, validate_finalize, CommitError, DisputeError, FinalizeError,
 };
-use crate::{{{ContractName}}, {{ContractName}}Client, MatchRecord};
-use crate::components::{CheckpointState, MatchConfig, STATUS_RUNNING as SR};
+use crate::{{{ContractName}}, {{ContractName}}Client};
 use cougr_core::test::GameHarness;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{symbol_short, Address, Env};
@@ -142,7 +144,7 @@ fn dispute_after_window_is_rejected() {
 
     assert!(!result.success);
     assert_eq!(result.message, symbol_short!("toolate"));
-    // Match is still running — the late dispute did not change state.
+    // Match is still running - the late dispute did not change state.
     assert_eq!(result.match_state.status, STATUS_RUNNING);
 }
 
@@ -154,7 +156,7 @@ fn dispute_with_matching_hash_is_rejected() {
     client.commit_checkpoint(&player, &100, &0xaaaa_u64, &5);
 
     let challenger = Address::generate(harness.env());
-    // Same hash as committed — nothing to dispute.
+    // Same hash as committed - nothing to dispute.
     let result = client.dispute_checkpoint(&challenger, &100, &0xaaaa_u64);
 
     assert!(!result.success);
@@ -233,7 +235,7 @@ fn running_record(env: &Env, player: &Address) -> MatchRecord {
         last_score: 5,
         last_tick: 100,
         committed_at_ledger: 50,
-        status: SR,
+        status: STATUS_RUNNING,
         authority: player.clone(),
     }
 }
