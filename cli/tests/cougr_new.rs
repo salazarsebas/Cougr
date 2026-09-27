@@ -12,7 +12,7 @@
 use std::path::Path;
 use std::process::{Command, Output};
 
-const TEMPLATES: [&str; 4] = ["starter", "turn-based", "hidden-info", "session-auth"];
+const TEMPLATES: [&str; 5] = ["starter", "turn-based", "hidden-info", "session-auth", "checkpoint"];
 
 fn cougr(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_cougr"))
