@@ -72,6 +72,12 @@ category = "other"
 maturity = "canonical"
 cougr_features = ["auth", "standards", "game-app"]
 
+[example.zk_dice_session]
+name = "zk_dice_session"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "zk-circuits", "session-auth", "privacy"]
+
 [example.season_ladder]
 name = "season_ladder"
 category = "other"
