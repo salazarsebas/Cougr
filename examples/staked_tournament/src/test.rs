@@ -70,16 +70,19 @@ fn four_player_bracket_settles_each_match_independently() {
     assert_eq!(token_balance(&setup, &setup.contract_id), 20);
     assert_eq!(token_balance(&setup, &p1), 990);
     assert_eq!(token_balance(&setup, &p2), 990);
+    assert_eq!(client.get_match(&0).winner, Some(p0.clone()));
     assert_eq!(client.get_match(&2).player_a, Some(p0.clone()));
 
     client.resolve_match(&p2, &1);
     assert_eq!(token_balance(&setup, &setup.contract_id), 0);
+    assert_eq!(client.get_match(&1).winner, Some(p2.clone()));
     assert_eq!(client.get_match(&2).player_b, Some(p2.clone()));
 
     client.stake_match(&p0, &2);
     client.stake_match(&p2, &2);
     client.resolve_match(&p0, &2);
 
+    assert_eq!(client.get_match(&2).winner, Some(p0.clone()));
     assert_eq!(client.champion(), Some(p0.clone()));
     assert_eq!(token_balance(&setup, &p0), 1_020);
     assert_eq!(token_balance(&setup, &p2), 1_000);

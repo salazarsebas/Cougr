@@ -8,7 +8,7 @@
 #   name             = string            # Directory name under examples/
 #   category         = string            # One of: arcade / board / puzzle / hidden-information / card / other
 #   maturity         = string            # canonical | transitional
-#   cougr_features   = list of strings   # Cougr APIs demonstrated (e.g. ecs, game-app, soroban-game, privacy, session-auth, zk-circuits, rich-components, auth, standards, commit-reveal)
+#   cougr_features   = list of strings   # Cougr APIs or integration patterns demonstrated (e.g. ecs, game-app, soroban-game, privacy, session-auth, zk-circuits, rich-components, auth, standards, commit-reveal)
 #   screenshot       = optional string   # Relative path to screenshot (populated by gallery generator)
 #   testnet_contract = optional string   # Deployed testnet contract ID (populated after deployment)
 

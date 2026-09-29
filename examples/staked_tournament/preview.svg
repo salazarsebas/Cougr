@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 310" width="520" height="310">
+  <defs><style>text { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }</style></defs>
+  <rect width="520" height="310" fill="#14100D" rx="12"/>
+  <text x="24" y="34" font-size="16" font-weight="700" fill="#F3EDE4">Staked tournament</text>
+  <text x="24" y="54" font-size="11" fill="#B7ABA0">Four players · single elimination · per-match escrow</text>
+  <path d="M172 124 H220 V185 H348" fill="none" stroke="#B7ABA0" stroke-opacity="0.5" stroke-width="2"/>
+  <path d="M172 246 H220 V185 H348" fill="none" stroke="#B7ABA0" stroke-opacity="0.5" stroke-width="2"/>
+  
+    <rect x="24" y="82" width="148" height="84"
+          rx="8" fill="#1F1A15"
+          stroke="#B7ABA0" stroke-opacity="0.24"/>
+    <text x="36" y="104" font-size="11" font-weight="700"
+          fill="#F3EDE4">SEMIFINAL 1</text>
+    
+      <rect x="32" y="108" width="132" height="21"
+            rx="4" fill="#4FBE8A22"/>
+      <text x="40" y="124" font-size="12" font-weight="700"
+            fill="#4FBE8A">Player 1</text>
+      <text x="154" y="124" text-anchor="end" font-size="10" fill="#4FBE8A">WIN</text>
+    
+      <rect x="32" y="132" width="132" height="21"
+            rx="4" fill="#14100D"/>
+      <text x="40" y="148" font-size="12" font-weight="400"
+            fill="#B7ABA0">Player 2</text>
+      
+    
+  
+  
+    <rect x="24" y="204" width="148" height="84"
+          rx="8" fill="#1F1A15"
+          stroke="#B7ABA0" stroke-opacity="0.24"/>
+    <text x="36" y="226" font-size="11" font-weight="700"
+          fill="#F3EDE4">SEMIFINAL 2</text>
+    
+      <rect x="32" y="230" width="132" height="21"
+            rx="4" fill="#4FBE8A22"/>
+      <text x="40" y="246" font-size="12" font-weight="700"
+            fill="#4FBE8A">Player 3</text>
+      <text x="154" y="246" text-anchor="end" font-size="10" fill="#4FBE8A">WIN</text>
+    
+      <rect x="32" y="254" width="132" height="21"
+            rx="4" fill="#14100D"/>
+      <text x="40" y="270" font-size="12" font-weight="400"
+            fill="#B7ABA0">Player 4</text>
+      
+    
+  
+  
+    <rect x="348" y="143" width="148" height="84"
+          rx="8" fill="#1F1A15"
+          stroke="#B7ABA0" stroke-opacity="0.24"/>
+    <text x="360" y="165" font-size="11" font-weight="700"
+          fill="#F3EDE4">FINAL</text>
+    
+      <rect x="356" y="169" width="132" height="21"
+            rx="4" fill="#4FBE8A22"/>
+      <text x="364" y="185" font-size="12" font-weight="700"
+            fill="#4FBE8A">Player 1</text>
+      <text x="478" y="185" text-anchor="end" font-size="10" fill="#4FBE8A">WIN</text>
+    
+      <rect x="356" y="193" width="132" height="21"
+            rx="4" fill="#14100D"/>
+      <text x="364" y="209" font-size="12" font-weight="400"
+            fill="#B7ABA0">Player 3</text>
+      
+    
+  
+  <text x="496" y="292" text-anchor="end" font-size="10" fill="#4FBE8A">CHAMPION: Player 1</text>
+</svg>
