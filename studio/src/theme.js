@@ -29,18 +29,16 @@ export { tokensVersion };
 export const BRAND = dark;
 
 /**
- * Semantic colors the brand palette deliberately does not define.
+ * Run-state colors mapped to the brand palette.
  *
- * `docs/BRAND.md` scopes the palette to a small fixed vocabulary and claims
- * red for error states — but it has no error *token*, because error surfaces
- * did not exist when the palette was written. These stay local and semantic
- * until it does. Waiting reuses the Beta tier and settled reuses the Stable
- * tier, so a run's lifecycle reads in the same colors as the maturity model.
+ * Danger reads the brand error token, waiting reuses the Beta tier, and settled
+ * reuses the Stable tier, so a run's lifecycle reads in the same colors as the
+ * maturity model and design system.
  */
 export const STUDIO = Object.freeze({
   /** Error state: RPC failure, friendbot failure, timeout. */
-  danger: '#D2503C',
-  dangerText: '#F2A79A',
+  danger: BRAND.colorDanger,
+  dangerText: BRAND.colorDanger,
   /** Waiting for Soroban finality. */
   waiting: BRAND.colorTierBeta,
   /** The run settled and the board is confirmed. */
