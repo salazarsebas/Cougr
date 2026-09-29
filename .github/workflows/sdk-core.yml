@@ -1,0 +1,54 @@
+name: SDK Core CI
+
+# Path-scoped to the TypeScript sdk-core package.  Only runs when files under
+# packages/sdk-core or this workflow file change.  Never triggers the Rust
+# clippy gate.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-core/**'
+      - '.github/workflows/sdk-core.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-core/**'
+      - '.github/workflows/sdk-core.yml'
+
+concurrency:
+  group: sdk-core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sdk-core:
+    name: Build and test sdk-core
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: packages/sdk-core
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: packages/sdk-core/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
