@@ -38,7 +38,7 @@ export const BRAND = dark;
 export const STUDIO = Object.freeze({
   /** Error state: RPC failure, friendbot failure, timeout. */
   danger: BRAND.colorDanger,
-  dangerText: BRAND.colorDanger,
+  dangerText: BRAND.colorOnDanger,
   /** Waiting for Soroban finality. */
   waiting: BRAND.colorTierBeta,
   /** The run settled and the board is confirmed. */

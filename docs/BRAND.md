@@ -58,12 +58,13 @@ an error) would misrepresent it as something broken.
 ### Error and danger
 
 The red hue reserved above for error states and failure surfaces (RPC failures, friendbot failures,
-timeouts). Kept distinct from the maturity tiers so failure never collides with normal lifecycle
-states.
+timeouts), plus its on-danger text companion. Kept distinct from the maturity tiers so failure never
+collides with normal lifecycle states.
 
 | Token | Light mode | Dark mode | Contrast on own bg |
 |---|---|---|---|
-| `color-danger` | `#D2503C` | `#F2A79A` | 4.24:1 / 9.71:1 |
+| `color-danger` | `#CA4D3A` | `#F2A79A` | 4.53:1 / 9.71:1 |
+| `color-on-danger` | `#FFFFFF` | `#14100D` | 4.53:1 / 9.71:1 |
 
 ## Typography
 
