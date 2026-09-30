@@ -77,3 +77,9 @@ name = "season_ladder"
 category = "other"
 maturity = "canonical"
 cougr_features = ["standards"]
+
+[example.account_kernel_game]
+name = "account_kernel_game"
+category = "other"
+maturity = "canonical"
+cougr_features = ["session-auth", "accounts"]
