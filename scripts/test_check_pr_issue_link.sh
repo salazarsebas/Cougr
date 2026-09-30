@@ -108,6 +108,15 @@ run_case "URL containing # but no keyword" \
 run_case "bare issue mention '#42' without keyword" \
   "This relates to #42 from the backlog."  1
 
+run_case "keyword embedded in 'prefix' ('prefix #1' must not match)" \
+  "This is a prefix #1 change with no real closing keyword."  1
+
+run_case "keyword embedded in 'disclose' ('disclose #1' must not match)" \
+  "We need to disclose #1 detail here."  1
+
+run_case "keyword embedded in 'unresolved' ('unresolved #5' must not match)" \
+  "There are unresolved #5 comments to address."  1
+
 # Note: the check is line-based and does not exclude fenced code blocks;
 # a closing keyword inside a code block will match. This is documented
 # behaviour – it is an unlikely edge case and adding complexity to exclude

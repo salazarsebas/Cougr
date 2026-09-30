@@ -73,8 +73,13 @@ fi
 #   followed by an optional <owner>/<repo> prefix
 #   then #<digits>
 #
-# The POSIX ERE pattern used with grep -iE:
-PATTERN='(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]*(([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)?#[0-9]+)'
+# The POSIX ERE pattern used with grep -iE.
+#
+# The leading (^|[^A-Za-z]) anchor ensures the keyword is not preceded by a
+# letter, so embedded occurrences such as "prefix", "disclose", "unresolved"
+# are not treated as closing references.  The anchor group is non-capturing
+# for the purposes of the human-readable output produced by grep -iEo.
+PATTERN='(^|[^A-Za-z])(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]*(([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)?#[0-9]+)'
 
 # ---------------------------------------------------------------------------
 # Check

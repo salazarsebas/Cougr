@@ -9,7 +9,11 @@ on:
     branches: [main, develop]
 
 concurrency:
-  group: pr-issue-link-${{ github.ref }}
+  # Key on the PR number so concurrent runs for the same PR cancel each other
+  # but runs for different PRs are independent.  github.ref is the base branch
+  # for pull_request_target, which would cause one PR to cancel the check on
+  # every other open PR targeting the same branch.
+  group: pr-issue-link-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -37,7 +41,14 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Make scripts executable
-        run: chmod +x scripts/check_pr_issue_link.sh
+        run: chmod +x scripts/check_pr_issue_link.sh scripts/test_check_pr_issue_link.sh
+
+      - name: Run parser test suite
+        # Validates check_pr_issue_link.sh in CI so regressions are caught on
+        # every PR (resolves issue #380).  This is a visibility check – it is
+        # not a required status check, so a maintainer can still merge when
+        # necessary.
+        run: bash scripts/test_check_pr_issue_link.sh
 
       - name: Check PR body for closing-issue reference
         env:
