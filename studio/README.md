@@ -111,6 +111,28 @@ npm run render:fixtures                   # writes out/<id>.html and out/<id>.sv
 
 `out/` is gitignored; it is an artifact for a reviewer, not a source file.
 
+## Running with Real Services
+
+To execute the play loop against a real testnet session and friendbot funding:
+
+1. **Deploy `studio/server`**: Ensure the service is running locally or on a testnet endpoint.
+2. **Set environment variables**:
+   ```sh
+   export USE_REAL_SERVICES=true
+   export RPC_URL=YOUR_TESTNET_RPC_URL
+   export FRIENDBOT_URL=YOUR_TESTNET_FRIENDBOT_URL
+   ```
+3. **Run the test suite**:
+   ```sh
+   cd studio && npx vitest run tests/play-loop.spec.ts
+   ```
+
+### Notes
+- The real-service path requires a running `studio/server` instance.
+- Transient RPC errors are retried with exponential backoff.
+- Finality waits are enforced for real testnet transactions.
+
+
 ## Layout
 
 ```
