@@ -47,7 +47,7 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test decoders
+      - name: Test
         run: npm test
 
       - name: Build

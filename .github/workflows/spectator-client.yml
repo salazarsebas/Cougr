@@ -1,0 +1,57 @@
+name: Spectator Replay Client CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'clients/spectator/**'
+      - 'packages/sdk-events/**'
+      - '.github/workflows/spectator-client.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'clients/spectator/**'
+      - 'packages/sdk-events/**'
+      - '.github/workflows/spectator-client.yml'
+
+concurrency:
+  group: spectator-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spectator:
+    name: Build and test spectator replay client
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          check-latest: true
+
+      - name: Upgrade npm
+        run: npm install --global npm@11
+
+      - name: Build sdk-events dependency
+        working-directory: packages/sdk-events
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install spectator client dependencies
+        working-directory: clients/spectator
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        working-directory: clients/spectator
+        run: npm run typecheck
+
+      - name: Unit tests
+        working-directory: clients/spectator
+        run: npm test
+
+      - name: Production build
+        working-directory: clients/spectator
+        run: npm run build

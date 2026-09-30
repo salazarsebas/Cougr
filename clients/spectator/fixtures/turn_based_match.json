@@ -1,0 +1,318 @@
+{
+  "metadata": {
+    "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+    "gameType": "turn-based",
+    "entityId": 1,
+    "description": "Recorded Soroban RPC events for a 5-move winning Tic-Tac-Toe match"
+  },
+  "richStorage": {
+    "players:1": {
+      "playerX": "GBALICE7777777777777777777777777777777777777777777777777",
+      "playerO": "GBBOB888888888888888888888888888888888888888888888888888"
+    },
+    "board:1:100": {
+      "cells": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "board:1:101": {
+      "cells": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "board:1:102": {
+      "cells": [
+        1,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "board:1:103": {
+      "cells": [
+        1,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "board:1:104": {
+      "cells": [
+        1,
+        1,
+        0,
+        0,
+        2,
+        2,
+        0,
+        0,
+        0
+      ]
+    },
+    "board:1:105": {
+      "cells": [
+        1,
+        1,
+        1,
+        0,
+        2,
+        2,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "events": [
+    {
+      "type": "contract",
+      "ledger": 100,
+      "ledgerClosedAt": "2026-09-29T10:00:00Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "100-01",
+      "pagingToken": "100-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1000000000000000000000000000000000000000000000000000000000000001",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANzZXQA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkBAAAAAAAAAAAAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+    },
+    {
+      "type": "contract",
+      "ledger": 100,
+      "ledgerClosedAt": "2026-09-29T10:00:00Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "100-02",
+      "pagingToken": "100-02",
+      "inSuccessfulContractCall": true,
+      "txHash": "1000000000000000000000000000000000000000000000000000000000000001",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAdwbGF5ZXJzAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 100,
+      "ledgerClosedAt": "2026-09-29T10:00:00Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "100-03",
+      "pagingToken": "100-03",
+      "inSuccessfulContractCall": true,
+      "txHash": "1000000000000000000000000000000000000000000000000000000000000001",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAVib2FyZAAAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 101,
+      "ledgerClosedAt": "2026-09-29T10:00:05Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "101-01",
+      "pagingToken": "101-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1010000000000000000000000000000000000000000000000000000000000002",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANzZXQA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkAAAAAAQAAAAAAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+    },
+    {
+      "type": "contract",
+      "ledger": 101,
+      "ledgerClosedAt": "2026-09-29T10:00:05Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "101-02",
+      "pagingToken": "101-02",
+      "inSuccessfulContractCall": true,
+      "txHash": "1010000000000000000000000000000000000000000000000000000000000002",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAVib2FyZAAAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 102,
+      "ledgerClosedAt": "2026-09-29T10:00:10Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "102-01",
+      "pagingToken": "102-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1020000000000000000000000000000000000000000000000000000000000003",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANzZXQA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkBAAAAAgAAAAAAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+    },
+    {
+      "type": "contract",
+      "ledger": 102,
+      "ledgerClosedAt": "2026-09-29T10:00:10Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "102-02",
+      "pagingToken": "102-02",
+      "inSuccessfulContractCall": true,
+      "txHash": "1020000000000000000000000000000000000000000000000000000000000003",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAVib2FyZAAAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 103,
+      "ledgerClosedAt": "2026-09-29T10:00:15Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "103-01",
+      "pagingToken": "103-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1030000000000000000000000000000000000000000000000000000000000004",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANzZXQA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkAAAAAAwAAAAAAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+    },
+    {
+      "type": "contract",
+      "ledger": 103,
+      "ledgerClosedAt": "2026-09-29T10:00:15Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "103-02",
+      "pagingToken": "103-02",
+      "inSuccessfulContractCall": true,
+      "txHash": "1030000000000000000000000000000000000000000000000000000000000004",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAVib2FyZAAAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 104,
+      "ledgerClosedAt": "2026-09-29T10:00:20Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "104-01",
+      "pagingToken": "104-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1040000000000000000000000000000000000000000000000000000000000005",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANzZXQA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkBAAAABAAAAAAAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+    },
+    {
+      "type": "contract",
+      "ledger": 104,
+      "ledgerClosedAt": "2026-09-29T10:00:20Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "104-02",
+      "pagingToken": "104-02",
+      "inSuccessfulContractCall": true,
+      "txHash": "1040000000000000000000000000000000000000000000000000000000000005",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAVib2FyZAAAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 105,
+      "ledgerClosedAt": "2026-09-29T10:00:25Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "105-01",
+      "pagingToken": "105-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1050000000000000000000000000000000000000000000000000000000000006",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANzZXQA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkAAAAABQAAAAEAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+    },
+    {
+      "type": "contract",
+      "ledger": 105,
+      "ledgerClosedAt": "2026-09-29T10:00:25Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "105-02",
+      "pagingToken": "105-02",
+      "inSuccessfulContractCall": true,
+      "txHash": "1050000000000000000000000000000000000000000000000000000000000006",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAARyaWNo",
+        "AAAADwAAAAVib2FyZAAAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    },
+    {
+      "type": "contract",
+      "ledger": 106,
+      "ledgerClosedAt": "2026-09-29T10:00:30Z",
+      "contractId": "CC7456F6TURNEVENTSPECTATORCONTRACTTESTNETEXAMPLE99",
+      "id": "106-01",
+      "pagingToken": "106-01",
+      "inSuccessfulContractCall": true,
+      "txHash": "1060000000000000000000000000000000000000000000000000000000000007",
+      "topic": [
+        "AAAADwAAAAVDT1VHUgAAAA==",
+        "AAAADwAAAANkZWwA",
+        "AAAADwAAAAZ0dXJuc3QAAA=="
+      ],
+      "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+    }
+  ]
+}

@@ -55,6 +55,17 @@ Green/amber/purple was chosen over green/amber/red because red is already claime
 states in most UI conventions; reusing it for "Experimental" (which is a normal, allowed state, not
 an error) would misrepresent it as something broken.
 
+### Error and danger
+
+The red hue reserved above for error states and failure surfaces (RPC failures, friendbot failures,
+timeouts), plus its on-danger text companion. Kept distinct from the maturity tiers so failure never
+collides with normal lifecycle states.
+
+| Token | Light mode | Dark mode | Contrast on own bg |
+|---|---|---|---|
+| `color-danger` | `#CA4D3A` | `#F2A79A` | 4.53:1 / 9.71:1 |
+| `color-on-danger` | `#FFFFFF` | `#14100D` | 4.53:1 / 9.71:1 |
+
 ## Typography
 
 One interface/documentation typeface, one monospace, both system-first - consistent with the CSP

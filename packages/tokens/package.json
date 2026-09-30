@@ -1,6 +1,6 @@
 {
   "name": "cougr-tokens",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cougr design tokens: the single versioned source for color, type, spacing, radius, and logo values shared by the documentation site and the showcase.",
   "type": "module",
   "main": "./dist/tokens.js",

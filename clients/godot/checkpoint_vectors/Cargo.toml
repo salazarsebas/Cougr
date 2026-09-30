@@ -1,0 +1,11 @@
+[package]
+name = "cougr-godot-checkpoint-vectors"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88.0"
+publish = false
+description = "Internal XDR cross-check vectors for the Cougr checkpoint Godot addon - not published"
+license = "MIT"
+
+[dependencies]
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }

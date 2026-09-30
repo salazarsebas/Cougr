@@ -3,6 +3,16 @@
 All notable changes to `cougr-tokens`. This package versions independently of `cougr-core`, per
 the policy in [README.md](./README.md#versioning-policy).
 
+## 1.1.0
+
+### Added
+
+- **`color-danger`**: error and danger token (`#CA4D3A` light, `#F2A79A` dark), promoting the
+  RPC- and friendbot-failure colors from Studio to the shared brand palette with 4.53:1 light and
+  9.71:1 dark contrast measurements meeting WCAG AA
+- **`color-on-danger`**: on-danger text companion (`#FFFFFF` light, `#14100D` dark) for text
+  and iconography on danger surfaces, with 4.53:1 light and 9.71:1 dark contrast on `color-danger`
+
 ## 1.0.0
 
 ### Added

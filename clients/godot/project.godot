@@ -1,0 +1,15 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+
+config_version=5
+
+[application]
+
+config/name="Cougr Godot Client"
+config/features=PackedStringArray("4.4")
+run/main_scene="res://sample_checkpoint_scene.tscn"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

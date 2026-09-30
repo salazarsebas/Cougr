@@ -195,3 +195,111 @@ fn generated_projects_pass_cargo_test() {
         assert!(status.success(), "`{template}` failed `cargo test`");
     }
 }
+
+// ---------------------------------------------------------------------------
+// cougr check - cdylib crate-type tests
+// ---------------------------------------------------------------------------
+
+/// Helper: generate a fresh project and return its path inside the TempDir.
+/// Also returns the TempDir so it is kept alive for the duration of the test.
+fn generate_project(template: &str) -> (tempfile::TempDir, std::path::PathBuf) {
+    let dir = tempfile::tempdir().unwrap();
+    let out = generate("demo", template, dir.path());
+    assert!(
+        out.status.success(),
+        "generate failed for {template}: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let project = dir.path().join("demo");
+    (dir, project)
+}
+
+/// `cougr check --path <project>` must pass for every template as generated.
+#[test]
+fn check_passes_for_every_template_with_default_cargo_toml() {
+    for template in TEMPLATES {
+        let (_dir, project) = generate_project(template);
+
+        let out = Command::new(env!("CARGO_BIN_EXE_cougr"))
+            .args(["check", "--path"])
+            .arg(&project)
+            .output()
+            .unwrap();
+
+        assert!(
+            out.status.success(),
+            "`cougr check` failed for template `{template}` (unmodified Cargo.toml):\n{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+}
+
+/// `cougr check` must fail with a clear message when crate-type is removed from [lib].
+#[test]
+fn check_fails_when_cdylib_crate_type_is_removed() {
+    let (_dir, project) = generate_project("starter");
+    let cargo_toml_path = project.join("Cargo.toml");
+
+    // Remove the crate-type line so [lib] exists but has no cdylib.
+    let original = std::fs::read_to_string(&cargo_toml_path).unwrap();
+    let patched = original
+        .lines()
+        .filter(|l| !l.contains("crate-type"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    std::fs::write(&cargo_toml_path, patched).unwrap();
+
+    let out = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["check", "--path"])
+        .arg(&project)
+        .output()
+        .unwrap();
+
+    assert!(
+        !out.status.success(),
+        "`cougr check` should have failed after removing crate-type but it succeeded"
+    );
+
+    let message = String::from_utf8_lossy(&out.stderr).to_string();
+    assert!(
+        message.contains("cdylib"),
+        "error message must mention `cdylib`; got: {message}"
+    );
+    assert!(
+        message.contains("stellar contract build") || message.contains(".wasm"),
+        "error message should explain why cdylib is needed; got: {message}"
+    );
+}
+
+/// `cougr check` must fail with a clear message when the entire [lib] section is removed.
+#[test]
+fn check_fails_when_lib_section_is_removed_entirely() {
+    let (_dir, project) = generate_project("starter");
+    let cargo_toml_path = project.join("Cargo.toml");
+
+    // Strip out the [lib] section and its crate-type line.
+    let original = std::fs::read_to_string(&cargo_toml_path).unwrap();
+    let patched = original
+        .lines()
+        .filter(|l| !l.trim_start().starts_with("[lib]") && !l.contains("crate-type"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    std::fs::write(&cargo_toml_path, patched).unwrap();
+
+    let out = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["check", "--path"])
+        .arg(&project)
+        .output()
+        .unwrap();
+
+    assert!(
+        !out.status.success(),
+        "`cougr check` should have failed after removing [lib] section but it succeeded"
+    );
+
+    let message = String::from_utf8_lossy(&out.stderr).to_string();
+    assert!(
+        message.contains("cdylib"),
+        "error message must mention `cdylib`; got: {message}"
+    );
+}

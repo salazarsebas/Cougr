@@ -27,49 +27,13 @@ use it.
 
 ## Quick start
 
-```ts
-import {
-  cougrEventFilter,
-  createGetEvents,
-  pageCougrEvents,
-  parseCursor,
-} from 'cougr-sdk-events';
+See [`examples/walkthrough.ts`](examples/walkthrough.ts) for a fully runnable
+example that walks the committed fixture data through every step: building a
+topic filter, paging with a persisted cursor, handling all three event families,
+and resolving a rich-component follow-up read with a fake reader.
 
-const rpcUrl = 'https://soroban-testnet.stellar.org';
-const contractId = 'C...YOUR_CONTRACT';
-const getEvents = createGetEvents({ url: rpcUrl });
-
-const cursor = parseCursor(localStorage.getItem('cougr-cursor') ?? 'null');
-const filters = [cougrEventFilter({ contractIds: [contractId] })];
-
-for await (const page of pageCougrEvents(getEvents, {
-  filters,
-  startLedger: 1_000_000,
-  cursor,               // resume where the last run stopped
-})) {
-  for (const update of page.updates) {
-    switch (update.family) {
-      case 'set':
-        // update.data is the serialized component bytes; decode with the
-        // component's own field layout.
-        applyComponent(update.entityId, update.componentType, update.data);
-        break;
-      case 'del':
-        removeComponent(update.entityId, update.componentType);
-        break;
-      case 'rich':
-        // update.requiresFollowUpRead === true and there is no `data` field.
-        // See "Why a rich event needs a follow-up read" below.
-        scheduleRichRead(update);
-        break;
-    }
-  }
-  localStorage.setItem('cougr-cursor', JSON.stringify(page.cursor));
-}
-```
-
-`page.cursor` is `{ pagingToken, ledger }`. Persist it after every page; the
-next run resumes with the RPC `cursor` parameter.
+The example is executed by `test/example.test.ts` on every CI run, so it cannot
+drift from the real API.
 
 ## Topic filters
 

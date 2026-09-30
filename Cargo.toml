@@ -2,6 +2,7 @@
 members = [
     ".",
     "cli",
+    "clients/godot/checkpoint_vectors",
     "internal/cougr-core-circuits",
     "internal/cougr-core-session",
     "internal/cougr-core-test",
