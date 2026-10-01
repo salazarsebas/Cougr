@@ -39,7 +39,7 @@ export class CougrClient {
     }
     
     // 2. Assemble
-    const assembledTx = SorobanRpc.assembleTransaction(tx, this.networkPassphrase, simResult).build();
+    const assembledTx = SorobanRpc.assembleTransaction(tx, simResult).build();
     
     // 3. Sign using injected signer
     const signedTxXdr = await signer.sign(assembledTx.toXDR());
