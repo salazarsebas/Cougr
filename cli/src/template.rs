@@ -83,6 +83,8 @@ pub enum Template {
     HiddenInfo,
     /// Approve a session once, then play without wallet prompts (from `session_arena`).
     SessionAuth,
+    /// Partial state writes with StorageWorld dirty-tracking (from new template).
+    Incremental,
 }
 
 impl Template {
@@ -93,6 +95,7 @@ impl Template {
             Template::TurnBased => "turn-based",
             Template::HiddenInfo => "hidden-info",
             Template::SessionAuth => "session-auth",
+            Template::Incremental => "incremental",
         }
     }
 
@@ -103,6 +106,7 @@ impl Template {
             Template::TurnBased => "tic_tac_toe",
             Template::HiddenInfo => "hidden_hand",
             Template::SessionAuth => "session_arena",
+            Template::Incremental => "spawn_and_move",
         }
     }
 
@@ -113,6 +117,7 @@ impl Template {
             Template::TurnBased => "a two-player turn-based board game on Soroban",
             Template::HiddenInfo => "a hidden-information game with ZK-verified deals on Soroban",
             Template::SessionAuth => "a session-key game loop with no per-move wallet prompts",
+            Template::Incremental => "two players set scores with StorageWorld dirty-tracking",
         }
     }
 
@@ -201,11 +206,12 @@ fn output_path(relative: &str) -> String {
 mod tests {
     use super::*;
 
-    const ALL: [Template; 4] = [
+    const ALL: [Template; 5] = [
         Template::Starter,
         Template::TurnBased,
         Template::HiddenInfo,
         Template::SessionAuth,
+        Template::Incremental,
     ];
 
     /// Truncate a semver string to its `major.minor` prefix.
@@ -331,11 +337,11 @@ mod tests {
         assert!(lib.contents.contains("pub struct DungeonCrawl;"));
     }
 
-    #[test]
-    fn template_ids_are_stable() {
+#[test]
+fn template_ids_are_stable() {
         assert_eq!(
             ALL.map(Template::id),
-            ["starter", "turn-based", "hidden-info", "session-auth"]
+            ["starter", "turn-based", "hidden-info", "session-auth", "incremental"]
         );
     }
 }

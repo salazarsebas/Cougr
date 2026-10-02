@@ -39,9 +39,40 @@ same code the framework's own reference projects run.
 | `turn-based` | `examples/tic_tac_toe` | Two players alternating on a board, with rich `Address`/`Vec` components |
 | `hidden-info` | `examples/hidden_hand` | Hidden hands verified with Groth16 proofs via `circuits::hidden_cards` |
 | `session-auth` | `examples/session_arena` | Approve a session once, play without wallet prompts, fall back to owner auth on expiry |
+| `incremental` | `spawn_and_move` | Two players set scores with `StorageWorld` dirty-tracking; only changed entities are rewritten on `flush` |
 
 Templates are embedded in the binary at compile time, so `cougr new` works
 offline.
+
+| Template | Based on | What you get |
+| --- | --- | --- |
+| `starter` | `examples/spawn_and_move` | Spawn entities and move them around a 2D world, with observed components emitting indexed events |
+| `turn-based` | `examples/tic_tac_toe` | Two players alternating on a board, with rich `Address`/`Vec` components |
+| `hidden-info` | `examples/hidden_hand` | Hidden hands verified with Groth16 proofs via `circuits::hidden_cards` |
+| `session-auth` | `examples/session_arena` | Approve a session once, play without wallet prompts, fall back to owner auth on expiry |
+| `incremental` | `spawn_and_move` | Two players set scores with `StorageWorld` dirty-tracking; only changed entities are rewritten on `flush` |
+
+### When to stay on `SimpleWorld` instead
+
+The `SimpleWorld` template is appropriate when:
+
+- Your game state fits in a single instance-storage write per call - the overhead of
+  per-entity persistent storage isn't justified.
+- You have many entities that all change together frequently - `SimpleWorld` writes
+  the whole world in one operation, which can be more efficient than multiple partial
+  writes.
+- You need rich query capabilities ( `get_entities_with_component`, `table_index`,
+  `all_index`) that `StorageWorld` doesn't support natively.
+- Your components are mostly observed (emit indexer events) rather than read back
+  through contract calls.
+
+The `incremental` template (`StorageWorld`) is appropriate when:
+
+- You have a small number of entities (2-10) and only a subset change per turn.
+- Gas cost matters - partial writes to persistent storage are cheaper than writing
+  the entire world state each call.
+- You want to prove that untouched entities are NOT rewritten on `flush()`.
+- You can accept the overhead of per-entity keys and dirty-tracking metadata.
 
 ## `cougr export`
 
