@@ -1,0 +1,59 @@
+name: Godot Checkpoint Client
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'clients/godot/**'
+      - '.github/workflows/godot-checkpoint-client.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'clients/godot/**'
+      - '.github/workflows/godot-checkpoint-client.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: godot-checkpoint-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vectors:
+    name: Checkpoint payload vectors
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      # The Rust half rebuilds both invocations through soroban_sdk and asserts
+      # the hex that clients/godot/addons/cougr_checkpoint pins. Deliberately no
+      # clippy gate here: this crate is an internal cross-check for the addon,
+      # not part of the published workspace surface, so this workflow runs only
+      # the tests that decide whether the two encoders still agree.
+      - name: Rust vectors
+        working-directory: clients/godot/checkpoint_vectors
+        run: cargo test -- --nocapture
+
+      # Pinned so the byte-level checks cannot move under the addon. Headless, so
+      # the runner needs no display server and no editor UI.
+      - name: Install Godot
+        env:
+          GODOT_VERSION: 4.4.1-stable
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q "Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          sudo mv "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+          godot --version
+
+      - name: GDScript vectors
+        working-directory: clients/godot
+        run: godot --headless --path . --script res://addons/cougr_checkpoint/tests/run_tests.gd

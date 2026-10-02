@@ -15,8 +15,11 @@ use soroban_sdk::{contracttype, Address, Env, Vec};
 /// simpler than a dynamic entity population.
 pub const GAME_ENTITY: u32 = 1;
 
-/// Number of cells on the board.
-pub const CELL_COUNT: u32 = 9;
+/// Match rules selected at export time; `cougr new` uses the 3x3 default.
+pub const BOARD_WIDTH: u32 = {{board_width}};
+pub const BOARD_HEIGHT: u32 = {{board_height}};
+pub const WIN_LENGTH: u32 = {{win_length}};
+pub const CELL_COUNT: u32 = BOARD_WIDTH * BOARD_HEIGHT;
 
 // ─── Cell markers ─────────────────────────────────────────────────────────────
 

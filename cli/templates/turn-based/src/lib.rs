@@ -1,7 +1,7 @@
 //! {{crate_name}} - a Cougr game contract generated from the `{{template_id}}` template.
 //!
-//! Two players alternate placing marks on a 3×3 board until one of them lines
-//! up three or the board fills. It is the reference shape for any turn-based
+//! Two players alternate placing marks on a configured board until one lines
+//! up {{win_length}} or the board fills. It is the reference shape for any turn-based
 //! game: one match per contract instance, an explicit turn owner, and moves
 //! validated before they are written.
 //!
@@ -76,7 +76,7 @@ impl {{ContractName}} {
         Self::read_state(&env, &world)
     }
 
-    /// Place the caller's mark at `position` (`0`–`8`).
+    /// Place the caller's mark at a zero-based, row-major cell index.
     ///
     /// Returns `success: false` with a reason code rather than panicking, so a
     /// client can show the rejection without losing the current state.

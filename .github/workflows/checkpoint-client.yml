@@ -1,0 +1,47 @@
+name: Checkpoint Web Client CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'clients/checkpoint-web/**'
+      - '.github/workflows/checkpoint-client.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'clients/checkpoint-web/**'
+      - '.github/workflows/checkpoint-client.yml'
+
+concurrency:
+  group: checkpoint-client-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client:
+    name: Build and test checkpoint web client
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: clients/checkpoint-web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          check-latest: true
+          cache: npm
+          cache-dependency-path: clients/checkpoint-web/package.json
+
+      - name: Upgrade npm
+        run: npm install --global npm@11
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build

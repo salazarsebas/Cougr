@@ -1,0 +1,19 @@
+[package]
+name = "cougr-sdk-events-fixtures"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# This crate lives inside the repository but deliberately outside the root
+# Cargo workspace. It is a fixture generator, not part of the published ECS.
+# The empty `[workspace]` table keeps it out of `cargo clippy -D warnings` and
+# `cargo fmt --check`, so the Rust-only gate never sees it.
+[workspace]
+
+[[bin]]
+name = "generate-fixtures"
+path = "src/main.rs"
+
+[dependencies]
+cougr-core = { path = "../../.." }
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }

@@ -64,7 +64,7 @@ pub use recovery::{
 };
 pub use replay::ReplayProtection;
 pub use secp256r1_auth::{verify_secp256r1, Secp256r1Key, Secp256r1Storage};
-pub use session_builder::SessionBuilder;
+pub use session_builder::{derive_session_key_id, SessionBuilder};
 pub use storage::SessionStorage;
 pub use traits::{CougrAccount, IntentAccount, SessionKeyProvider};
 pub use types::{AccountCapabilities, GameAction, SessionKey, SessionScope};

@@ -6,5 +6,10 @@ config_version=5
 
 [application]
 
-config/name="Cougr Turn-Based Client"
-config/features=PackedStringArray("4.2")
+config/name="Cougr Godot Client"
+config/features=PackedStringArray("4.4")
+run/main_scene="res://sample_checkpoint_scene.tscn"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

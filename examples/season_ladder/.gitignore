@@ -1,0 +1,19 @@
+# Build artifacts
+target/
+
+# Soroban test snapshots
+test_snapshots/
+
+# Never commit compiled contracts
+*.wasm
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

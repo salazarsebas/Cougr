@@ -1,0 +1,29 @@
+{
+  "name": "cougr-sdk-session",
+  "version": "0.1.0",
+  "description": "TypeScript session client that mirrors cougr-core's SessionBuilder, expiry, and replay nonce rules and matches the Rust engine against committed cross-language vectors.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vectors": "./vectors/session-vectors.json"
+  },
+  "files": [
+    "src/",
+    "vectors/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/session.test.ts test/vectors.test.ts"
+  },
+  "keywords": [
+    "cougr",
+    "soroban",
+    "session-keys",
+    "replay-protection",
+    "stellar"
+  ],
+  "engines": {
+    "node": ">=22.6"
+  },
+  "license": "MIT"
+}

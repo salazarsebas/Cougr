@@ -12,8 +12,11 @@ pub enum CliError {
     /// The project name is not usable as a Rust crate name.
     InvalidName { name: String, reason: String },
 
-    /// The target directory already exists.
-    TargetExists { path: PathBuf },
+    /// The studio turn-based configuration is malformed or outside its bounds.
+    InvalidConfig { reason: String },
+
+    /// The target path already exists (as a file or a directory).
+    TargetExists { path: PathBuf, is_file: bool },
 
     /// A filesystem operation failed.
     Io {
@@ -59,8 +62,12 @@ impl CliError {
                  (for example: `my-game` or `dungeon_crawl`)"
                     .to_string(),
             ),
-            CliError::TargetExists { path } => Some(format!(
-                "pick a different name, or remove `{}` first",
+            CliError::InvalidConfig { .. } => Some(
+                "use board_width and board_height in 3..=8, and win_length in 3..=min(width, height)".to_string(),
+            ),
+            CliError::TargetExists { path, is_file } => Some(format!(
+                "pick a different name, or remove the {} `{}` first",
+                if *is_file { "file" } else { "directory" },
                 path.display()
             )),
             CliError::Io { .. } => None,
@@ -87,9 +94,13 @@ impl fmt::Display for CliError {
             CliError::InvalidName { name, reason } => {
                 write!(f, "`{name}` is not a valid project name: {reason}")
             }
-            CliError::TargetExists { path } => {
-                write!(f, "target directory `{}` already exists", path.display())
-            }
+            CliError::InvalidConfig { reason } => write!(f, "invalid turn-based config: {reason}"),
+            CliError::TargetExists { path, is_file } => write!(
+                f,
+                "target {} `{}` already exists",
+                if *is_file { "file" } else { "directory" },
+                path.display()
+            ),
             CliError::Io {
                 action,
                 path,

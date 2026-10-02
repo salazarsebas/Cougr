@@ -1,0 +1,41 @@
+{
+  "id": "7x6-win",
+  "description": "Connect Four-shaped board: 7 wide by 6 tall with a 4-in-a-row win. Proves the board is driven by config, not by a hard-coded 3×3 canvas, and that a non-square grid and a winLength that differs from both dimensions render correctly.",
+  "_source": "Board size from examples/connect_four and examples/checkers conventions; state shape from GameState.",
+  "config": {
+    "id": "connect_four",
+    "label": "Connect Four",
+    "board": { "width": 7, "height": 6 },
+    "winLength": 4,
+    "marks": { "1": "R", "2": "Y" },
+    "statusMap": { "inProgress": 0, "firstWins": 1, "secondWins": 2, "draw": 3 }
+  },
+  "state": {
+    "cells": [
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0,
+      0, 1, 1, 1, 1, 0, 0,
+      0, 2, 2, 2, 0, 0, 0,
+      0, 1, 2, 1, 2, 0, 0
+    ],
+    "status": 1,
+    "is_x_turn": false,
+    "move_count": 11
+  },
+  "run": {
+    "phase": "settled",
+    "txHash": "c6f0a9b2d5e8c1f4a7b0d3e6c9f2a5b8d1e4c7f0a3b6d9e2c5f8a1b4d7e0c3f6",
+    "elapsedMs": 7100,
+    "polls": 5
+  },
+  "expect": {
+    "rows": 6,
+    "cols": 7,
+    "cellCount": 42,
+    "filledCells": 11,
+    "statusLabel": "R wins",
+    "winningCells": [22, 23, 24, 25],
+    "terminal": true
+  }
+}

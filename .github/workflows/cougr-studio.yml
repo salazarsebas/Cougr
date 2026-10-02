@@ -1,0 +1,56 @@
+name: Cougr Studio
+
+# Path-scoped to the studio tree, on the pattern of .github/workflows/cougr-site.yml.
+# Rust-only changes must not trigger this workflow, and it deliberately does not
+# run the Rust `clippy -D warnings` gate — the studio is TypeScript/JavaScript
+# tooling, not a crate.
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'studio/**'
+      - 'packages/tokens/tokens.json'
+      - '.github/workflows/cougr-studio.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'studio/**'
+      - 'packages/tokens/tokens.json'
+      - '.github/workflows/cougr-studio.yml'
+
+concurrency:
+  group: cougr-studio-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  studio:
+    name: Test cougr-studio
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      # The studio resolves its colors from the shared design tokens package,
+      # whose dist/ is generated rather than committed. Zero dependencies, so
+      # this is a bare `node` call and no install step is needed anywhere here.
+      - name: Build shared design tokens
+        working-directory: ./packages/tokens
+        run: node build.js
+
+      # Checks that every recorded fixture is a legal TurnBasedConfig with a
+      # matching state, and that its declared expectations still match what the
+      # board computes. Runs before the tests so a bad fixture is reported as a
+      # fixture problem, not as a renderer failure.
+      - name: Validate recorded fixtures
+        working-directory: ./studio
+        run: node tools/validate-fixtures.js
+
+      - name: Run tests
+        working-directory: ./studio
+        run: node --test

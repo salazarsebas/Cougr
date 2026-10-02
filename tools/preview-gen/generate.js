@@ -31,6 +31,7 @@ const RENDERERS = {
   tic_tac_toe: './renderers/tic_tac_toe.js',
   checkers: './renderers/checkers.js',
   battleship: './renderers/battleship.js',
+  staked_tournament: './renderers/staked_tournament.js',
 };
 
 /**

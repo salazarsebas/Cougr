@@ -4,7 +4,7 @@
 //! examples use: it registers the contract in a fresh `Env`, mints player
 //! addresses, and pairs with `Scenario` to drive alternating turns.
 
-use crate::components::{DRAW, IN_PROGRESS, MARK_O, MARK_X, X_WINS};
+use crate::components::{BOARD_HEIGHT, BOARD_WIDTH, CELL_COUNT, DRAW, IN_PROGRESS, MARK_O, MARK_X, WIN_LENGTH, X_WINS};
 use crate::systems::{detect_status, validate_move, MoveError};
 use crate::{{ContractName}};
 use crate::{{ContractName}}Client;
@@ -34,7 +34,7 @@ fn init_game_starts_with_an_empty_board() {
     let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
 
     let state = client.get_state();
-    assert_eq!(state.cells.len(), 9);
+    assert_eq!(state.cells.len(), CELL_COUNT);
     assert!(state.cells.iter().all(|cell| cell == 0));
     assert_eq!(state.player_x, player_x);
     assert!(state.is_x_turn);
@@ -100,14 +100,15 @@ fn scenario_plays_a_winning_column_for_x() {
     let (harness, _, _) = started_game();
 
     // X takes the left column while O answers in the middle one.
-    let moves = [0u32, 1, 3, 4, 6];
     Scenario::new("x wins the left column")
         .players(2)
-        .turns(moves.len() as u32)
+        .turns(2 * WIN_LENGTH - 1)
         .run(&harness, |slot, turn, h| {
             let client = {{ContractName}}Client::new(h.env(), h.contract_id());
             let player = h.player(slot).clone();
-            let result = client.make_move(&player, &moves[turn.0 as usize]);
+            let row = turn.0 / 2;
+            let col = turn.0 % 2;
+            let result = client.make_move(&player, &(row * BOARD_WIDTH + col));
             assert!(result.success, "move {} was rejected", turn.0);
         });
 
@@ -123,16 +124,19 @@ fn moves_after_the_game_ends_are_rejected() {
     let (harness, player_x, player_o) = started_game();
     let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
 
-    for (index, position) in [0u32, 1, 3, 4, 6].iter().enumerate() {
-        let player = if index % 2 == 0 { &player_x } else { &player_o };
-        assert!(client.make_move(player, position).success);
+    for turn in 0..(2 * WIN_LENGTH - 1) {
+        let player = if turn % 2 == 0 { &player_x } else { &player_o };
+        let position = (turn / 2) * BOARD_WIDTH + turn % 2;
+        assert!(client.make_move(player, &position).success);
     }
 
+    let next_cell = (WIN_LENGTH - 1) * BOARD_WIDTH + 1;
+
     assert_eq!(
-        client.make_move(&player_o, &2).message,
+        client.make_move(&player_o, &next_cell).message,
         symbol_short!("gameover")
     );
-    assert!(!client.is_valid_move(&2));
+    assert!(!client.is_valid_move(&next_cell));
 }
 
 #[test]
@@ -152,10 +156,30 @@ fn reset_game_clears_the_board_and_keeps_the_players() {
 #[test]
 fn detect_status_reports_a_full_board_as_a_draw() {
     let env = Env::default();
-    // X O X / X O O / O X X - full board with no line.
-    let cells = soroban_sdk::vec![&env, 1, 2, 1, 1, 2, 2, 2, 1, 1];
+    let cells = if BOARD_WIDTH == 3 && BOARD_HEIGHT == 3 && WIN_LENGTH == 3 {
+        // X O X / X O O / O X X - full board with no line.
+        soroban_sdk::vec![&env, 1, 2, 1, 1, 2, 2, 2, 1, 1]
+    } else if BOARD_WIDTH == 5 && BOARD_HEIGHT == 4 && WIN_LENGTH == 4 {
+        // X X O O X / O O X X O / X O X O X / X O O X O.
+        soroban_sdk::vec![&env, 1, 1, 2, 2, 1, 2, 2, 1, 1, 2, 1, 2, 1, 2, 1, 1, 2, 2, 1, 2]
+    } else {
+        return;
+    };
 
-    assert_eq!(detect_status(&cells, 9), DRAW);
+    assert_eq!(detect_status(&cells, CELL_COUNT), DRAW);
+}
+
+#[test]
+fn configured_horizontal_line_wins() {
+    let (harness, player_x, player_o) = started_game();
+    let client = {{ContractName}}Client::new(harness.env(), harness.contract_id());
+    for col in 0..WIN_LENGTH {
+        assert!(client.make_move(&player_x, &col).success);
+        if col + 1 < WIN_LENGTH {
+            assert!(client.make_move(&player_o, &(BOARD_WIDTH + col)).success);
+        }
+    }
+    assert_eq!(client.get_state().status, X_WINS);
 }
 
 #[test]

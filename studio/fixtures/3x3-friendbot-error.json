@@ -1,0 +1,32 @@
+{
+  "id": "3x3-friendbot-error",
+  "description": "The sandbox account could not be funded on testnet, before any move was submitted. The board shows the untouched start position and the run panel explains that nothing was sent and nothing on chain changed.",
+  "_source": "Error path named in the issue: 'RPC or friendbot failures render an error, not a hang'.",
+  "config": {
+    "id": "tic_tac_toe",
+    "label": "Tic-tac-toe",
+    "board": { "width": 3, "height": 3 },
+    "winLength": 3,
+    "marks": { "1": "X", "2": "O" },
+    "statusMap": { "inProgress": 0, "firstWins": 1, "secondWins": 2, "draw": 3 }
+  },
+  "state": {
+    "cells": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "status": 0,
+    "is_x_turn": true,
+    "move_count": 0
+  },
+  "run": {
+    "phase": "error",
+    "errorKind": "friendbot",
+    "detail": "friendbot responded 429 Too Many Requests",
+    "txHash": null,
+    "elapsedMs": 900,
+    "polls": 0
+  },
+  "expect": {
+    "phase": "error",
+    "errorKind": "friendbot",
+    "statusLabel": "X to move"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "cougr-spectator-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Spectator and replay viewer client for Cougr turn-based games, consuming cougr-sdk-events",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "cougr-spectator": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.ts",
+    "start": "node --loader tsx src/cli.ts 2>/dev/null || node dist/cli.js 2>/dev/null || node src/cli.ts",
+    "replay": "node src/cli.ts"
+  },
+  "dependencies": {
+    "cougr-sdk-events": "file:../../packages/sdk-events"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "license": "MIT"
+}

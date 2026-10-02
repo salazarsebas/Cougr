@@ -1,0 +1,9 @@
+# Godot editor and import cache, regenerated on open or on a headless run.
+.godot/
+
+# Godot writes this when a project is opened in the editor.
+*.translation
+
+# Testnet keys are supplied through the environment and must never be committed.
+env.sh
+*.key

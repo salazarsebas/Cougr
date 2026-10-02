@@ -4,9 +4,10 @@
 //! to build and deploy a Cougr project are all present and meet the minimum
 //! versions specified in the workspace `Cargo.toml`.
 //!
-//! Each check reports **pass** or **fail** and, on failure, prints the exact
-//! command needed to fix the problem. The command exits 0 only when every
-//! check passes.
+//! Each check reports **pass**, **fail**, or **warn**, with remediation for
+//! failures and warnings. A failed rustup target query warns with rustup's
+//! diagnostic instead of reporting a missing target. Only failures cause a
+//! non-zero exit.
 //!
 //! This function is also called non-fatally from `cougr new` to surface
 //! environment problems before the developer discovers them at build time.
@@ -196,6 +197,25 @@ fn check_wasm_target() -> CheckResult {
     };
 
     let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    wasm_target_result(output.status.success(), &stdout, &stderr)
+}
+
+fn wasm_target_result(success: bool, stdout: &str, stderr: &str) -> CheckResult {
+    if !success {
+        let stderr = stderr.trim();
+        let detail = if stderr.is_empty() {
+            "rustup target list --installed failed without an error message".to_string()
+        } else {
+            format!("rustup target list --installed failed: {stderr}")
+        };
+        return CheckResult::warn(
+            "wasm32v1-none",
+            detail,
+            "Resolve the rustup error, then retry: rustup target list --installed",
+        );
+    }
+
     if stdout.lines().any(|l| l.trim() == WASM_TARGET) {
         CheckResult::pass("wasm32v1-none", format!("{WASM_TARGET} target installed"))
     } else {
@@ -378,6 +398,82 @@ impl std::error::Error for DoctorError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wasm_target_installed_passes() {
+        let result = wasm_target_result(
+            true,
+            "x86_64-unknown-linux-gnu\n  wasm32v1-none\n",
+            "an unrelated warning",
+        );
+
+        assert_eq!(result.name, WASM_TARGET);
+        match result.status {
+            CheckStatus::Pass(detail) => assert_eq!(detail, "wasm32v1-none target installed"),
+            status => panic!("expected Pass, got {status:?}"),
+        }
+    }
+
+    #[test]
+    fn wasm_target_missing_fails_with_install_command() {
+        let result =
+            wasm_target_result(true, "x86_64-unknown-linux-gnu\nwasm32v1-none-extra\n", "");
+
+        assert_eq!(result.name, WASM_TARGET);
+        match result.status {
+            CheckStatus::Fail { detail, fix } => {
+                assert_eq!(detail, "wasm32v1-none target is not installed");
+                assert_eq!(fix, "rustup target add wasm32v1-none");
+            }
+            status => panic!("expected Fail, got {status:?}"),
+        }
+    }
+
+    #[test]
+    fn wasm_target_query_failure_warns_with_rustup_error() {
+        let stderr = "error: no default toolchain configured\nhelp: run `rustup default stable`";
+        let result = wasm_target_result(false, "", stderr);
+
+        assert_eq!(result.name, WASM_TARGET);
+        assert!(!result.is_fail());
+        match result.status {
+            CheckStatus::Warn { detail, fix } => {
+                assert!(detail.contains(stderr));
+                assert!(!detail.contains("target is not installed"));
+                assert!(!fix.contains("rustup target add"));
+            }
+            status => panic!("expected Warn, got {status:?}"),
+        }
+    }
+
+    #[test]
+    fn wasm_target_query_failure_takes_precedence_over_stdout() {
+        let result = wasm_target_result(false, "wasm32v1-none\n", "error: target query failed");
+
+        match result.status {
+            CheckStatus::Warn { detail, .. } => {
+                assert!(detail.contains("error: target query failed"));
+            }
+            status => panic!("expected Warn, got {status:?}"),
+        }
+    }
+
+    #[test]
+    fn wasm_target_query_failure_without_stderr_is_actionable() {
+        let result = wasm_target_result(false, "", " \n");
+
+        match result.status {
+            CheckStatus::Warn { detail, fix } => {
+                assert_eq!(
+                    detail,
+                    "rustup target list --installed failed without an error message"
+                );
+                assert!(fix.contains("rustup target list --installed"));
+                assert!(!fix.contains("rustup target add"));
+            }
+            status => panic!("expected Warn, got {status:?}"),
+        }
+    }
 
     // ── parse_version ────────────────────────────────────────────────────────
 

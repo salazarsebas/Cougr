@@ -58,6 +58,8 @@ These are the maintained reference architectures. They are held to the full stan
 | `snake` | **Arcade (GameApp) / canonical** | Arcade loop, `GameApp` tick model, basic ECS | - |
 | `battleship` | **Hidden information / canonical** | Commit-reveal and selective state disclosure using `privacy::stable` | [preview.svg](./battleship/preview.svg) |
 | `guild_arena` | **Authentication & recovery / canonical** | Account abstraction, social recovery, multi-device authorization | - |
+| `season_ladder` | **Standards layer / canonical** | Season standings with integer-only ratings, `Ownable` admin, and a `Pausable` emergency stop | - |
+| `staked_tournament` | **Token escrow / canonical** | Independent match stakes, automatic bracket advancement, and no-show refunds | [preview.svg](./staked_tournament/preview.svg) |
 
 ### Transitional examples
 
@@ -111,6 +113,7 @@ Use examples by pattern, not only by genre:
 | Arcade / GameApp tick loop | `snake`, `asteroids`, `space_invaders` |
 | Turn-based logic | `tic_tac_toe`, `pokemon_mini`, `chess` |
 | Account abstraction & recovery | `guild_arena` |
+| Per-match token escrow and bracket advancement | `staked_tournament` |
 | Testing with `GameHarness` | `spawn_and_move`, `tic_tac_toe` (see `testutils` feature) |
 | Larger multi-entity loops | `asteroids`, `space_invaders`, `pac_man` |
 

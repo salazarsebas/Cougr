@@ -1,0 +1,44 @@
+{
+  "name": "cougr-sdk-events",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Typed decoder for Cougr COUGR component events (set, del, rich) returned by the Soroban RPC getEvents method.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fixtures/events.json": "./fixtures/events.json"
+  },
+  "files": [
+    "dist/",
+    "fixtures/events.json",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.ts",
+    "fixtures": "cargo run --quiet --manifest-path fixtures/Cargo.toml | node fixtures/build.mjs > fixtures/events.json"
+  },
+  "keywords": [
+    "cougr",
+    "stellar",
+    "soroban",
+    "events",
+    "ecs",
+    "sdk"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "typescript": "^5.7.2"
+  }
+}

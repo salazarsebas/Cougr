@@ -4,6 +4,7 @@
 
 ### Added
 
+- **`cougr_core::accounts::derive_session_key_id`** - deterministic session-key identifier derivation, so the Rust core and the TypeScript session client agree on session identity instead of re-deriving it off-chain
 - **`cougr_core::cors`** - CORS configuration validation and dynamic origin
   allowlist for HTTP gateways in front of a game contract: `CorsConfig`
   validates origins, methods, header names, and credential/wildcard

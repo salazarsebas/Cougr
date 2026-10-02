@@ -1,0 +1,34 @@
+name: ZK Dice Session Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/zk_dice_session/**'
+      - '!examples/zk_dice_session/**/*.md'
+      - 'src/circuits/**'
+      - 'src/accounts/**'
+      - 'src/session/**'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/zk_dice_session.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/zk_dice_session/**'
+      - '!examples/zk_dice_session/**/*.md'
+      - 'src/circuits/**'
+      - 'src/accounts/**'
+      - 'src/session/**'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/zk_dice_session.yml'
+
+concurrency:
+  group: zk-dice-session-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: ZK Dice Session Example CI
+      working_directory: examples/zk_dice_session

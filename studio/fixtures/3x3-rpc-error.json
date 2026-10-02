@@ -1,0 +1,32 @@
+{
+  "id": "3x3-rpc-error",
+  "description": "The move was submitted but the RPC read that follows it failed. The board keeps the last confirmed state and the run panel states the failure; it must not keep waiting.",
+  "_source": "Error path named in the issue: 'RPC or friendbot failures render an error, not a hang'.",
+  "config": {
+    "id": "tic_tac_toe",
+    "label": "Tic-tac-toe",
+    "board": { "width": 3, "height": 3 },
+    "winLength": 3,
+    "marks": { "1": "X", "2": "O" },
+    "statusMap": { "inProgress": 0, "firstWins": 1, "secondWins": 2, "draw": 3 }
+  },
+  "state": {
+    "cells": [1, 0, 0, 0, 2, 0, 0, 0, 0],
+    "status": 0,
+    "is_x_turn": true,
+    "move_count": 2
+  },
+  "run": {
+    "phase": "error",
+    "errorKind": "rpc",
+    "detail": "fetch failed: ECONNRESET contacting soroban-testnet RPC",
+    "txHash": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6071829a3b4c5d6e7f809",
+    "elapsedMs": 3100,
+    "polls": 2
+  },
+  "expect": {
+    "phase": "error",
+    "errorKind": "rpc",
+    "statusLabel": "X to move"
+  }
+}

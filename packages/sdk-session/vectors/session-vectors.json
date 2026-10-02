@@ -1,0 +1,118 @@
+{
+  "$comment": "Cross-language session vectors. The Rust side is pinned by tests/session_vectors.rs of salazarsebas/Cougr; the TypeScript side is asserted by packages/sdk-session/test/vectors.test.ts. Do not edit one side without the other.",
+  "source": "cougr_core::accounts::{SessionBuilder, SessionPolicy, SessionStorage, derive_session_key_id}",
+  "keyId": {
+    "inputs": {
+      "timestamp": 1735689600,
+      "sequence": 42,
+      "existingSessions": 1,
+      "scope": {
+        "allowedActions": ["move", "attack", "trade"],
+        "maxOperations": 200,
+        "expiresAt": 1735693200
+      }
+    },
+    "expectedHex": "00000000677485800000002a0000000100000003000000c80000000067749390"
+  },
+  "validSession": {
+    "scope": {
+      "allowedActions": ["move", "attack"],
+      "maxOperations": 2,
+      "expiresAt": 1735693200
+    },
+    "key": {
+      "createdAt": 1735689600,
+      "operationsUsed": 0,
+      "nextNonce": 0
+    },
+    "now": 1735689700,
+    "action": "move",
+    "nonce": 0,
+    "expected": {
+      "accepted": true,
+      "remainingOperations": 1,
+      "operationsUsed": 1,
+      "nextNonce": 1
+    }
+  },
+  "rejectedReplay": {
+    "scope": {
+      "allowedActions": ["move", "attack"],
+      "maxOperations": 2,
+      "expiresAt": 1735693200
+    },
+    "key": {
+      "createdAt": 1735689600,
+      "operationsUsed": 1,
+      "nextNonce": 1
+    },
+    "now": 1735689800,
+    "action": "move",
+    "nonce": 0,
+    "expected": {
+      "accepted": false,
+      "errorName": "NonceMismatch",
+      "errorCode": 37
+    }
+  },
+  "expiredSession": {
+    "scope": {
+      "allowedActions": ["move", "attack"],
+      "maxOperations": 2,
+      "expiresAt": 1735693200
+    },
+    "key": {
+      "createdAt": 1735689600,
+      "operationsUsed": 0,
+      "nextNonce": 0
+    },
+    "now": 1735693200,
+    "action": "move",
+    "nonce": 0,
+    "expected": {
+      "accepted": false,
+      "errorName": "SessionExpired",
+      "errorCode": 21
+    }
+  },
+  "actionNotAllowed": {
+    "scope": {
+      "allowedActions": ["move", "attack"],
+      "maxOperations": 2,
+      "expiresAt": 1735693200
+    },
+    "key": {
+      "createdAt": 1735689600,
+      "operationsUsed": 0,
+      "nextNonce": 0
+    },
+    "now": 1735689700,
+    "action": "dance",
+    "nonce": 0,
+    "expected": {
+      "accepted": false,
+      "errorName": "ActionNotAllowed",
+      "errorCode": 38
+    }
+  },
+  "budgetExceeded": {
+    "scope": {
+      "allowedActions": ["move", "attack"],
+      "maxOperations": 2,
+      "expiresAt": 1735693200
+    },
+    "key": {
+      "createdAt": 1735689600,
+      "operationsUsed": 2,
+      "nextNonce": 2
+    },
+    "now": 1735689700,
+    "action": "move",
+    "nonce": 2,
+    "expected": {
+      "accepted": false,
+      "errorName": "SessionBudgetExceeded",
+      "errorCode": 39
+    }
+  }
+}

@@ -1,0 +1,56 @@
+name: PR Issue Link Check
+
+# pull_request_target runs with write access to the base repo and has access
+# to the PR metadata (including the body) even for first-time contributors.
+# We do NOT check out untrusted code here – the script lives in the base repo.
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+    branches: [main, develop]
+
+concurrency:
+  # Key on the PR number so concurrent runs for the same PR cancel each other
+  # but runs for different PRs are independent.  github.ref is the base branch
+  # for pull_request_target, which would cause one PR to cancel the check on
+  # every other open PR targeting the same branch.
+  group: pr-issue-link-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-issue-link:
+    name: Closing-issue reference
+    runs-on: ubuntu-latest
+    # -----------------------------------------------------------------------
+    # Design decision: this is a VISIBILITY check, not a hard merge gate.
+    #
+    # The job exits with a non-zero code when no closing reference is found,
+    # which produces a visible failing check on the PR status panel.  Because
+    # this check is NOT listed as a required status check in branch protection,
+    # a maintainer can still merge a PR that fails it – for example, a
+    # housekeeping change that genuinely has no linked issue.
+    #
+    # To promote this to a hard gate, add "Closing-issue reference" to the
+    # required status checks list in the branch protection rule for `main`.
+    # -----------------------------------------------------------------------
+    steps:
+      - name: Checkout base branch (scripts only – no PR code executed)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          sparse-checkout: scripts/
+          sparse-checkout-cone-mode: false
+
+      - name: Make scripts executable
+        run: chmod +x scripts/check_pr_issue_link.sh scripts/test_check_pr_issue_link.sh
+
+      - name: Run parser test suite
+        # Validates check_pr_issue_link.sh in CI so regressions are caught on
+        # every PR (resolves issue #380).  This is a visibility check – it is
+        # not a required status check, so a maintainer can still merge when
+        # necessary.
+        run: bash scripts/test_check_pr_issue_link.sh
+
+      - name: Check PR body for closing-issue reference
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: echo "$PR_BODY" | bash scripts/check_pr_issue_link.sh

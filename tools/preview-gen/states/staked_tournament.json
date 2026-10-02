@@ -1,0 +1,10 @@
+{
+  "_source": "examples/staked_tournament/src/test.rs :: four_player_bracket_settles_each_match_independently",
+  "_description": "Completed four-player bracket; players 1 and 3 win the semifinals, then player 1 wins the final.",
+  "semifinals": [
+    { "players": ["Player 1", "Player 2"], "winner": "Player 1" },
+    { "players": ["Player 3", "Player 4"], "winner": "Player 3" }
+  ],
+  "final": { "players": ["Player 1", "Player 3"], "winner": "Player 1" },
+  "champion": "Player 1"
+}

@@ -1,0 +1,24 @@
+[package]
+name = "season-ladder"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Cougr standards example: a competitive season ladder with Ownable admin and a Pausable emergency stop"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = "25.1.0"
+cougr-core = "1.1.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+lto = true
+
+[workspace]

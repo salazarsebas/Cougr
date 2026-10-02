@@ -43,6 +43,28 @@ same code the framework's own reference projects run.
 Templates are embedded in the binary at compile time, so `cougr new` works
 offline.
 
+## `cougr export`
+
+```bash
+cougr export my-game --config turn-based.json --path ./projects
+cd projects/my-game
+cougr check
+cargo test
+stellar contract build
+```
+
+`turn-based.json` uses the studio `TurnBasedConfig` shape:
+
+```json
+{"board_width": 3, "board_height": 3, "win_length": 3}
+```
+
+Width and height must be 3 through 8; win length must be 3 through the
+smaller dimension. Invalid configurations fail before the project directory is
+created. Export uses the same embedded `turn-based` template, rendering and
+writer as `cougr new`, and refuses to overwrite an existing directory. The
+generated README and CLI output retain the same build and test next steps.
+
 ## `cougr add`
 
 ```bash
