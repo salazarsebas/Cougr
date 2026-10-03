@@ -1,0 +1,43 @@
+name: SDK Core
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-core/**'
+      - '.github/workflows/sdk-core.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/sdk-core/**'
+      - '.github/workflows/sdk-core.yml'
+
+concurrency:
+  group: sdk-core-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test sdk-core
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        working-directory: ./packages/sdk-core
+        run: npm install
+
+      - name: Build
+        working-directory: ./packages/sdk-core
+        run: npm run build
+
+      - name: Test
+        working-directory: ./packages/sdk-core
+        run: npm test
