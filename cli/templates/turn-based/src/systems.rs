@@ -39,6 +39,7 @@ pub fn mark_for_turn(turn: &TurnState) -> u32 {
 pub fn validate_move(
     board: &Board,
     turn: &TurnState,
+    config: &TurnBasedConfig,
     position: u32,
     is_player_x: bool,
     is_player_o: bool,
@@ -46,7 +47,7 @@ pub fn validate_move(
     if turn.status != IN_PROGRESS {
         return Err(MoveError::GameOver);
     }
-    if position >= CELL_COUNT {
+    if position >= config.board_width * config.board_height {
         return Err(MoveError::OutOfBounds);
     }
     if !is_player_x && !is_player_o {
@@ -62,9 +63,9 @@ pub fn validate_move(
 }
 
 /// Turn state after a legal move has been written to `cells`.
-pub fn advance(turn: &TurnState, cells: &Vec<u32>) -> TurnState {
+pub fn advance(turn: &TurnState, cells: &Vec<u32>, config: &TurnBasedConfig) -> TurnState {
     let move_count = turn.move_count + 1;
-    let status = detect_status(cells, move_count);
+    let status = detect_status(cells, move_count, config);
     TurnState {
         is_x_turn: if status == IN_PROGRESS {
             !turn.is_x_turn
@@ -99,7 +100,16 @@ pub fn detect_status(cells: &Vec<u32>, move_count: u32) -> u32 {
             }
         }
     }
-    if move_count >= CELL_COUNT {
+
+    // Anti-diagonal (top-right to bottom-left)
+    for y in 0..=h.saturating_sub(win_len) {
+        for x in win_len - 1..w {
+            let res = check_line(x, y, -1, 1);
+            if res != EMPTY { return res; }
+        }
+    }
+
+    if move_count >= w * h {
         DRAW
     } else {
         IN_PROGRESS
