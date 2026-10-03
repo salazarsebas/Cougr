@@ -130,6 +130,10 @@ enum Command {
         /// List all embedded capabilities.
         #[arg(long)]
         list: bool,
+
+        /// Directory of the target project. Defaults to the current directory.
+        #[arg(long, value_name = "DIR")]
+        path: Option<std::path::PathBuf>,
     },
 }
 
@@ -149,8 +153,8 @@ fn main() -> ExitCode {
             commands::new::export(&name, &config, path.as_deref()).map_err(anyhow::Error::from)
         }
 
-        Command::Add { piece, list } => {
-            pieces::run(piece.as_deref(), list).map_err(anyhow::Error::from)
+        Command::Add { piece, list, path } => {
+            pieces::run(piece.as_deref(), list, path.as_deref()).map_err(anyhow::Error::from)
         }
 
         Command::Check {

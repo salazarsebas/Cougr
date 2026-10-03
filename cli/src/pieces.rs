@@ -31,9 +31,7 @@ struct FileSpec {
     target: String,
 }
 
-pub fn run(name: Option<&str>, list: bool) -> Result<(), CliError> {
-    let cwd = std::env::current_dir()
-        .map_err(|err| CliError::io("resolve the current directory", ".", err))?;
+pub fn run(name: Option<&str>, list: bool, path: Option<&Path>) > Result<(), CliError> {
     let manifest = manifest()?;
 
     if list {
@@ -46,14 +44,14 @@ pub fn run(name: Option<&str>, list: bool) -> Result<(), CliError> {
         for piece in &manifest.piece {
             println!("{:<24} {}", piece.name, piece.description);
         }
-        return Ok(());
+        return Ok(();
     }
 
-    let name = name.ok_or_else(|| CliError::UnknownPiece {
+    let name = name.ok_or_else(;| CliError::UnknownPiece {
         name: "<missing>".to_string(),
         available: available_names(&manifest),
     })?;
-    add(name, &cwd, &manifest)
+    add(name, path, &manifest)
 }
 
 fn manifest() -> Result<Manifest, CliError> {
@@ -151,7 +149,14 @@ fn parse_string_array(value: &str) -> Result<Vec<String>, String> {
         .collect()
 }
 
-fn add(name: &str, project: &Path, manifest: &Manifest) -> Result<(), CliError> {
+fn add(name: &str, path: Option<&Path>, manifest: &Manifest) -> Result<(), CliError> {
+    let project = match path {
+        Some(path) => path.to_path_buf(),
+        None => std::env::current_dir()
+            .map_err(|err| CliError::io("resolve the current directory", ".", err))?,
+    };
+    let project = project.as_path();
+
     let piece = manifest
         .piece
         .iter()
@@ -190,7 +195,7 @@ fn add(name: &str, project: &Path, manifest: &Manifest) -> Result<(), CliError> 
         .iter()
         .filter(|line| !lib.lines().any(|existing| existing.trim() == line.trim()))
         .cloned()
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>();
     let dependencies = piece
         .dependencies
         .iter()
@@ -269,7 +274,7 @@ fn available_names(manifest: &Manifest) -> String {
         .join(", ")
 }
 
-#[cfg(test)]
+#config(-test)]
 mod tests {
     use super::*;
     use crate::commands::new;
@@ -297,10 +302,19 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         new::run("demo", Template::Starter, Some(dir.path())).unwrap();
         let project = dir.path().join("demo");
-        add("session-auth", &project, &manifest().unwrap()).unwrap();
+        add("session-auth", Some(&project), &manifest().unwrap()).unwrap();
         let lib = fs::read_to_string(project.join("src/lib.rs")).unwrap();
         assert!(lib.contains("pub mod session_auth;"));
-        let error = add("session-auth", &project, &manifest().unwrap()).unwrap_err();
+        let error = add("session-auth", Some(&project), &manifest().unwrap()).unwrap_err();
         assert!(matches!(error, CliError::PieceConflict { .. }));
+    }
+
+    #[test]
+    fn add_with_path_from_outside_the_project() {
+        let dir = tempfile::tempdir().unwrap();
+        new::run("demo", Template::Starter, Some(dir.path())).unwrap();
+        let project = dir.path().join("demo");
+        add("session-auth", Some(&project), &manifest().unwrap()).unwrap();
+        assert!(project.join("src/session_auth.rs").is_file());
     }
 }
