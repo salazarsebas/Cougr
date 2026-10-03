@@ -135,3 +135,20 @@ studio/
 `.github/workflows/cougr-site.yml`. It builds the tokens, validates the
 fixtures and runs `node --test`. It does not run the Rust `clippy -D warnings`
 gate, and Rust-only changes do not trigger it.
+
+## Real-service play-loop smoke test
+
+The real-service play-loop runs against the local `studio/server` contract. The
+GitHub Actions smoke job skips itself until that directory exists, then runs as
+an optional check with `continue-on-error` so testnet latency or Friendbot
+availability never blocks required gates.
+
+From `studio/`, install dependencies and run the smoke test with:
+
+```sh
+npm ci
+USE_REAL_SERVICES=true npx vitest run tests/play-loop.spec.ts
+```
+
+The service must expose `/friendbot`, `/reconfigure`, `/state`, and `/rpc/move`
+with the shapes documented by the play-loop fixtures.
