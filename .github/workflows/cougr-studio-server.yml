@@ -1,0 +1,41 @@
+name: Cougr Studio Server
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'studio/server/**'
+      - '.github/workflows/cougr-studio-server.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'studio/server/**'
+      - '.github/workflows/cougr-studio-server.yml'
+
+concurrency:
+  group: cougr-studio-server-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test Studio Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: studio/server/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./studio/server
+        run: npm ci
+
+      - name: Run Tests
+        working-directory: ./studio/server
+        run: npm test

@@ -1,0 +1,7 @@
+[package]
+name = "contract"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+soroban-sdk = { version = "25.1.0", default-features = false }
