@@ -79,7 +79,11 @@ impl CliError {
             CliError::UnknownPiece { .. } => {
                 Some("run `cougr add --list` to see available pieces".to_string())
             }
-            CliError::InvalidProject { .. } | CliError::PieceConflict { .. } => None,
+            CliError::InvalidProject { .. } => Some(
+                "run `cougr add` from inside a project created with `cougr new`"
+                    .to_string(),
+            ),
+            CliError::PieceConflict { .. } => None,
             CliError::MissingPieceAsset { .. } => Some(
                 "this is a bug in cougr-cli - please report it at https://github.com/salazarsebas/Cougr/issues"
                     .to_string(),

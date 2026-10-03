@@ -174,8 +174,35 @@ fn add_wires_a_piece_and_refuses_to_overwrite_it() {
     assert!(stderr(&second).contains("src/session_auth.rs"));
 }
 
-/// The definition-of-done check: every template builds and its tests pass
-/// against the published `cougr-core`.
+#[test]
+fn add_outside_a_project_reports_the_error_and_a_hint() {
+    let dir = tempfile::tempdir().unwrap();
+
+    // Run `cougr add session-auth` in a directory that contains no Cargo.toml
+    // or src/lib.rs - simulates the common mistake of running from the repo
+    // root instead of the generated project subdirectory.
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["add", "session-auth"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+
+    assert!(!output.status.success());
+    let message = stderr(&output);
+    assert!(message.starts_with("error:"), "{message}");
+    assert!(!message.contains("panicked"), "{message}");
+    assert!(
+        message.contains("is not a Cougr project"),
+        "expected the InvalidProject message: {message}"
+    );
+    assert!(message.contains("help:"), "expected a hint: {message}");
+    assert!(
+        message.contains("cougr new"),
+        "expected the hint to mention `cougr new`: {message}"
+    );
+}
+
+/// Compile every template against the published `cougr-core`.
 ///
 /// Ignored by default because it downloads and compiles the Soroban SDK.
 #[test]
