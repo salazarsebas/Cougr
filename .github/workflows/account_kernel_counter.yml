@@ -1,0 +1,28 @@
+name: Account Kernel Counter Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/account_kernel_counter/**'
+      - '!examples/account_kernel_counter/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/account_kernel_counter.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/account_kernel_counter/**'
+      - '!examples/account_kernel_counter/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/account_kernel_counter.yml'
+
+concurrency:
+  group: account-kernel-counter-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Account Kernel Counter Example CI
+      working_directory: examples/account_kernel_counter

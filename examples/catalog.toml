@@ -30,6 +30,12 @@ category = "other"
 maturity = "canonical"
 cougr_features = ["soroban-game", "session-auth", "game-app"]
 
+[example.account_kernel_counter]
+name = "account_kernel_counter"
+category = "other"
+maturity = "canonical"
+cougr_features = ["auth", "session-auth"]
+
 [example.hidden_hand]
 name = "hidden_hand"
 category = "card"
