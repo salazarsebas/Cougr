@@ -10,11 +10,11 @@ mod scenario;
 mod snapshot;
 
 pub use fixture::WorldFixture;
-pub use harness::{GameHarness, PlayerSlot};
+pub use harness::{GameHarness, PlayerSlot, ResourceBudget, ResourceReport};
 pub use mock_session::MockSession;
 pub use replay::{ReplayCheckpoint, ReplayLog};
 pub use scenario::{Scenario, TurnIndex};
 pub use snapshot::SnapshotAssert;
 
 /// Bootstrap marker - bumped when sandbox API changes.
-pub const MODULE_VERSION: &str = "0.1.0-sandbox";
+pub const MODULE_VERSION: &str = "0.1.1-sandbox";
