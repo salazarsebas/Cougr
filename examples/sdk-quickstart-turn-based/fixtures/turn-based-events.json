@@ -1,0 +1,47 @@
+{
+  "generatedBy": "examples/sdk-quickstart-turn-based/fixtures (hand-crafted XDR matching TurnState and Board component layouts from cli/templates/turn-based)",
+  "contractId": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+  "startLedger": 1000,
+  "events": [
+    {
+      "description": "TurnState 'set' after make_move: X placed at cell 0. isXTurn=false, moveCount=1, status=0 (in_progress). TurnState wire layout: byte0=bool, bytes1-4=u32BE move_count, bytes5-8=u32BE status.",
+      "component": "turnst",
+      "event": {
+        "type": "contract",
+        "ledger": 1001,
+        "ledgerClosedAt": "2026-09-29T21:00:00Z",
+        "contractId": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "id": "1001-1",
+        "pagingToken": "1001-1",
+        "inSuccessfulContractCall": true,
+        "txHash": "aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd",
+        "topic": [
+          "AAAADwAAAAVDT1VHUgAAAA==",
+          "AAAADwAAAANzZXQA",
+          "AAAADwAAAAZ0dXJuc3QAAA=="
+        ],
+        "value": "AAAAEQAAAAEAAAACAAAADwAAAARkYXRhAAAADQAAAAkAAAAAAQAAAAAAAAAAAAAPAAAACWVudGl0eV9pZAAAAAAAAAMAAAAB"
+      }
+    },
+    {
+      "description": "Board 'rich' after make_move: Board component changed (rich component — follow-up read required, value not in event). entity_id=1.",
+      "component": "board",
+      "event": {
+        "type": "contract",
+        "ledger": 1001,
+        "ledgerClosedAt": "2026-09-29T21:00:00Z",
+        "contractId": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+        "id": "1001-2",
+        "pagingToken": "1001-2",
+        "inSuccessfulContractCall": true,
+        "txHash": "aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd",
+        "topic": [
+          "AAAADwAAAAVDT1VHUgAAAA==",
+          "AAAADwAAAARyaWNo",
+          "AAAADwAAAAVib2FyZAAAAA=="
+        ],
+        "value": "AAAAEQAAAAEAAAABAAAADwAAAAllbnRpdHlfaWQAAAAAAAADAAAAAQ=="
+      }
+    }
+  ]
+}

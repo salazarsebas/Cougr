@@ -1,0 +1,23 @@
+{
+  "name": "cougr-sdk-quickstart-turn-based",
+  "version": "0.1.0",
+  "private": true,
+  "description": "End-to-end Node/TS quickstart: sdk-events event decode + GameState reconstruction over the turn-based template contract (sdk-core/#350 and sdk-session/#351 pending)",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.ts",
+    "start": "node src/quickstart.ts"
+  },
+  "dependencies": {
+    "cougr-sdk-events": "file:../../packages/sdk-events"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "license": "MIT"
+}
