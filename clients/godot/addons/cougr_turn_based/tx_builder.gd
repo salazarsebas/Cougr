@@ -1,7 +1,7 @@
 class_name SorobanMakeMoveTxBuilder
 
 # Builds an unsigned TransactionEnvelope XDR for a Soroban invoke contract call
-static func build_make_move_tx(source_account: String, sequence: int, contract_id_hex: String, player_address: String, position: int) -> PackedByteArray:
+static func build_make_move_tx(source_account: String, sequence: int, contract_id_hex: String, player_address: String, position: int, auth: PackedByteArray = PackedByteArray(), transaction_data: PackedByteArray = PackedByteArray(), fee: int = 100) -> PackedByteArray:
     var xdr = PackedByteArray()
     
     # EnvelopeType = ENVELOPE_TYPE_TX (2)
@@ -12,8 +12,8 @@ static func build_make_move_tx(source_account: String, sequence: int, contract_i
     xdr.append_array(pack_u32(0))
     xdr.append_array(decode_account_id(source_account))
     
-    # fee (uint32) - set a placeholder fee of 100 stroops
-    xdr.append_array(pack_u32(100))
+    # fee (uint32)
+    xdr.append_array(pack_u32(fee))
     
     # seqNum (int64)
     xdr.append_array(pack_u64(sequence))
@@ -63,11 +63,18 @@ static func build_make_move_tx(source_account: String, sequence: int, contract_i
     xdr.append_array(pack_u32(4))
     xdr.append_array(pack_u32(position))
     
-    # auth (Array of SorobanAuthorizationEntry length = 0)
-    xdr.append_array(pack_u32(0))
+    # auth (Array of SorobanAuthorizationEntry)
+    if auth.is_empty():
+        xdr.append_array(pack_u32(0))
+    else:
+        xdr.append_array(auth)
     
-    # ext (TransactionExt discriminant = 0) 
-    xdr.append_array(pack_u32(0))
+    # ext (TransactionExt)
+    if transaction_data.is_empty():
+        xdr.append_array(pack_u32(0))
+    else:
+        xdr.append_array(pack_u32(1))
+        xdr.append_array(transaction_data)
     
     # signatures (Array of DecoratedSignature length = 0)
     xdr.append_array(pack_u32(0))
@@ -128,4 +135,3 @@ static func hex_decode(hex: String) -> PackedByteArray:
     for i in range(0, hex.length(), 2):
         res.append(hex.substr(i, 2).hex_to_int())
     return res
-

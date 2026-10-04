@@ -2,10 +2,16 @@ name: Godot Client
 on:
   push:
     paths:
-      - "clients/godot/**"
+      - "clients/godot/addons/cougr_turn_based/**"
+      - "clients/godot/rust_tests/**"
+      - "clients/godot/sample_scene.tscn"
+      - ".github/workflows/godot-client.yml"
   pull_request:
     paths:
-      - "clients/godot/**"
+      - "clients/godot/addons/cougr_turn_based/**"
+      - "clients/godot/rust_tests/**"
+      - "clients/godot/sample_scene.tscn"
+      - ".github/workflows/godot-client.yml"
 
 jobs:
   test:
