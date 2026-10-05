@@ -1,4 +1,4 @@
-class_name CougrStellarCliSigner
+
 
 # Signs an unsigned envelope by handing it to `stellar tx sign`.
 #

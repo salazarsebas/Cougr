@@ -1,7 +1,9 @@
 class_name SorobanMakeMoveTxBuilder
 
+const Xdr := preload("res://addons/cougr_turn_based/soroban_xdr.gd")
+
 # Builds an unsigned TransactionEnvelope XDR for a Soroban invoke contract call
-static func build_make_move_tx(source_account: String, sequence: int, contract_id_hex: String, player_address: String, position: int, auth: PackedByteArray = PackedByteArray(), transaction_data: PackedByteArray = PackedByteArray(), fee: int = 100) -> PackedByteArray:
+static func build_make_move_tx(source_account: String, sequence: int, contract_id: String, player_address: String, position: int, auth: PackedByteArray = PackedByteArray(), transaction_data: PackedByteArray = PackedByteArray(), fee: int = 100) -> PackedByteArray:
     var xdr = PackedByteArray()
     
     # EnvelopeType = ENVELOPE_TYPE_TX (2)
@@ -41,7 +43,7 @@ static func build_make_move_tx(source_account: String, sequence: int, contract_i
     # --- InvokeContractArgs ---
     # contractAddress (SCAddress discriminant SC_ADDRESS_TYPE_CONTRACT = 1)
     xdr.append_array(pack_u32(1))
-    xdr.append_array(hex_decode(contract_id_hex))
+    xdr.append_array(Xdr.contract_hash(contract_id))
     
     # functionName (SCSymbol)
     xdr.append_array(pack_string("make_move"))
@@ -50,8 +52,8 @@ static func build_make_move_tx(source_account: String, sequence: int, contract_i
     xdr.append_array(pack_u32(2))
     
     # arg[0]: SCVal (player: Address)
-    # discriminant SCV_ADDRESS = 19
-    xdr.append_array(pack_u32(19))
+    # discriminant SCV_ADDRESS = 18
+    xdr.append_array(pack_u32(18))
     # SCAddress discriminant SC_ADDRESS_TYPE_ACCOUNT = 0
     xdr.append_array(pack_u32(0))
     # AccountID (PublicKeyType KEY_TYPE_ED25519 = 0)
@@ -59,8 +61,8 @@ static func build_make_move_tx(source_account: String, sequence: int, contract_i
     xdr.append_array(decode_account_id(player_address))
     
     # arg[1]: SCVal (position: u32)
-    # discriminant SCV_U32 = 4
-    xdr.append_array(pack_u32(4))
+    # discriminant SCV_U32 = 3
+    xdr.append_array(pack_u32(3))
     xdr.append_array(pack_u32(position))
     
     # auth (Array of SorobanAuthorizationEntry)

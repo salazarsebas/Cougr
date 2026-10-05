@@ -54,7 +54,7 @@ func read_state() -> Dictionary:
     xdr.append_array(TxBuilder.pack_u32(24))
     xdr.append_array(TxBuilder.pack_u32(0))
     xdr.append_array(TxBuilder.pack_u32(1))
-    xdr.append_array(TxBuilder.hex_decode(contract_id))
+    xdr.append_array(Xdr.contract_hash(contract_id))
     xdr.append_array(TxBuilder.pack_string("get_state"))
     xdr.append_array(TxBuilder.pack_u32(0))
     xdr.append_array(TxBuilder.pack_u32(0))

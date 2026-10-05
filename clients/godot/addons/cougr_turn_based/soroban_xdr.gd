@@ -1,4 +1,4 @@
-class_name CougrSorobanXdr
+
 
 # Encoding and decoding primitives for Stellar and Soroban XDR.
 #
