@@ -1,0 +1,11 @@
+# Committed soroban resource baselines for tests/resource_budget.rs.
+# Columns: scenario,instructions,mem_bytes,disk_read_entries,disk_read_bytes,write_entries,write_bytes,memory_read_entries,contract_events_size_bytes
+# Recorded against soroban-sdk 25.3.0 / soroban-env-host 25.0.1, the versions
+# Cargo.lock pins. Instructions, bytes, and memory move with the compiler and the
+# host, which is what ResourceBudget's percentages absorb; the entry counts do
+# not, and are gated exactly.
+# turn_based_alternating_match: a nine-turn match where each player owns the
+# positions they play. init_match is the whole setup call, alternating_move is a
+# single move - metering resets per top-level invocation, so one move is the unit.
+init_match,44951,6670,0,0,2,464,3,0
+alternating_move,58352,13164,0,0,2,464,3,0

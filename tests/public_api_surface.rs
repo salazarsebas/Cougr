@@ -350,5 +350,5 @@ fn competitive_layers_expose_version_markers() {
 #[test]
 #[cfg(feature = "testutils")]
 fn test_sandbox_module_available_with_testutils() {
-    assert_eq!(cougr_core::test::MODULE_VERSION, "0.1.0-sandbox");
+    assert_eq!(cougr_core::test::MODULE_VERSION, "0.1.1-sandbox");
 }
