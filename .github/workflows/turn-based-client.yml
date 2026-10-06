@@ -5,11 +5,13 @@ on:
     branches: [main, develop]
     paths:
       - 'clients/web/**'
+      - 'packages/client-ui/**'
       - '.github/workflows/turn-based-client.yml'
   pull_request:
     branches: [main, develop]
     paths:
       - 'clients/web/**'
+      - 'packages/client-ui/**'
       - '.github/workflows/turn-based-client.yml'
 
 concurrency:
@@ -36,6 +38,10 @@ jobs:
 
       - name: Upgrade npm
         run: npm install --global npm@11
+
+      - name: Build shared client UI package
+        working-directory: packages/client-ui
+        run: npm ci && npm run build
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund

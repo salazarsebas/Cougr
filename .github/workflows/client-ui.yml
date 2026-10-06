@@ -1,0 +1,35 @@
+name: Cougr client UI package
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/client-ui/**'
+      - '.github/workflows/client-ui.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/client-ui/**'
+      - '.github/workflows/client-ui.yml'
+
+concurrency:
+  group: client-ui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Typecheck client UI package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/client-ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: packages/client-ui/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck

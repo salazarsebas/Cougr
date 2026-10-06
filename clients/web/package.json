@@ -12,7 +12,8 @@
     "@stellar/freighter-api": "6.0.1",
     "@stellar/stellar-sdk": "17.1.0",
     "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react-dom": "19.2.6",
+    "@cougr/client-ui": "file:../../packages/client-ui"
   },
   "devDependencies": {
     "@types/react": "19.2.14",
