@@ -37,6 +37,13 @@ jobs:
           cache-dependency-path: studio/package-lock.json
       - run: npm ci
         working-directory: studio
+      - run: npm ci
+        working-directory: studio/server
+      - name: Start studio server
+        run: npm start &
+        working-directory: studio/server
+      - name: Wait for server
+        run: sleep 5
       - run: npx vitest run tests/play-loop.spec.ts
         working-directory: studio
         env:

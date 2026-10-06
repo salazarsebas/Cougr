@@ -124,9 +124,31 @@ studio/
     view.js       the fragment: board, status, wait, errors, sandbox warning
     theme.js      design tokens, resolved at render time
   fixtures/       recorded JSON scenarios
+  server/         testnet-only session wallet and reconfigure service
   test/           node:test suites
   tools/          fixture loader, validator, artifact renderer
 ```
+
+## Server / Backend
+
+A backend service under `studio/server` creates session-scoped testnet keys, funds them with friendbot, and submits validated configs to a deployed match. **This service is strictly testnet-only** as it automatically funds session accounts via friendbot, and keys are held server-side (they do not become a browser secret, and they expire). To point a client at a real template, update the contract ID and RPC configurations appropriately once the main template entrypoint exists.
+
+### HTTP Contract
+
+The editor and renderer interact with the backend via the following HTTP contract:
+
+#### `POST /api/session`
+Creates a testnet session wallet, funds it with friendbot, and configures a deployed match instance.
+- **Request Body:** `TurnBasedConfig` (JSON)
+  - `board_width`: `u32` (3..=8)
+  - `board_height`: `u32` (3..=8)
+  - `win_length`: `u32` (3..=min(board_width, board_height))
+  - `first_player`: `"x" | "o"`
+- **Response (200 OK):**
+  - `sessionId`: String token identifying the session.
+  - `contractId`: The testnet contract ID of the matched instance.
+- **Errors (400 / 500 / 502):**
+  - Returns `{ "error": "<reason>" }` for bad configs, friendbot limits, or RPC failures.
 
 ## CI
 

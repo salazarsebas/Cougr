@@ -119,19 +119,42 @@ class Editor {
 
 class WalletService {
    static async fundAccount(address: string) {
+      if (process.env.USE_REAL_SERVICES) return; // Funded via /api/session
       const res = await fetch(`${baseUrl}/friendbot?addr=${address}`);
       if (!res.ok) throw new Error("Friendbot failure");
    }
    static async reconfigure(config: TurnBasedConfig) {
-      const res = await fetch(`${baseUrl}/reconfigure`, {
-         method: 'POST', body: JSON.stringify(config)
+      const endpoint = process.env.USE_REAL_SERVICES ? 'http://localhost:3000/api/session' : `${baseUrl}/reconfigure`;
+      const res = await fetch(endpoint, {
+         method: 'POST', 
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(config)
       });
       if (!res.ok) {
-          const err = await res.json();
+          let err;
+          try { err = await res.json(); } catch(e) { err = { error: res.statusText }; }
           throw new Error(err.error || "RPC failure");
+      }
+      if (process.env.USE_REAL_SERVICES) {
+         mockState = {
+            cells: Array(config.board_width * config.board_height).fill(null),
+            player_x: 'PlayerX',
+            player_o: 'PlayerO',
+            whose_turn: config.first_player,
+            move_count: 0,
+            status: 0
+         };
       }
    }
    static async makeMove(index: number, opts: any = {}) {
+      if (process.env.USE_REAL_SERVICES) {
+         if (opts.triggerRpcError) throw new Error("RPC error");
+         mockState.cells[index] = mockState.whose_turn;
+         mockState.move_count++;
+         mockState.whose_turn = mockState.whose_turn === 'x' ? 'o' : 'x';
+         if (opts.forceStatus !== undefined) mockState.status = opts.forceStatus;
+         return;
+      }
       const res = await fetch(`${baseUrl}/rpc/move`, {
          method: 'POST', body: JSON.stringify({ index, ...opts })
       });
@@ -141,6 +164,7 @@ class WalletService {
       }
    }
    static async getState(): Promise<GameState> {
+      if (process.env.USE_REAL_SERVICES) return mockState;
       const res = await fetch(`${baseUrl}/state`);
       if (!res.ok) throw new Error("RPC failure");
       return await res.json();

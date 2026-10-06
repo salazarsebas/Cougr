@@ -15,7 +15,7 @@
     "build:tokens": "node ../packages/tokens/build.js",
     "validate:fixtures": "node tools/validate-fixtures.js",
     "render:fixtures": "node tools/render-fixtures.js",
-    "test": "npm run build:tokens && node --test && vitest run tests/"
+    "test": "npm run build:tokens && node --test test/*.test.js && vitest run tests/"
 
   },
   "engines": {

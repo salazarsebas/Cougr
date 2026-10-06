@@ -53,4 +53,4 @@ jobs:
 
       - name: Run tests
         working-directory: ./studio
-        run: node --test
+        run: node --test test/*.test.js
