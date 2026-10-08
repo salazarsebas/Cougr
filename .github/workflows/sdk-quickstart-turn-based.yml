@@ -1,0 +1,68 @@
+name: SDK Quickstart Turn-Based CI
+
+# Path-scoped to examples/sdk-quickstart-turn-based and its sdk-events
+# dependency. Does not run for unrelated paths.
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/sdk-quickstart-turn-based/**'
+      - 'packages/sdk-events/**'
+      - '.github/workflows/sdk-quickstart-turn-based.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/sdk-quickstart-turn-based/**'
+      - 'packages/sdk-events/**'
+      - '.github/workflows/sdk-quickstart-turn-based.yml'
+
+concurrency:
+  group: sdk-quickstart-turn-based-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quickstart:
+    name: Build and test sdk-quickstart-turn-based
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          check-latest: true
+
+      - name: Upgrade npm
+        run: npm install --global npm@11
+
+      # Build the real sdk-events package first; the quickstart depends on it.
+      - name: Build sdk-events dependency
+        working-directory: packages/sdk-events
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install quickstart dependencies
+        working-directory: examples/sdk-quickstart-turn-based
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        working-directory: examples/sdk-quickstart-turn-based
+        run: npm run typecheck
+
+      - name: Test (fixture mode — no live testnet)
+        working-directory: examples/sdk-quickstart-turn-based
+        env:
+          FIXTURE_MODE: 'true'
+        run: npm test
+
+      - name: Quickstart script smoke-run
+        working-directory: examples/sdk-quickstart-turn-based
+        env:
+          FIXTURE_MODE: 'true'
+        run: node src/quickstart.ts
