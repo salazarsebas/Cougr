@@ -6,8 +6,8 @@
 //! carry. `TurnState` is all fixed-size scalars, so the cheaper
 //! `impl_component!` is enough.
 
-use cougr_core::{impl_component, impl_rich_component};
-use soroban_sdk::{contracttype, Address, Env, Vec};
+use cougr_core::{impl_component, impl_component_observed, impl_rich_component};
+use soroban_sdk::{contracterror, contracttype, Address, Env, Vec};
 
 /// The single entity every game's state hangs off.
 ///
@@ -47,9 +47,9 @@ impl_rich_component!(Board, "board");
 
 impl Board {
     /// An empty board.
-    pub fn new(env: &Env) -> Self {
+    pub fn new(env: &Env, width: u32, height: u32) -> Self {
         let mut cells = Vec::new(env);
-        for _ in 0..CELL_COUNT {
+        for _ in 0..(width * height) {
             cells.push_back(EMPTY);
         }
         Self { cells }
@@ -76,17 +76,17 @@ pub struct TurnState {
     pub status: u32,
 }
 
-impl_component!(TurnState, "turnst", Table, {
+impl_component_observed!(TurnState, "turnst", Table, {
     is_x_turn: bool,
     move_count: u32,
     status: u32
 });
 
 impl TurnState {
-    /// Opening turn state: X to move, nothing played yet.
-    pub fn opening() -> Self {
+    /// Opening turn state.
+    pub fn opening(is_x_turn: bool) -> Self {
         Self {
-            is_x_turn: true,
+            is_x_turn,
             move_count: 0,
             status: IN_PROGRESS,
         }
