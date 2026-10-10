@@ -337,11 +337,17 @@ mod tests {
         assert!(lib.contents.contains("pub struct DungeonCrawl;"));
     }
 
-#[test]
-fn template_ids_are_stable() {
+    #[test]
+    fn template_ids_are_stable() {
         assert_eq!(
             ALL.map(Template::id),
-            ["starter", "turn-based", "hidden-info", "session-auth", "incremental"]
+            [
+                "starter",
+                "turn-based",
+                "hidden-info",
+                "session-auth",
+                "incremental"
+            ]
         );
     }
 }
