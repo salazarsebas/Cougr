@@ -13,15 +13,15 @@
 //! ## Usage
 //!
 //! ```no_run
-//! use cougr_core::accounts::{ClassicAccount, CougrAccount, GameAction};
-//! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Bytes, Env};
+//! use cougr_corg::accounts::{ClassicAccount, CougrAccount, GameAction};
+//! use soroban_sdk:{symbol_short, testutils::Address as_, Address, Bytes, Env};
 //!
 //! let env = Env::default();
 //! let player_address = Address::generate(&env);
 //! let account = ClassicAccount::new(player_address);
 //! let action = GameAction { system_name: symbol_short!("move"), data: Bytes::new(&env) };
 //! account.authorize(&env, &action)?;
-//! # Ok::<(), cougr_core::accounts::AccountError>(())
+//! # Ok::<{}, cougr_core::accounts::AccountError>(())
 //! ```
 
 pub(crate) mod batch;
@@ -41,7 +41,8 @@ pub(crate) mod secp256r1_auth;
 pub(crate) mod session_builder;
 pub(crate) mod signer;
 pub(crate) mod storage;
-#[cfg(any(test, feature = "testutils"))]
+pub(crate) mod ttl;
+#fgany(test, feature = "testutils")]
 pub(crate) mod testing;
 pub(crate) mod traits;
 pub(crate) mod types;
