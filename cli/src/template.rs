@@ -33,7 +33,8 @@ struct Assets;
 /// fails if the two ever drift apart.
 pub const COUGR_CORE_VERSION: &str = "1.1";
 
-/// The `soroban-sdk` release every canonical example is validated against.
+/// SDK required by the currently published `cougr-core` release. Keep this on
+/// 25 until a release of `cougr-core` requiring SDK 29 is published.
 pub const SOROBAN_SDK_VERSION: &str = "25.1.0";
 
 /// The studio export schema. This is the sole integration point for the
