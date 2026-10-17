@@ -5,7 +5,7 @@ on:
     branches: [main, develop]
     paths:
       - '**/Cargo.toml'
-      - 'Cargo.lock'
+      - '**/Cargo.lock'
       - 'deny.toml'
       - '.github/workflows/cargo-deny.yml'
 
@@ -18,6 +18,31 @@ jobs:
     name: Advisories, Licenses, Bans, Sources
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        manifest:
+          - Cargo.toml
+          - examples/ai_dungeon_master_arena/Cargo.toml
+          - examples/angry_birds/Cargo.toml
+          - examples/arkanoid/Cargo.toml
+          - examples/asteroids/Cargo.toml
+          - examples/bomberman/Cargo.toml
+          - examples/cross_asset_racing_league/Cargo.toml
+          - examples/flappy_bird/Cargo.toml
+          - examples/geometry_dash/Cargo.toml
+          - examples/guild_arena/Cargo.toml
+          - examples/guild_treasury_wars/Cargo.toml
+          - examples/pac_man/Cargo.toml
+          - examples/pokemon_mini/Cargo.toml
+          - examples/pong/Cargo.toml
+          - examples/session_arena/Cargo.toml
+          - examples/shadow_draft_card_game/Cargo.toml
+          - examples/snake/Cargo.toml
+          - examples/space_invaders/Cargo.toml
+          - examples/spawn_and_move/Cargo.toml
+          - examples/tower_defense/Cargo.toml
+          - examples/trading_card_game/Cargo.toml
     steps:
       - uses: actions/checkout@v4
 
@@ -25,3 +50,5 @@ jobs:
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
+          manifest-path: ${{ matrix.manifest }}
+          arguments: --config deny.toml

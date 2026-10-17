@@ -15,7 +15,17 @@ ignore = [
     { crate = "spin@0.9.8", reason = "transitive via soroban-wasmi, upgrade tracks soroban-sdk releases" },
     # Transitive through soroban-env-host's arkworks (BLS12-381 / BN254) dependency chain.
     { id = "RUSTSEC-2024-0388", reason = "unmaintained `derivative`, pulled in transitively by soroban-env-host via ark-ec/ark-ff" },
+    # Transitive through soroban-sdk's dependency tree (ark-std). The advisory applies to
+    # `rand` 0.8.5 when used with a custom logger; the default logger is unaffected.
+    # no fix available until soroban-sdk bumps its ark-std dependency.
+    { id = "RUSTSEC-2026-0097", reason = "transitive `rand` 0.8.5 via ark-std from soroban-env-host; no fix until soroban-sdk updates ark-std" },
+    # Transitive through soroban-sdk's dependency tree. `wee_alloc` is unmaintained and
+    # pulled in transitively; no safe upgrade until soroban-sdk/wasmi moves off it.
+    { id = "RUSTSEC-2022-0054", reason = "unmaintained `wee_alloc`, pulled in transitively by soroban-sdk/wasmi dependencies" },
 ]
+
+[dependencies]
+unused = "warn"
 
 [licenses]
 allow = [
@@ -35,8 +45,8 @@ confidence-threshold = 0.8
 [bans]
 multiple-versions = "warn"
 # "allow": cougr-core's own dev-dependency on itself (to enable `testutils` in
-# doctests/integration tests) is a legitimate path self-dependency, not a
-# supply-chain risk.
+ # doctests/integration tests) is a legitimate path self-dependency, not a
+ # supply-chain risk.
 wildcards = "allow"
 deny = []
 
