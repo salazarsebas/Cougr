@@ -43,3 +43,10 @@ jobs:
             echo "::error::Unresolved merge conflict markers found."
             exit 1
           fi
+
+      - name: Check example workflow coverage
+        run: |
+          if ! python3 scripts/check_example_workflows.py; then
+            echo "::error::One or more examples are not covered by any workflow."
+            exit 1
+          fi

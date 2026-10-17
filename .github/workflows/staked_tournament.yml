@@ -1,0 +1,27 @@
+name: Staked Tournament
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/staked_tournament/**'
+      - '!examples/staked_tournament/**/*.md'
+      - '.github/workflows/staked_tournament.yml'
+      - .github/workflows/example_reusable.yml
+  pull_request:
+    paths:
+      - 'examples/staked_tournament/**'
+      - '!examples/staked_tournament/**/*.md'
+      - .github/workflows/staked_tournament.yml
+      - .github/workflows/example_reusable.yml
+  workflow_dispatch:
+
+concurrency:
+  group: staked-tournament-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      example: staked_tournament

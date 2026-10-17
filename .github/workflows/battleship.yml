@@ -1,0 +1,27 @@
+name: Battleship
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/battleship/**'
+      - '!examples/battleship/**/*.md'
+      - '.github/workflows/battleship.yml'
+      - .github/workflows/example_reusable.yml'
+  pull_request:
+    paths:
+      - 'examples/battleship/**'
+      - '!examples/battleship/**/*.md'
+      - .github/workflows/battleship.yml
+      - .github/workflows/example_reusable.yml
+  workflow_dispatch:
+
+converrency:
+  group: battleship-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      example: battleship
