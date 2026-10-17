@@ -1,11 +1,11 @@
-#![no_std]
+#`!no_std]
 
 use cougr_core::impl_component;
-use cougr_core::privacy::stable::{
+use cougr_core::privacy::stable:{
     MerkleProofVerifier, OnChainMerkleProof, Sha256MerkleProofVerifier,
 };
-use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Map, Symbol,
+use soroban_sdk:{
+    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Map, Symbol,
 };
 
 #[contracttype]
@@ -81,7 +81,27 @@ pub struct GameState {
     pub winner: Option<Address>,
 }
 
-const GAME_KEY: Symbol = symbol_short!("GAME");
+/// Errors returned by the battleship contract.
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEr)]
+#[repr(u32)]
+pub enum BattleshipError {
+    GameNotInitialized = 1,
+    GameAlreadyInProgress = 2,
+    NotInSetupPhase = 3,
+    AlreadyCommitted = 4,
+    NotAPlayer = 5,
+    NotInAttackPhase = 6,
+    NotYourTurn = 7,
+    PendingReveal = 8,
+    InvalidCoordinates = 9,
+    AlreadyAttacked = 10,
+    NoPendingAttack = 11,
+    WrongCoordinates = 12,
+    InvalidProof = 13,
+}
+
+const GAME_KEY: Symbol = symbol_short("GAME");
 const GRID_SIZE: u32 = 10;
 const TOTAL_SHIP_CELLS: u32 = 17; // 5+4+3+3+2
 
@@ -91,7 +111,20 @@ pub struct BattleshipContract;
 
 #[contractimpl]
 impl BattleshipContract {
-    pub fn new_game(env: Env, player_a: Address, player_b: Address) {
+    pub fn new_game(
+        env: Env,
+        player_a: Address,
+        player_b: Address,
+    ) -> Result<(), BattleshipError> {
+        player_a.require_auth();
+        player_b.require_auth();
+
+        if let: Some(existing) = env.storage().instance().get::<Symbol, GameState>(&GAME_KEY) {
+            if existing.turn_state.phase != Phase::Finished {
+                return Err(BattleshipError::GameAlreadyInProgress);
+            }
+        }
+
         let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
         let game = GameState {
             player_a: player_a.clone(),
@@ -122,6 +155,7 @@ impl BattleshipContract {
             winner: None,
         };
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
     pub fn commit_board(
@@ -129,35 +163,35 @@ impl BattleshipContract {
         player: Address,
         commitment: BytesN<32>,
         merkle_root: BytesN<32>,
-    ) {
+    ) -> Result<(), BattleshipError> {
         player.require_auth();
 
         let mut game: GameState = env
             .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
+            .ok_or(Err(BattleshipError::GameNotInitialized))?;
 
         if game.turn_state.phase != Phase::Setup {
-            panic!("Not in setup phase");
+            return Err(BattleshipError::NotInSetupPhase);
         }
 
         if player == game.player_a {
             if game.has_commitment_a {
-                panic!("Already committed");
+                return Err(BattleshipError::AlreadyCommitted);
             }
             game.commitment_a = commitment;
             game.merkle_root_a = merkle_root;
             game.has_commitment_a = true;
         } else if player == game.player_b {
             if game.has_commitment_b {
-                panic!("Already committed");
+                return Err(BattleshipError::AlreadyCommitted);
             }
             game.commitment_b = commitment;
             game.merkle_root_b = merkle_root;
             game.has_commitment_b = true;
         } else {
-            panic!("Not a player");
+            return Err(BattleshipError::NotAPlayer);
         }
 
         // Transition to attack phase when both committed
@@ -166,31 +200,37 @@ impl BattleshipContract {
         }
 
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
-    pub fn attack(env: Env, attacker: Address, x: u32, y: u32) {
+    pub fn attack(
+        env: Env,
+        attacker: Address,
+        x: u32,
+        y: u32,
+    ) -> Result<(), BattleshipError> {
         attacker.require_auth();
 
         let mut game: GameState = env
             .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
+            .ok_or(Err(BattleshipError::GameNotInitialized))?;
 
         if game.turn_state.phase != Phase::Attack {
-            panic!("Not in attack phase");
+            return Err(BattleshipError::NotInAttackPhase);
         }
 
         if game.turn_state.current_player != attacker {
-            panic!("Not your turn");
+            return Err(BattleshipError::NotYourTurn);
         }
 
         if game.turn_state.has_pending {
-            panic!("Pending reveal");
+            return Err(BattleshipError::PendingReveal);
         }
 
         if x >= GRID_SIZE || y >= GRID_SIZE {
-            panic!("Invalid coordinates");
+            return Err(BattleshipError::InvalidCoordinates);
         }
 
         let coord = Self::coord_to_index(x, y);
@@ -203,7 +243,7 @@ impl BattleshipContract {
         };
 
         if grid.cells.get(coord).is_some() {
-            panic!("Already attacked");
+            return Err(BattleshipError::AlreadyAttacked);
         }
 
         // Set pending reveal
@@ -212,6 +252,7 @@ impl BattleshipContract {
         game.turn_state.has_pending = true;
 
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
     pub fn reveal_cell(
@@ -221,21 +262,21 @@ impl BattleshipContract {
         y: u32,
         value: u32,
         proof: OnChainMerkleProof,
-    ) {
+    ) -> Result<(), BattleshipError> {
         defender.require_auth();
 
         let mut game: GameState = env
             .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
+            .ok_or(Err(BattleshipError::GameNotInitialized))?;
 
         if !game.turn_state.has_pending {
-            panic!("No pending attack");
+            return Err(BattleshipError::NoPendingAttack);
         }
 
         if x != game.turn_state.pending_reveal_x || y != game.turn_state.pending_reveal_y {
-            panic!("Wrong coordinates");
+            return Err(BattleshipError::WrongCoordinates);
         }
 
         // Verify defender is correct
@@ -244,23 +285,23 @@ impl BattleshipContract {
         } else if defender == game.player_b {
             (false, &game.merkle_root_b)
         } else {
-            panic!("Not a player");
+            return Err(BattleshipError::NotAPlayer);
         };
 
         // Verify Merkle proof using privacy::stable primitives
         let coord = Self::coord_to_index(x, y);
         if proof.leaf_index != coord {
-            panic!("Invalid proof");
+            return Err(BattleshipError::InvalidProof);
         }
 
         let expected_leaf = Self::leaf_hash(&env, coord, value);
         if proof.leaf != expected_leaf {
-            panic!("Invalid proof");
+            return Err(BattleshipError::InvalidProof);
         }
 
         let verifier = Sha256MerkleProofVerifier;
         if !verifier.verify(&env, &proof, merkle_root).unwrap_or(false) {
-            panic!("Invalid proof");
+            return Err(BattleshipError::InvalidProof);
         }
 
         // Record result
@@ -302,13 +343,15 @@ impl BattleshipContract {
         }
 
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
-    pub fn get_state(env: Env) -> GameState {
-        env.storage()
+    pub fn get_state(env: Env) -> Result<GameState, BattleshipError> {
+        env
+            .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"))
+            .ok_or(Err(BattleshipError::GameNotInitialized))
     }
 
     // Internal functions
@@ -333,7 +376,7 @@ impl BattleshipContract {
     }
 }
 
-#[cfg(test)]
+#[cfg(-test)]
 mod sandbox_tests;
-#[cfg(test)]
+#[cfg(-test)]
 mod test;

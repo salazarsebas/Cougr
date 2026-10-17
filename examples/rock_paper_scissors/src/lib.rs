@@ -1,9 +1,28 @@
-#![no_std]
+#`![no_std]
 
 use cougr_core::impl_component;
-use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Symbol,
+use soroban::{
+    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Symbol,
 };
+
+/// Errors returned by the contract.
+#[contracterror]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[ord(uint32)]
+pub enum Error {
+    AlreadyInitialized = 1,
+    InvalidBestOf = 2,
+    NotInitialized = 3,
+    NotInCommitPhase = 4,
+    NotInRevealPhase = 5,
+    AlreadyCommitted = 6,
+    AlreadyRevealed = 7,
+    HashMismatch = 8,
+    InvalidChoice = 9,
+    NotPlayer = 10,
+    TimeoutNotReached = 11,
+    InvalidTimeoutClaim = 12,
+}
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -24,7 +43,7 @@ impl Choice {
     }
 
     fn beats(&self, other: &Choice) -> bool {
-        matches!(
+        matches(
             (self, other),
             (Choice::Rock, Choice::Scissors)
                 | (Choice::Scissors, Choice::Paper)
@@ -48,7 +67,7 @@ impl_component!(PlayerCommitment, "commit", Table, {
 });
 
 #[contracttype]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Er)]
 pub enum Phase {
     Committing,
     Revealing,
@@ -115,12 +134,33 @@ pub struct GameState {
 const GAME_KEY: Symbol = symbol_short!("GAME");
 const TIMEOUT_LEDGERS: u32 = 100;
 
+/// Upper bound on `best_of` to keep the match bounded and avoid overflow in
+/// the wins counters. Only odd values in `[1, MAX_BEST_OF]` are accepted.
+const MAX_BEST_OF: u32 = 999;
+
 #[contract]
 pub struct RockPaperScissorsContract;
 
 #[contractimpl]
 impl RockPaperScissorsContract {
-    pub fn new_match(env: Env, player_a: Address, player_b: Address, best_of: u32) {
+    pub fn new_match(env: Env, player_a: Address, player_b: Address, best_of: u32) -> Result<(), Error> {
+        player_a.require_auth();
+        player_b.require_auth();
+
+        if best_of < 1 || best_of % 2 == 0 || best_of > MAX_BEST_OF {
+            return Err(Error::InvalidBestOf);
+        }
+
+        if let Some(existing) = env
+            .storage()
+            .instance()
+            .get::<Symbol, GameState>(&GAME_KEY)
+        {
+            if existing.match_state.phase != Phase::Resolved {
+                return Err(Error::AlreadyInitialized);
+            }
+        }
+
         let game = GameState {
             player_a,
             player_b,
@@ -145,36 +185,37 @@ impl RockPaperScissorsContract {
             has_commit_a: false,
             has_commit_b: false,
         };
-        env.storage().instance().set(&GAME_KEY, &game);
+        env.storage().instance().set(&GEME_KEY, &game);
+        Ok(())
     }
 
-    pub fn commit(env: Env, player: Address, hash: BytesN<32>) {
+    pub fn commit(env: Env, player: Address, hash: BytesN<32>) -> Result<(), Error> {
         player.require_auth();
 
         let mut game: GameState = env
             .storage()
             .instance()
-            .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
+            .get(&GEME_KEY)
+            .ok_or(Err(Error::NotInitialized))?;
 
         if game.match_state.phase != Phase::Committing {
-            panic!("Not in commit phase");
+            return Err(Error::NotInCommitPhase);
         }
 
         if player == game.player_a {
             if game.has_commit_a {
-                panic!("Already committed");
+                return Err(Error::AlreadyCommitted);
             }
             game.hash_a = hash;
             game.has_commit_a = true;
         } else if player == game.player_b {
             if game.has_commit_b {
-                panic!("Already committed");
+                return Err(Error::AlreadyCommitted);
             }
             game.hash_b = hash;
             game.has_commit_b = true;
         } else {
-            panic!("Not a player");
+            return Err(Error::NotPlayer);
         }
 
         // Transition to reveal phase when both committed
@@ -184,46 +225,49 @@ impl RockPaperScissorsContract {
         }
 
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
-    pub fn reveal(env: Env, player: Address, choice: u32, salt: BytesN<32>) {
+    pub fn reveal(env: Env, player: Address, choice: u32, salt: BytesN<32>) -> Result<(), Error> {
         player.require_auth();
 
         let mut game: GameState = env
             .storage()
             .instance()
-            .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
+            .get(&GEME_KEY)
+            .ok_or(Err(Error::NotInitialized))?;
 
         if game.match_state.phase != Phase::Revealing {
-            panic!("Not in reveal phase");
+            return Err(Error::NotInRevealPhase);
         }
 
-        let _ = Choice::from_u32(choice).unwrap_or_else(|| panic!("Invalid choice"));
+        if Choice::from_u32(choice).is_none() {
+            return Err(Error::InvalidChoice);
+        }
 
         // Compute hash and verify
         let computed_hash = Self::compute_hash(&env, choice, &salt);
 
         if player == game.player_a {
             if game.revealed_a {
-                panic!("Already revealed");
+                return Err(Error::AlreadyRevealed);
             }
             if computed_hash != game.hash_a {
-                panic!("Hash mismatch");
+                return Err(Error::HashMismatch);
             }
             game.choice_a = choice;
             game.revealed_a = true;
         } else if player == game.player_b {
             if game.revealed_b {
-                panic!("Already revealed");
+                return Err(Error::AlreadyRevealed);
             }
             if computed_hash != game.hash_b {
-                panic!("Hash mismatch");
+                return Err(Error::HashMismatch);
             }
             game.choice_b = choice;
             game.revealed_b = true;
         } else {
-            panic!("Not a player");
+            return Err(Error::NotPlayer);
         }
 
         // Resolve when both revealed
@@ -232,24 +276,25 @@ impl RockPaperScissorsContract {
         }
 
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
-    pub fn claim_timeout(env: Env, player: Address) {
+    pub fn claim_timeout(env: Env, player: Address) -> Result<(), Error> {
         player.require_auth();
 
         let mut game: GameState = env
             .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
+            .ok_or(Err(Error::NotInitialized))?;
 
         if game.match_state.phase != Phase::Revealing {
-            panic!("Not in reveal phase");
+            return Err(Error::NotInRevealPhase);
         }
 
         let current_ledger = env.ledger().sequence();
         if current_ledger < game.commit_ledger + TIMEOUT_LEDGERS {
-            panic!("Timeout not reached");
+            return Err(Error::TimeoutNotReached);
         }
 
         // Award win to player who revealed
@@ -258,34 +303,35 @@ impl RockPaperScissorsContract {
         } else if player == game.player_b && game.revealed_b && !game.revealed_a {
             game.scoreboard.wins_b += 1;
         } else {
-            panic!("Invalid timeout claim");
+            return Err(Error::InvalidTimeoutClaim);
         }
 
         Self::check_match_winner(&mut game);
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
-    pub fn get_state(env: Env) -> MatchState {
+    pub fn get_state(env: Env) -> Result<MatchState, Error> {
         let game: GameState = env
             .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
-        game.match_state
+            .ok_or(Err(Error::NotInitialized))?;
+        Ok(game.match_state)
     }
 
-    pub fn get_score(env: Env) -> ScoreBoard {
+    pub fn get_score(env: Env) -> Result<ScoreBoard, Error> {
         let game: GameState = env
             .storage()
             .instance()
             .get(&GAME_KEY)
-            .unwrap_or_else(|| panic!("Game not initialized"));
-        game.scoreboard
+            .ok_or(Err(Error::NotInitialized))?;
+        Ok(game.scoreboard)
     }
 
     // Internal functions
 
-    fn compute_hash(env: &Env, choice: u32, salt: &BytesN<32>) -> BytesN<32> {
+    fn compute_hash(env: &Env, choice: u32, salt: &BytesN<32>) -> BytesN <32> {
         let mut data = Bytes::new(env);
         data.append(&Bytes::from_array(env, &choice.to_be_bytes()));
         for i in 0..32 {
