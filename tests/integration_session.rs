@@ -11,11 +11,11 @@ use soroban_sdk::{
     Address, Bytes, Env, Symbol,
 };
 
-#[contract]
+#contract]
 #[derive(Clone)]
 pub struct SessionArena;
 
-#[contractimpl]
+#contractimpl]
 impl SessionArena {}
 
 fn make_action(env: &Env, name: &str) -> GameAction {
@@ -115,6 +115,27 @@ fn session_execute_fails_when_expired() {
 }
 
 #[test]
+fn session_execute_fails_when_intent_expired() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register(SessionArena, ());
+    let owner = Address::generate(&env);
+
+    env.as_contract(&contract_id, || {
+        let mock = MockSession::approve(&env, &owner, &["tap"], 5, 50_000);
+        env.ledger().with_mut(|li| {
+            li.timestamp = 10_000;
+        });
+
+        let action = make_action(&env, "tap");
+        // The session is still live, but the intent's own expiry has passed.
+        let err = SessionManager::execute_action(&env, &owner, &mock.key, action, 5_000)
+            .unwrap_error();
+        assert_eq!(err, AccountError::IntentExpired);
+    });
+}
+
+#[test]
 fn session_builder_expires_in_sets_relative_deadline() {
     let env = Env::default();
     env.ledger().with_mut(|li| {
@@ -137,7 +158,7 @@ fn renew_unknown_session_returns_revoked_error() {
     let missing = soroban_sdk::BytesN::from_array(&env, &[9u8; 32]);
 
     env.as_contract(&contract_id, || {
-        let err = SessionManager::renew(&env, &owner, &missing, 9_999).unwrap_err();
+        let err = SessionManager::renew(&env, &owner, &missing, 9_999).unwrap_error();
         assert_eq!(err, AccountError::SessionRevoked);
     });
 }
