@@ -14,7 +14,14 @@ use systems::{
     win_detection_system,
 };
 
-use soroban_sdk::{contract, contractimpl, symbol_short, Address, Env, Vec};
+use soroban_sdk::{contract, contracterror, contractimpl, symbol_short, Address, Env, Vec};
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum Error {
+    AlreadyInitialised = 1,
+}
 
 #[contract]
 pub struct ConnectFourContract;
@@ -22,7 +29,15 @@ pub struct ConnectFourContract;
 #[contractimpl]
 impl ConnectFourContract {
     /// Initialize a new game with two players
-    pub fn init_game(env: Env, player_one: Address, player_two: Address) -> GameState {
+    pub fn init_game(
+        env: Env,
+        player_one: Address,
+        player_two: Address,
+    ) -> Result<GameState, Error> {
+        if env.storage().instance().has(&WORLD_KEY) {
+            return Err(Error::AlreadyInitialised);
+        }
+
         let mut next_entity_id = 0u32;
 
         let board = BoardComponent::new(&env, next_entity_id);
@@ -42,12 +57,14 @@ impl ConnectFourContract {
         };
 
         env.storage().instance().set(&WORLD_KEY, &world_state);
-        Self::to_game_state(&env, &world_state)
+        Ok(Self::to_game_state(&env, &world_state))
     }
 
     /// Drop a piece in a column (0-6)
     /// Gravity automatically places piece in lowest available row
     pub fn drop_piece(env: Env, player: Address, column: u32) -> DropResult {
+        player.require_auth();
+
         let mut world_state: ECSWorldState = env
             .storage()
             .instance()
@@ -158,12 +175,16 @@ impl ConnectFourContract {
     }
 
     /// Reset the game with the same players
-    pub fn reset_game(env: Env) -> GameState {
+    pub fn reset_game(env: Env) -> Result<GameState, Error> {
         let world_state: ECSWorldState = env
             .storage()
             .instance()
             .get(&WORLD_KEY)
             .unwrap_or_else(|| panic!("Game not initialized"));
+
+        world_state.players.player_one.require_auth();
+
+        env.storage().instance().remove(&WORLD_KEY);
 
         Self::init_game(
             env,

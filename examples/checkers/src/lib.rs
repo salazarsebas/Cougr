@@ -71,6 +71,8 @@ impl CheckersContract {
         to_row: u32,
         to_col: u32,
     ) -> Result<(), CheckersError> {
+        player.require_auth();
+
         let status: GameStatusComponent = env
             .storage()
             .persistent()
