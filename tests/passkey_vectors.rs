@@ -258,3 +258,22 @@ fn the_mapped_key_round_trips_through_secp256r1_storage() {
         );
     });
 }
+
+#[test]
+fn the_mapped_key_is_stable_across_envs() {
+    let mut public_key = [0u8; 65];
+    public_key.copy_from_slice(&unhex(REGISTRATION_PUBLIC_KEY));
+    assert_eq!(public_key[0], 0x04);
+
+    let mut digests = std::vec::Vec::new();
+    for _ in 0..2 {
+        let env = Env::default();
+        let digest = env
+            .crypto()
+            .sha256(&Bytes::from_array(&env, &public_key))
+            .to_array();
+        digests.push(hex(&digest));
+    }
+
+    assert_eq!(digests[0], digests[1]);
+}

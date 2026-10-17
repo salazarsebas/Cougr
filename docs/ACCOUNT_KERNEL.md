@@ -33,13 +33,28 @@ The account subsystem is now organized around:
 - deterministic `action_hash`
 - proof material
 
-The deterministic hash is derived from:
+### Deterministic Hash Layout
 
-- nonce
-- expiry
-- signer identity fields
-- action system name
-- action bytes
+The deterministic hash is derived from the following bytes,
+concatenated in order and then SHA-256-hashed:
+
+1. domain tag: the ASCII bytes `cougr.intent.v1`
+2. `account.to_xdr()`
+ 3. `env.current_contract_address().to_xdrX`
+4. nonce (8 bytes, big-endian u64)
+5. expiry (8 bytes, big-endian u64)
+6. signer kind (4 bytes, big-endian u32)
+7. signer session key id (32 bytes)
+8. `signer.label.to_xdr()`
+9. `action.system_name.to_xdr()`
+10. action data (raw bytes)
+
+Symbols are hashed by their XDR bytes, not by their in-env `Val`
+payload, so the hash is a pure function of the intent content for every
+valid `Symbol` length (including names longer than 9 characters). The
+account and contract addresses are part of the hash, so a signature over
+an intent is bound to a specific account and contract and cannot be
+replayed against another one.
 
 ## Replay Protection
 
@@ -113,6 +128,5 @@ Current fields:
 The account kernel is now consumed through the curated `accounts` / `auth`
 surface directly.
 
-The previous `GameWorld` wrapper was removed so `1.0.0` does not freeze an
-extra orchestration layer. Authorization should be composed explicitly at the
+The previous `GameWorld` wrapper was removed so `1.0.0` does not freeze anextra orchestration layer. Authorization should be composed explicitly at the
 application layer around `GameApp`, `SimpleWorld`, and the account primitives.

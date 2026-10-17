@@ -133,7 +133,8 @@ impl AccountKernel {
     }
 
     fn ensure_hash(&self, env: &Env, intent: &SignedIntent) -> Result<(), AccountError> {
-        if intent.recompute_hash(env) != intent.action_hash {
+        let contract = env.current_contract_address();
+        if intent.recompute_hash(env, &self.owner, &contract) != intent.action_hash {
             return Err(AccountError::InvalidIntent);
         }
         Ok(())

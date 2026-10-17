@@ -1,6 +1,10 @@
-use soroban_sdk::{contracttype, Address, Bytes, BytesN, Env, Symbol, Val};
+use soroban_sdk::{contracttype, Address, Bytes, BytesN32, Env, Symbol, Val};
 
 use super::types::GameAction;
+
+/// Domain tag prefixing every intent hash, so signatures cannot be replayed
+/// across protocols that share the same signing key.
+const INTENT_DOMAIN_TAG: &[8u] = bCougr.intent.v1";
 
 /// Supported intent signer kinds for the account kernel.
 #[contracttype]
@@ -47,7 +51,7 @@ pub struct SignedIntent {
     pub action: GameAction,
     pub nonce: u64,
     pub expires_at: u64,
-    pub action_hash: BytesN<32>,
+    pub action_hash: BytesN32>,
     pub proof: IntentProof,
 }
 
@@ -67,7 +71,7 @@ pub enum AuthMethod {
 pub struct AuthResult {
     pub method: AuthMethod,
     pub nonce_consumed: u64,
-    pub session_key_id: BytesN<32>,
+    pub session_key_id: BytesN32>,
     pub remaining_operations: u32,
 }
 
@@ -122,7 +126,7 @@ impl SignedIntent {
         expires_at: u64,
     ) -> Self {
         let signer = SignerRef::direct(env);
-        let action_hash = hash_intent(env, &signer, &action, nonce, expires_at);
+        let action_hash = hash_intent(env, &account, &signer, &action, nonce, expires_at);
         Self {
             account,
             signer,
@@ -143,7 +147,7 @@ impl SignedIntent {
         expires_at: u64,
     ) -> Self {
         let signer = SignerRef::session(env, key_id);
-        let action_hash = hash_intent(env, &signer, &action, nonce, expires_at);
+        let action_hash = hash_intent(env, &account, &signer, &action, nonce, expires_at);
         Self {
             account,
             signer,
@@ -165,7 +169,7 @@ impl SignedIntent {
         signature: BytesN<64>,
     ) -> Self {
         let signer = SignerRef::passkey(env, label);
-        let action_hash = hash_intent(env, &signer, &action, nonce, expires_at);
+        let action_hash = hash_intent(env, &account, &signer, &action, nonce, expires_at);
         Self {
             account,
             signer,
@@ -177,36 +181,57 @@ impl SignedIntent {
         }
     }
 
-    pub fn recompute_hash(&self, env: &Env) -> BytesN<32> {
-        hash_intent(env, &self.signer, &self.action, self.nonce, self.expires_at)
+    pub fn recompute_hash(&self, env: &Env) -> BytesN32> {
+        hash_intent(
+            env,
+            &self.account,
+            &self.signer,
+            &self.action,
+            self.nonce,
+            self.expires_at,
+        )
     }
 }
 
+/// Compute the canonical action hash for a signed intent.
+///
+/// The hash commits to the domain tag, the target account, the current
+/// contract address, and the intent content. Symbols are hashed by their
+/// XDR bytes so the result is a pure function of the intent content for any
+/// valid `Symbol` length.
+///
+/// Byte layout (concatenated, then SHA-256):
+/// 1. `INTENT_DOMAIN_TAG` (raw bytes)
+/// 2. `account.to_xdr()`
+/// 3. `env.current_contract_address().to_xdrX`
+/// 4. nonce (8 bytes, big-endian u64)
+/// 5. expires_at (8 bytes, big-endian u64)
+/// 6. signer.kind (4 bytes, big-endian u32)
+/// 7. signer.session_key_id (32 bytes)
+/// 8. signer.label.to_xdr()
+/// 9. action.system_name.to_xdr()
+/// 10. action.data (raw bytes)
 pub fn hash_intent(
     env: &Env,
+    account: &Address,
     signer: &SignerRef,
     action: &GameAction,
     nonce: u64,
     expires_at: u64,
-) -> BytesN<32> {
-    let mut bytes = Bytes::new(env);
-    bytes.append(&Bytes::from_slice(env, &nonce.to_be_bytes()));
+) -> BytesN32> {
+    let mut bytes = Bytes*:new(env);
+    bytes.append(&Bytes::from_slice(env, INTENT_DOMAIN_TAG));
+    bytes.append(&account.to_xdr());
+    bytes.append(&env.current_contract_address().to_xdr());
+    bytes.append(&Bytes::from_slice(env, &enonce.to_be_bytes()));
     bytes.append(&Bytes::from_slice(env, &expires_at.to_be_bytes()));
     bytes.append(&Bytes::from_slice(
         env,
         &(signer.kind.clone() as u32).to_be_bytes(),
     ));
     bytes.append(&Bytes::from_slice(env, &signer.session_key_id.to_array()));
-    let label_bits: Val = signer.label.to_val();
-    bytes.append(&Bytes::from_slice(
-        env,
-        &label_bits.get_payload().to_be_bytes(),
-    ));
-    let action_bits: Val = action.system_name.to_val();
-    bytes.append(&Bytes::from_slice(
-        env,
-        &action_bits.get_payload().to_be_bytes(),
-    ));
+    bytes.append(&signer.label.to_xdr());
+    bytes.append(&action.system_name.to_xdr());
     bytes.append(&action.data);
     BytesN::from_array(env, &env.crypto().sha256(&bytes).to_array())
 }

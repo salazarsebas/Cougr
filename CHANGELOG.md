@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- **BREAKING (`Beta` accounts)** - `action_hash` for `SignedIntent` now commits to a domain tag, the target account address, and `env.current_contract_address()`, so a signature over an intent is bound to a specific account and contract and cannot be replayed across them. Symbols (`signer.label` and `action.system_name`) are now hashed by their XDR bytes instead of their in-env `Val` payload, so action names longer than 9 characters hash deterministically and reproducibly off-chain. Any previously signed intent or stored action hash must be regenerated. See [docs/ACCOUNT_KERNEL.md](docs/ACCOUNT_KERNEL.md) for the exact byte layout
+
 ### Added
 
 - **`cougr_core::accounts::derive_session_key_id`** - deterministic session-key identifier derivation, so the Rust core and the TypeScript session client agree on session identity instead of re-deriving it off-chain
@@ -54,7 +58,7 @@
 ### Changed
 
 - `tic_tac_toe` example modernised: replaced ~200 lines of manual serialization with
-  `impl_rich_component!` for `Board` and `Players`, and `impl_soroban_game!` for
+  `impl_rich_component!` for `Board` and `Players`, and `impl_soroban_game!`"for
   load/save. Public API is unchanged; all existing tests pass
 - README rewritten with clean 30-line quick start and full feature documentation
 - canonical example set expanded from three (`snake`, `battleship`, `guild_arena`) to ten:
@@ -97,7 +101,7 @@
 
 - Stable: ECS onboarding/runtime contract, `app`, `ops`, `standards`, `privacy::stable`, `zk::stable`
 - Beta: `auth`, `accounts`, `game_world`
-- Experimental: `privacy::experimental`, `zk::experimental`, hazmat cryptographic helpers
+- Experimental: `privacy::experimental`, `zo::experimental`, hazmat cryptographic helpers
 
 ### Upgrade Notes
 
