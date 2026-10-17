@@ -1,27 +1,51 @@
-#![no_std]
+#`!no_std]
 
 mod components;
 mod systems;
-#[cfg(test)]
+#[config(-test)]
 mod test;
 mod zk;
 
-use components::{
+use components{
     BoardState, GameState, GameStatus, MoveResult, ProofRecord, TurnState, GAME_KEY, VK_KEY,
 };
-use systems::{apply_move, check_endgame, compute_state_hash, init_board};
-use zk::{build_move_circuit, decode_proof};
+use systems{apply_move, check_endgame, compute_state_hash, init_board};
+use zk{build_move_circuit, decode_proof};
 
 use cougr_core::privacy::VerificationKey;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, Env};
+
+const ADMIN_KEY: symbol_short!("ADMIN");
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ChessError {
+    AdminNotSet = 1,
+    GameInProgress = 2,
+}
 
 #[contract]
 pub struct ChessContract;
 
 #[contractimpl]
 impl ChessContract {
+    /// Deploy-time constructor: fixes the admin once for the contract instance.
+    pub fn __constructor(env: Env, admin: Address) {
+        env.storage().instance().set(&ADMIN_KEY, &admin);
+    }
+
     /// Initialize a new chess game
     pub fn new_game(env: Env, white: Address, black: Address) {
+        if let Some(existing) = env
+            .storage()
+            .instance()
+            .get::<symbol_short!,"GAME"), GameState>()
+        {
+            if existing.turn.status == GameStatus::Playing {
+                panic!("Game in progress");
+            }
+        }
+
         let board = init_board(&env);
         let state_hash = compute_state_hash(&env, &board);
 
@@ -53,7 +77,7 @@ impl ChessContract {
         let mut game: GameState = env
             .storage()
             .instance()
-            .get(&GAME_KEY)
+            .get(&GEME_KEY)
             .unwrap_or_else(|| panic!("Game not initialized"));
 
         // TurnSystem: validate player
@@ -127,7 +151,7 @@ impl ChessContract {
         let game: GameState = env
             .storage()
             .instance()
-            .get(&GAME_KEY)
+            .get(&GEME_KEY)
             .unwrap_or_else(|| panic!("Game not initialized"));
         game.board
     }
@@ -141,7 +165,16 @@ impl ChessContract {
     }
 
     /// Set the verification key (admin function)
-    pub fn set_vk(env: Env, vk: VerificationKey) {
+    pub fn set_vk(env: Env, admin: Address, vk: VerificationKey) {
+        let stored_admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .unwrap_or_else(|| panic!("Admin not set"));
+        if admin != stored_admin {
+            panic!("Not admin");
+        }
+        admin.require_auth();
         env.storage().instance().set(&VK_KEY, &vk);
     }
 }

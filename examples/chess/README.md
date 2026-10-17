@@ -2,11 +2,12 @@
 
 > **Transitional example**: This example uses an older Cougr pattern and is preserved
 > for compatibility reference. For the current recommended approach to ZK-backed game
-> logic specifically, see `hidden_hand`, which uses `cougr_core::circuits`' pre-built
+> logic specifically, see `hidden_hand`, which uses `cougr_core::circuits`'s pre-built
 > circuit builders instead of constructing a `CustomCircuit` by hand.
 
 A simplified chess implementation on Stellar Soroban that demonstrates **zero-knowledge proof
-verification** for move legality using the [Cougr](../../README.md) ZK framework. Move
+verification** for move legality using the [Cougr](../../README.md) ZK
+framework. Move
 legality is checked off-chain by a circuit; the contract only verifies a compact Groth16
 proof and applies the move.
 
@@ -23,14 +24,19 @@ ECS-lite examples for typed, byte-serializable game state.
 
 ## Public contract API
 
+The contract is deployed with a `__constructor(admin: Address)` that fixes the
+administrator for the lifetime of the contract instance. The admin is the only account
+that can call `set_vk`.
+
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `new_game` | `white: Address`, `black: Address` | - | Initializes the standard 8x8 opening position, computes the initial `state_hash`, and sets White to move first. |
+| `__constructor` | `admin: Address` | - | Runs once at deploy; stores the admin address used to gate `set_vk`. |
+| `new_game` | `white: Address`, `black: Address` | - | Initializes the standard 8x8 opening position, computes the initial `state_hash`, and sets White to move first. Panics with `Game in progress` if a game is already `Playing`. |
 | `submit_move` | `player: Address`, `from: u32`, `to: u32`, `proof: Bytes` | `MoveResult` | Requires `player.require_auth()`. Checks turn order and game status, verifies the supplied proof against the stored verification key and current `state_hash`, then applies the move, recomputes the hash, and switches turns. |
 | `resign` | `player: Address` | - | Marks the game `Resigned` if called by either registered player. |
 | `get_board` | - | `BoardState` | Current piece map and `state_hash`. |
 | `get_state` | - | `GameState` | Full game state: both players, board, turn state, and last proof record. |
-| `set_vk` | `vk: VerificationKey` | - | Admin function to set/replace the Groth16 verification key used for move proofs. |
+| `set_vk` | `admin: Address`, `vk: VerificationKey` | - | Admin-only. Requires the caller to match the admin stored at deploy time and to pass `admin.require_auth()`. Sets/rotates the Groth16 verification key used for move proofs. |
 
 ## Architecture overview
 
@@ -39,11 +45,11 @@ invocation:
 
 ```
 submit_move
-  └─ TurnSystem              → rejects calls from the wrong player or a finished game
-  └─ ProofVerificationSystem → verifies the Groth16 proof against state_hash/from/to via CustomCircuit
-  └─ BoardUpdateSystem       → applies the move to the piece map, recomputes state_hash
-  └─ TurnSystem              → increments move_count, switches current player
-  └─ EndGameSystem           → marks Checkmate if either king is no longer on the board
+  └‐TurnSystem              → rejects calls from the wrong player or a finished game
+  └‐ProofVerificationSystem → verifies the Groth16 proof against state_hash/from/to via CustomCircuit
+  └‐BoardUpdateSystem       → applies the move to the piece map, recomputes state_hash
+  └‐TurnSystem              → increments move_count, switches current player
+  └‐EndGameSystem           → marks Checkmate if either king is no longer on the board
 ```
 
 `components.rs` defines the data (`Piece`, `BoardState`, `TurnState`, `ProofRecord`,
@@ -60,24 +66,36 @@ The entire game lives under one instance-storage key (`GAME_KEY`,
 `symbol_short!("GAME")`) as a single `GameState` struct bundling both player addresses, the
 board, turn state, and the last proof record. The verification key is stored separately
 under its own instance-storage key (`VK_KEY`, `symbol_short!("VK")`) so it can be rotated
-with `set_vk` independently of game state. Instance storage is used for both - not persistent
-or temporary - because there is exactly one game and one verification key per contract
-instance, with no per-entry TTL management needed.
+with `set_vk` independently of game state. The admin address is stored under a
+third instance-storage key (`ADMIN_KEY`, `symbol_short!("ADMIN")`) and is written exactly
+once by the constructor. Instance storage is used for all three - not persistent
+or temporary - because there is exactly one game, one verification key, and one admin per
+contract instance, with no per-entry TTL management needed.
+
+## Admin model
+
+The admin is set once at deploy through the constructor and cannot be changed by any
+contract function. Only the admin can call `set_vk`, and `set_vk` verifies that the
+caller address matches the stored admin before calling `admin.require_auth()`. This prevents
+unrestricted key installation, which would otherwise let any caller substitute a circuit they
+control and submit "proven" moves the contract would accept.
 
 ## Main gameplay flow
 
-1. Deployer calls `set_vk(vk)` once to register the Groth16 verification key matching the
+1. Deployer deploys the contract with `__constructor(admin)`, which stores the admin address.
+2. Admin calls `set_vk(admin, vk)` once to register the Groth16 verification key matching the
    off-chain move-validation circuit.
-2. Deployer (or either player) calls `new_game(white, black)`; the board is seeded with the
-   standard opening position, White to move, and the initial `state_hash` is computed.
-3. Off-chain, White picks a move (`from`, `to`), runs the move-validation circuit against the
+3. Deployer (or either player) calls `new_game(white, black)`; the board is seeded with the
+   standard opening position, White to move, and the initial `state_hash` is computed. If a
+   game is already in progress (status `Playing`), this panics with `Game in progress`.
+4. Off-chain, White picks a move (`from`, `to`), runs the move-validation circuit against the
    current `state_hash`, and produces a Groth16 proof that the move is legal.
-4. White calls `submit_move(white, from, to, proof)`. The contract checks turn order, verifies
+5. White calls `submit_move(white, from, to, proof)`. The contract checks turn order, verifies
    the proof via `CustomCircuit`, and on success applies the move, recomputes `state_hash`,
    records the proof, and switches the turn to Black.
-5. Players alternate steps 3-4. If a king is ever captured, `EndGameSystem` sets the status to
+6. Players alternate steps 4-5. If a king is ever captured, `EndGameSystem` sets the status to
    `Checkmate`; either player may also call `resign` at any time to end the game early.
-6. Any caller reads `get_board` or `get_state` to render the current position or check status.
+7. Any caller reads `get_board` or `get_state` to render the current position or check status.
 
 ## Cougr APIs used
 
