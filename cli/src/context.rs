@@ -154,3 +154,176 @@ fn discover_examples(repo_root: &Path) -> Result<Vec<Example>> {
 
     Ok(examples)
 }
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    /// Build a fake repo with a Cargo.toml and the given example names
+    /// (each with its own Cargo.toml so `discover_examples` picks them up).
+    fn fake_repo(examples: &[&str]) -> tempfile::TempDir {
+        let dir = tempdir().unwrap();
+        fs::write(dir.path().join("Cargo.toml"), "[workspace]\n").unwrap();
+        let examples_dir = dir.path().join("examples");
+        fs::create_dir_all(&examples_dir).unwrap();
+        for name in examples {
+            let ex = examples_dir.join(name);
+            fs::create_dir_all(&ex).unwrap();
+            fs::write(ex.join("Cargo.toml"), "[package]\nname = \"x\"\n").unwrap();
+        }
+        dir
+    }
+
+    // -- resolve: explicit --path ------------------------------------------
+
+    #[test]
+    fn resolve_explicit_root_discovers_examples() {
+        let repo = fake_repo(&["alpha", "beta"]);
+        let root = repo.path().canonicalize().unwrap();
+        let ctx = resolve(&root, Some(root.to_str().unwrap()), None).unwrap();
+        assert_eq!(ctx.repo_root, root);
+        let mut names: Vec<_> = ctx.examples.iter().map(|e| e.name.clone()).collect();
+        names.sort();
+        assert_eq!(names, vec!["alpha", "beta"]);
+    }
+
+    #[test]
+    fn resolve_explicit_root_missing_path_bails() {
+        let repo = fake_repo(&["alpha"]);
+        let missing = repo.path().join("does-not-exist");
+        let err = resolve(repo.path(), Some(missing.to_str().unwrap()), None).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("explicit --path does not exist"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    // -- resolve: single_example (bail at :49) -----------------------------
+
+    #[test]
+    fn resolve_single_example_found() {
+        let repo = fake_repo(&["alpha", "beta"]);
+        let root = repo.path().canonicalize().unwrap();
+        let ctx = resolve(&root, Some(root.to_str().unwrap()), Some("beta")).unwrap();
+        assert_eq!(ctx.examples.len(), 1);
+        assert_eq!(ctx.examples[0].name, "beta");
+    }
+
+    #[test]
+    fn resolve_single_example_not_found_bails() {
+        let repo = fake_repo(&["alpha"]);
+        let root = repo.path().canonicalize().unwrap();
+        let err = resolve(&root, Some(root.to_str().unwrap()), Some("nope")).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("example 'nope' not found"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    // -- resolve: auto-detect inside examples/<name>/ ----------------------
+
+    #[test]
+    fn resolve_auto_detects_inside_example_dir() {
+        let repo = fake_repo(&["alpha", "beta"]);
+        let root = repo.path().canonicalize().unwrap();
+        let inside = root.join("examples").join("alpha");
+        let ctx = resolve(&inside, None, None).unwrap();
+        assert_eq!(ctx.examples.len(), 1);
+        assert_eq!(ctx.examples[0].name, "alpha");
+    }
+
+    // -- resolve: find_repo_root walk (bail at :107) -----------------------
+
+    #[test]
+    fn resolve_no_repo_root_bails() {
+        // A tempdir with no Cargo.toml and no examples/ anywhere above it
+        // (tempdirs live under /tmp, which has neither).
+        let dir = tempdir().unwrap();
+        let err = resolve(dir.path(), None, None).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("could not find repo root"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
+    fn resolve_walks_up_to_repo_root() {
+        let repo = fake_repo(&["alpha"]);
+        let root = repo.path().canonicalize().unwrap();
+        let nested = root.join("examples").join("alpha").join("src");
+        fs::create_dir_all(&nested).unwrap();
+        // From a nested dir that is not directly inside examples/<name>/,
+        // find_repo_root should walk up and discover all examples.
+        let ctx = resolve(&nested, None, None).unwrap();
+        assert_eq!(ctx.repo_root, root);
+        assert_eq!(ctx.examples.len(), 1);
+        assert_eq!(ctx.examples[0].name, "alpha");
+    }
+
+    // -- discover_examples: bail at :131 (no examples/ dir) ----------------
+
+    #[test]
+    fn resolve_missing_examples_dir_bails() {
+        let dir = tempdir().unwrap();
+        // Cargo.toml present so find_repo_root succeeds, but no examples/.
+        fs::write(dir.path().join("Cargo.toml"), "[workspace]\n").unwrap();
+        let root = dir.path().canonicalize().unwrap();
+        // Pass explicit_root so we skip find_repo_root and hit discover_examples.
+        let err = resolve(&root, Some(root.to_str().unwrap()), None).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("examples/ directory not found"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    // -- discover_examples: bail at :152 (empty examples/) -----------------
+
+    #[test]
+    fn resolve_empty_examples_dir_bails() {
+        let repo = fake_repo(&[]);
+        let root = repo.path().canonicalize().unwrap();
+        let err = resolve(&root, Some(root.to_str().unwrap()), None).unwrap_err();
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("no examples found"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
+    fn discover_examples_skips_dirs_without_cargo_toml() {
+        let repo = fake_repo(&["alpha"]);
+        let root = repo.path().canonicalize().unwrap();
+        // A directory under examples/ that has no Cargo.toml must be skipped.
+        fs::create_dir_all(root.join("examples").join("not_an_example")).unwrap();
+        let ctx = resolve(&root, Some(root.to_str().unwrap()), None).unwrap();
+        assert_eq!(ctx.examples.len(), 1);
+        assert_eq!(ctx.examples[0].name, "alpha");
+    }
+
+    // -- example_dir / canonical_example_names -----------------------------
+
+    #[test]
+    fn example_dir_joins_examples_and_name() {
+        let root = Path::new("/tmp/repo");
+        assert_eq!(
+            example_dir(root, "alpha"),
+            PathBuf::from("/tmp/repo/examples/alpha")
+        );
+    }
+
+    #[test]
+    fn canonical_example_names_has_ten_entries() {
+        assert_eq!(canonical_example_names().len(), 10);
+    }
+}

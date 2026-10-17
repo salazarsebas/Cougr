@@ -144,3 +144,181 @@ impl std::error::Error for CliError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io;
+
+    fn io_error() -> io::Error {
+        io::Error::new(io::ErrorKind::NotFound, "boom")
+    }
+
+    fn all_variants() -> Vec<CliError> {
+        vec![
+            CliError::InvalidName {
+                name: "1bad".to_string(),
+                reason: "must start with a letter".to_string(),
+            },
+            CliError::InvalidConfig {
+                reason: "board_width out of range".to_string(),
+            },
+            CliError::TargetExists {
+                path: PathBuf::from("/tmp/my-game"),
+                is_file: false,
+            },
+            CliError::TargetExists {
+                path: PathBuf::from("/tmp/my-game"),
+                is_file: true,
+            },
+            CliError::Io {
+                action: "write",
+                path: PathBuf::from("/tmp/out.txt"),
+                source: io_error(),
+            },
+            CliError::MissingTemplateAsset {
+                template: "turn-based",
+                file: "src/lib.rs".to_string(),
+            },
+            CliError::UnknownPiece {
+                name: "nope".to_string(),
+                available: "score, timer".to_string(),
+            },
+            CliError::InvalidProject {
+                path: PathBuf::from("/tmp/not-a-project"),
+            },
+            CliError::PieceConflict {
+                piece: "score".to_string(),
+                files: vec![PathBuf::from("src/score.rs")],
+            },
+            CliError::MissingPieceAsset {
+                piece: "score".to_string(),
+                file: "score.rs".to_string(),
+            },
+        ]
+    }
+
+    #[test]
+    fn hint_is_some_for_actionable_variants() {
+        let cases: Vec<(CliError, &str)> = vec![
+            (
+                CliError::InvalidName {
+                    name: "1bad".to_string(),
+                    reason: "must start with a letter".to_string(),
+                },
+                "crate names start with a letter",
+            ),
+            (
+                CliError::InvalidConfig {
+                    reason: "board_width out of range".to_string(),
+                },
+                "board_width and board_height in 3..=8",
+            ),
+            (
+                CliError::TargetExists {
+                    path: PathBuf::from("/tmp/my-game"),
+                    is_file: false,
+                },
+                "directory `/tmp/my-game`",
+            ),
+            (
+                CliError::TargetExists {
+                    path: PathBuf::from("/tmp/my-game"),
+                    is_file: true,
+                },
+                "file `/tmp/my-game`",
+            ),
+            (
+                CliError::MissingTemplateAsset {
+                    template: "turn-based",
+                    file: "src/lib.rs".to_string(),
+                },
+                "bug in cougr-cli",
+            ),
+            (
+                CliError::UnknownPiece {
+                    name: "nope".to_string(),
+                    available: "score, timer".to_string(),
+                },
+                "cougr add --list",
+            ),
+            (
+                CliError::InvalidProject {
+                    path: PathBuf::from("/tmp/not-a-project"),
+                },
+                "cougr add",
+            ),
+            (
+                CliError::MissingPieceAsset {
+                    piece: "score".to_string(),
+                    file: "score.rs".to_string(),
+                },
+                "bug in cougr-cli",
+            ),
+        ];
+
+        for (err, needle) in cases {
+            let hint = err.hint().unwrap_or_else(|| {
+                panic!("expected a hint for {err:?}, got None");
+            });
+            assert!(
+                hint.contains(needle),
+                "hint for {err:?} was {hint:?}, expected it to contain {needle:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn hint_is_none_for_non_actionable_variants() {
+        let cases = vec![
+            CliError::Io {
+                action: "write",
+                path: PathBuf::from("/tmp/out.txt"),
+                source: io_error(),
+            },
+            CliError::PieceConflict {
+                piece: "score".to_string(),
+                files: vec![PathBuf::from("src/score.rs")],
+            },
+        ];
+
+        for err in cases {
+            assert!(
+                err.hint().is_none(),
+                "expected no hint for {err:?}, got {:?}",
+                err.hint()
+            );
+        }
+    }
+
+    #[test]
+    fn every_variant_has_a_hint_decision() {
+        // Table-driven guard: every variant must be classified as Some or None
+        // by `hint()`. This keeps the match exhaustive as variants are added.
+        for err in all_variants() {
+            let _ = err.hint();
+        }
+    }
+
+    #[test]
+    fn display_messages_are_non_empty() {
+        for err in all_variants() {
+            let msg = err.to_string();
+            assert!(!msg.is_empty(), "display for {err:?} was empty");
+        }
+    }
+
+    #[test]
+    fn io_variant_exposes_source() {
+        let err = CliError::io("write", "/tmp/out.txt", io_error());
+        assert!(std::error::Error::source(&err).is_some());
+    }
+
+    #[test]
+    fn non_io_variants_have_no_source() {
+        let err = CliError::InvalidConfig {
+            reason: "bad".to_string(),
+        };
+        assert!(std::error::Error::source(&err).is_none());
+    }
+}

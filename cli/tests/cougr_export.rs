@@ -1,6 +1,7 @@
 //! End-to-end coverage for the studio config export path.
 
 use std::fs;
+use std::path::Path;
 use std::process::{Command, Output};
 
 fn export(config: &str) -> (tempfile::TempDir, Output) {
@@ -125,5 +126,44 @@ fn export_never_overwrites_existing_directory() {
     assert_eq!(
         fs::read_to_string(project.join("keep.txt")).unwrap(),
         "mine"
+    );
+}
+
+#[test]
+fn export_missing_config_file_fails() {
+    let dir = tempfile::tempdir().unwrap();
+    let missing = dir.path().join("does-not-exist.json");
+    assert!(!Path::new(&missing).exists());
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["export", "demo", "--config"])
+        .arg(&missing)
+        .arg("--path")
+        .arg(dir.path())
+        .output()
+        .unwrap();
+    assert!(
+        !output.status.success(),
+        "export unexpectedly succeeded with a missing config file"
+    );
+    assert!(!dir.path().join("demo").exists());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("does-not-exist.json"),
+        "stderr did not mention the missing config path: {stderr}"
+    );
+}
+
+#[test]
+fn export_malformed_config_json_fails() {
+    let (dir, output) = export("{ this is not valid json ");
+    assert!(
+        !output.status.success(),
+        "export unexpectedly succeeded with malformed JSON"
+    );
+    assert!(!dir.path().join("demo").exists());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        !stderr.is_empty(),
+        "expected an error message on stderr for malformed JSON"
     );
 }

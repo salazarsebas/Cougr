@@ -353,3 +353,175 @@ pub fn indent_lines(s: &str, prefix: &str) -> String {
         .collect::<Vec<_>>()
         .join("\n")
 }
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    /// Build a minimal fake example directory with a Cargo.toml and README.md.
+    fn fake_example(dir: &Path, name: &str) -> std::path::PathBuf {
+        let ex = dir.join("examples").join(name);
+        fs::create_dir_all(&ex).unwrap();
+        ex
+    }
+
+    // -- check_readme_contract_ids -----------------------------------------
+
+    #[test]
+    fn readme_contract_ids_pass_when_no_id() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(ex.join("README.md"), "# Demo\nNo contract id here.\n").unwrap();
+        let mut failures = Vec::new();
+        check_readme_contract_ids(&ex, "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {:?}", failures);
+    }
+
+    #[test]
+    fn readme_contract_ids_fail_when_hardcoded_id() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        // C + 55 chars from [A-Z2-7]
+        let id = format!("C{}", "A".repeat(55));
+        fs::write(ex.join("README.md"), format!("# Demo\nContract: {id}\n")).unwrap();
+        let mut failures = Vec::new();
+        check_readme_contract_ids(&ex, "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("hardcoded contract ID"));
+    }
+
+    #[test]
+    fn readme_contract_ids_skips_when_missing() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        let mut failures = Vec::new();
+        check_readme_contract_ids(&ex, "demo", &mut failures);
+        assert!(failures.is_empty());
+    }
+
+    // -- check_example_gitignore -------------------------------------------
+
+    #[test]
+    fn example_gitignore_pass_when_target_present() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(ex.join(".gitignore"), "target/\n").unwrap();
+        let mut failures = Vec::new();
+        check_example_gitignore(&ex, "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {:?}", failures);
+    }
+
+    #[test]
+    fn example_gitignore_fail_when_missing() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        let mut failures = Vec::new();
+        check_example_gitignore(&ex, "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("missing .gitignore"));
+    }
+
+    #[test]
+    fn example_gitignore_fail_when_target_absent() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(ex.join(".gitignore"), "/build\n").unwrap();
+        let mut failures = Vec::new();
+        check_example_gitignore(&ex, "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("does not ignore target/"));
+    }
+
+    // -- check_cargo_toml_description --------------------------------------
+
+    #[test]
+    fn cargo_toml_description_pass_when_non_empty() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(
+            ex.join("Cargo.toml"),
+            "[package]\nname = \"demo\"\ndescription = \"A demo example\"\n",
+        )
+        .unwrap();
+        let mut failures = Vec::new();
+        check_cargo_toml_description(&ex, "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {:?}", failures);
+    }
+
+    #[test]
+    fn cargo_toml_description_fail_when_missing() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(ex.join("Cargo.toml"), "[package]\nname = \"demo\"\n").unwrap();
+        let mut failures = Vec::new();
+        check_cargo_toml_description(&ex, "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("missing a description"));
+    }
+
+    #[test]
+    fn cargo_toml_description_fail_when_empty() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(
+            ex.join("Cargo.toml"),
+            "[package]\nname = \"demo\"\ndescription = \"\"\n",
+        )
+        .unwrap();
+        let mut failures = Vec::new();
+        check_cargo_toml_description(&ex, "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("description field is empty"));
+    }
+
+    #[test]
+    fn cargo_toml_description_fail_when_cargo_toml_missing() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        let mut failures = Vec::new();
+        check_cargo_toml_description(&ex, "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("missing Cargo.toml"));
+    }
+
+    // -- check_cargo_metadata ----------------------------------------------
+    //
+    // NOTE: this test shells out to `cargo metadata`. It is intentionally
+    // kept to a single case (a valid minimal crate) to keep it fast and
+    // robust. The failure path is exercised indirectly via `run_generated`.
+
+    #[test]
+    fn cargo_metadata_pass_on_minimal_crate() {
+        let tmp = tempdir().unwrap();
+        let ex = fake_example(tmp.path(), "demo");
+        fs::write(
+            ex.join("Cargo.toml"),
+            "[package]\nname = \"demo\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        )
+        .unwrap();
+        fs::create_dir_all(ex.join("src")).unwrap();
+        fs::write(ex.join("src/lib.rs"), "").unwrap();
+        let mut failures = Vec::new();
+        check_cargo_metadata(&ex, "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {:?}", failures);
+    }
+
+    // -- indent_lines ------------------------------------------------------
+
+    #[test]
+    fn indent_lines_prefixes_every_line() {
+        let out = indent_lines("a\nb\nc", "  ");
+        assert_eq!(out, "  a\n  b\n  c");
+    }
+
+    #[test]
+    fn indent_lines_handles_empty_string() {
+        assert_eq!(indent_lines("", "  "), "");
+    }
+}
