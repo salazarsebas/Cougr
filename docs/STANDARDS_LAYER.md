@@ -31,7 +31,7 @@ These modules are meant to be composed into application contracts and account fl
 
 ### `Pausable`
 
-- storage-backed emergency stop flag
+- storage-backed emergency stop flaf
 - explicit paused and unpaused transitions
 - guard methods for mutating entrypoints
 
@@ -73,9 +73,11 @@ Where authorization matters:
 
 - `Ownable` and `Ownable2Step` require an explicit caller address
 - `AccessControl` checks the caller against the relevant admin role
-- `Pausable`, `RecoveryGuard`, and similar state machines leave the surrounding authorization decision to the integrating contract
+- `Pausable`, `RecoveryGuard`, and similar state machines leave the surrounding authorization decision to the integring contract
 
 This is intentional. Cougr keeps authorization visible at the integration boundary instead of burying it in generic helpers.
+
+In particular, the standards mutators do not call `caller.require_auth()`. They compare `caller` against stored state and emit events, but the integrating contract is responsible for authenticating the caller before invoking them. This includes `Pausable::pause` and `Pausable::unpause`, where the `caller` argument is used only for the emitted event.
 
 ## Error Semantics
 
@@ -90,7 +92,7 @@ Important failure modes include:
 - paused versus not-paused guard failures
 - execution lock contention
 - recovery-active guard failure
-- empty or oversized batches
+- empty or oversize batches
 - delayed operation not ready, expired, already executed, or missing
 
 ## Maturity

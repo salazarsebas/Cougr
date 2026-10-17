@@ -43,6 +43,9 @@ impl Ownable {
         Self { id }
     }
 
+    /// Sets the initial owner. The integrating contract must authenticate
+    /// the caller before invoking this function; this helper does not call
+    /// `caller.require_auth()`.
     pub fn initialize(
         &self,
         env: &Env,
@@ -76,9 +79,12 @@ impl Ownable {
         if owner != *caller {
             return Err(StandardsError::Unauthorized);
         }
-        Ok(())
+        Ok()
     }
 
+    /// Transfers ownership to `new_owner`. The integrating contract must
+    /// authenticate `caller` before invoking this function; this helper does not
+    /// call `caller.require_auth()`.
     pub fn transfer_ownership(
         &self,
         env: &Env,
@@ -100,6 +106,9 @@ impl Ownable {
         })
     }
 
+    /// Renounces ownership, leaving the contract without an owner. The
+    /// integrating contract must authenticate `caller` before invoking this one;
+    /// this helper does not call `caller.require_auth()`.
     pub fn renounce_ownership(
         &self,
         env: &Env,
@@ -134,6 +143,9 @@ impl Ownable2Step {
         }
     }
 
+    /// Sets the initial owner. The integrating contract must authenticate
+    /// the caller before invoking this function; this helper does not call
+    /// `caller.require_auth()`.
     pub fn initialize(
         &self,
         env: &Env,
@@ -154,6 +166,9 @@ impl Ownable2Step {
         self.inner.require_owner(env, caller)
     }
 
+    /// Starts a two-step transfer to `pending_owner`. The integrating
+    /// contract must authenticate `caller` before invoking this function; this
+    /// helper does not call `caller.require_auth()`.
     pub fn begin_transfer(
         &self,
         env: &Env,
@@ -171,6 +186,9 @@ impl Ownable2Step {
         })
     }
 
+    /// Accepts a pending ownership transfer. The integrating contract must
+    /// authenticate `caller` before invoking this function; this helper does
+    /// not call `caller.require_auth()`.
     pub fn accept_transfer(
         &self,
         env: &Env,
@@ -197,6 +215,9 @@ impl Ownable2Step {
         })
     }
 
+    /// Cancels a pending ownership transfer. The integrating contract must
+    /// authenticate `caller` before invoking this function; this helper does not
+    /// call `caller.require_auth()`.
     pub fn cancel_transfer(
         &self,
         env: &Env,
@@ -214,5 +235,258 @@ impl Ownable2Step {
             owner: caller.clone(),
             pending_owner,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::testutils::Address;
+    use soroban_sdk:{Env, Symbol};
+
+    fn setup() -> (Env, Address) {
+        let env = Env::default();
+        let id = env.register(Contract, ());
+        (env, id)
+    }
+
+    fn: ownable() -> Ownable {
+        Ownable::new(Symbol::new(&Env::default(), "ownable"))
+    }
+
+    #`derive(Contract)]
+    struct Contract;
+
+    #[contractimpl]
+    impl Contract {}
+
+    #[test]
+    fn initialize_sets_owner_and_emits_event() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let owner = Address::generate(&env);
+        env.as_contract(&id, || {
+            let event = ownable.initialize(&env, &owner).unwrap();
+            assert_eq(event.previous_owner, None);
+            assert_eq(event.new_owner, Some(owner.clone()));
+            assert_eq(ownable.owner(&env), Some(owner));
+        });
+    }
+
+    #[test]
+    fn initialize_twice_returns_already_initialized() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let owner = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq(
+                ownable.initialize(&env, &owner),
+                Err(StandardsError::AlreadyInitialized),
+            );
+        });
+    }
+
+    #[test]
+    fn require_owner_fails_when_owner_not_set() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let caller = Address::generate(&env);
+        env.as_contract(&id, || {
+            assert_eq(
+                ownable.require_owner(&env, &caller),
+                Err(StandardsError::OwnerNotSet),
+            );
+        });
+    }
+
+    #[test]
+    fn require_owner_fails_for_non_owner() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let owner = Address::generate(&env);
+        let other = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq(
+                ownable.require_owner(&env, &other),
+                Err(StandardsError::Unauthorized),
+            );
+        });
+    }
+
+    #[test]
+    fn transfer_ownership_moves_owner_and_clears_pending() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let owner = Address::generate(&env);
+        let new_owner = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            let event = ownable.transfer_ownership(&env, &owner, &new_owner).unwrap();
+            assert_eq(event.previous_owner, Some(owner.clone()));
+            assert_eq(event.new_owner, Some(new_owner.clone()));
+            assert_eq(ownable.owner(&env), Some(new_owner));
+            assert_eq(ownable.pending_owner(&env), None);
+        });
+    }
+
+    #[test]
+    fn transfer_ownership_rejects_non_owner() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let owner = Address::generate(&env);
+        let other = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq(
+                ownable.transfer_ownership(&env, &other, &other),
+                Err(StandardsError::Unauthorized),
+            );
+        });
+    }
+
+    #[test]
+    fn renounce_ownership_clears_owner_and_pending() {
+        let (env, id) = setup();
+        let ownable = ownable();
+        let owner = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            let event = ownable.renounce_ownership(&env, &owner).unwrap();
+            assert_eq(event.previous_owner, Some(owner.clone()));
+            assert_eq(event.new_owner, None);
+            assert_eq(ownable.owner(&env), None);
+            assert_eq(ownable.pending_owner(&env), None);
+        });
+    }
+
+    fn: ownable_2step() -> Ownable2Step {
+        Ownable2Step::new(Symbol::new(&Env::default(), "ownable2step"))
+    }
+
+    #[test]
+    fn begin_transfer_sets_pending_owner() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        let pending = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            let event = ownable.begin_transfer(&env, &owner, &pending).unwrap();
+            assert_eq(event.owner, owner.clone());
+            assert_eq(event.pending_owner, pending.clone());
+            assert_eq(ownable.pending_owner(&env), Some(pending));
+        });
+    }
+
+    #[test]
+    fn begin_transfer_rejects_non_owner() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        let other = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq(
+                ownable.begin_transfer(&env, &other, &other),
+                Err(StandardsError::Unauthorized),
+            );
+        });
+    }
+
+    #[test]
+    fn accept_transfer_requires_pending_owner() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq(
+                ownable.accept_transfer(&env, &owner),
+                Err(StandardsError::PendingOwnerNotSet),
+            );
+        });
+    }
+
+    #[test]
+    fn accept_transfer_rejects_mismatched_caller() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        let pending = Address::generate(&env);
+        let other = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            ownable.begin_transfer(&env, &owner, &pending).unwrap();
+            assert_eq(
+                ownable.accept_transfer(&env, &other),
+                Err(StandardsError::PendingOwnerMismatch),
+            );
+        });
+    }
+
+    #[test]
+    fn accept_transfer_moves_ownership() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        let pending = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            ownable.begin_transfer(&env, &owner, &pending).unwrap();
+            let event = ownable.accept_transfer(&env, &pending).unwrap();
+            assert_eq(event.previous_owner, Some(owner.clone()));
+            assert_eq(event.new_owner, Some(pending.clone()));
+            assert_eq(ownable.owner(&env), Some(pending.clone()));
+            assert_eq(ownable.pending_owner(&env), None);
+        });
+    }
+
+    #[test]
+    fn cancel_transfer_clears_pending() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        let pending = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            ownable.begin_transfer(&env, &owner, &pending).unwrap();
+            let event = ownable.cancel_transfer(&env, &owner).unwrap();
+            assert_eq(event.owner, owner.clone());
+            assert_eq(event.pending_owner, pending.clone());
+            assert_eq(ownable.pending_owner(&env), None);
+            assert_eq(ownable.owner(&env), Some(owner));
+        });
+    }
+
+    #[test]
+    fn cancel_transfer_requires_pending_owner() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq(
+                ownable.cancel_transfer(&env, &owner),
+                Err(StandardsError::PendingOwnerNotSet),
+            );
+        });
+    }
+
+    #[test]
+    fn cancel_transfer_rejects_non_owner() {
+        let (env, id) = setup();
+        let ownable = ownable_2step();
+        let owner = Address::generate(&env);
+        let other = Address::generate(&env);
+        env.as_contract(&id, || {
+            ownable.initialize(&env, &owner).unwrap();
+            ownable.begin_transfer(&env, &owner, &other).unwrap();
+            assert_eq(
+                ownable.cancel_transfer(&env, &other),
+                Err(StandardsError::Unauthorized),
+            );
+        });
     }
 }
