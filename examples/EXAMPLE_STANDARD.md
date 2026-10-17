@@ -203,6 +203,8 @@ Use the following table to decide which Cougr APIs an example should use and doc
 | `ScheduleStage` | Systems must run in a defined order within a tick | Stable |
 | `SimpleWorld` | The example stores and queries entities with multiple components | Stable |
 | `SimpleQueryBuilder` | The example scans entities by component type (more than one entity type) | Stable |
+| `ArchetypeWorld` | The example groups entities by component signature for archetype-batched queries, as an alternative to `SimpleWorld` | Stable |
+| `ArchetypeQueryBuilder` | The example queries `ArchetypeWorld` by required, excluded, or optional component types (`with_component` / `without_component` / `with_any_component`) | Stable |
 | `impl_rich_component!` | A component contains `Address` or `Vec` fields that need Soroban-native storage | Stable |
 | `session::SessionManager` | The example manages multi-round player sessions, timeouts, or session-key lifecycle | Beta |
 | `circuits::hidden_cards` | The example demonstrates hidden-card ZK proof flows | Experimental |
@@ -233,6 +235,7 @@ The following table maps each canonical example to its primary Cougr APIs:
 | `snake` | `GameApp`, `ScheduleStage`, `SimpleWorld`, `SimpleQueryBuilder` |
 | `battleship` | `privacy::stable`, `GameApp`, `SimpleWorld` |
 | `guild_arena` | `auth`, `ops::Ownable`, `ops::RecoveryGuard`, `GameApp` |
+| `sokoban` | `ArchetypeWorld`, `ArchetypeQueryBuilder` |
 
 > **Note:** All `circuits::*` functions return a `GameCircuitSpec` and are currently considered **Experimental** (matching the `CHANGELOG.md`).
 

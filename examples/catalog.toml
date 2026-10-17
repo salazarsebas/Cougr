@@ -95,3 +95,9 @@ name = "staked_tournament"
 category = "other"
 maturity = "canonical"
 cougr_features = ["token-escrow"]
+
+[example.sokoban]
+name = "sokoban"
+category = "puzzle"
+maturity = "canonical"
+cougr_features = ["ecs", "archetype-world"]

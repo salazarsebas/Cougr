@@ -1,0 +1,28 @@
+name: Sokoban Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "examples/sokoban/**"
+      - "!examples/sokoban/**/*.md"
+      - ".github/workflows/example_reusable.yml"
+      - ".github/workflows/sokoban.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "examples/sokoban/**"
+      - "!examples/sokoban/**/*.md"
+      - ".github/workflows/example_reusable.yml"
+      - ".github/workflows/sokoban.yml"
+
+concurrency:
+  group: sokoban-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Sokoban Example CI
+      working_directory: examples/sokoban
