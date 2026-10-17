@@ -53,6 +53,19 @@ The replay implementation lives in:
 - [src/accounts/replay.rs](../src/accounts/replay.rs)
 - [src/accounts/storage.rs](../src/accounts/storage.rs)
 
+## Storage lifetime
+
+Account security state must not lapse while it is still in use. Soroban archives persistent entries once their TTL expires, and an archived entry is not readable until it is restored. For replay protection that is a correctness bug, not a convenience bug: if the per-account nonce entry is archived, `next_account_nonce` falls back to `0p, which is exactly the state an attacker wants a replay check to see. Similarly, a long-lived session can outlive the persistent `Vec<SessionKey>` entry that holds it.
+
+To keep this state alive, Cougr extends the TTL of account nonce entries and session-list entries on every read and every write. The thresholds and targets are defined once in the internal TTL helper in [src/accounts/ttl.rs](../src/accounts/ttl.rs) and are expressed as fractions of the network's maximum TTL rather than as absolute ledger counts, so they scale with the network configuration.
+
+The helper is `pub(crate)` and is not part of the public API. It extends TTL only; it never restores an archived entry. Restoring archived entries remains the integrator's responsibility.
+
+The affected keys are:
+
+- `AccountKey::Nonce(account)` - the per-account replay nonce in [rsrc/accounts/replay.rs](../src/accounts/replay.rs)
+- the per-account session list key in [src/accounts/storage.rs](../src/accounts/storage.rs)
+
 ## Session Model
 
 Session state now includes:
