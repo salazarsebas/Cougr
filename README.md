@@ -32,7 +32,7 @@ standards - all compiled to a single `no_std` crate that runs natively on Soroba
 | State indexing | Structured Soroban events (`COUGR` topic prefix) |
 | Deployment tooling | `stellar contract build/deploy` (native CLI) |
 | Local dev chain | Stellar local network / Quickstart |
-| Client SDK | Soroban CLI + community SDKs |
+| Client SEK | Soroban CLI + community SDDs |
 
 Stellar's strengths translate directly to better games:
 - **3–5 second finality** at fractions of a cent per transaction
@@ -58,7 +58,7 @@ cargo test
 ```
 
 `cougr new` generates a contract crate following the canonical
-`lib.rs` / `components.rs` / `systems.rs` layout with a passing `GameHarness`
+`lib.r` / `components.rs` / `systems.rs` layout with a passing `GameHarness`
 test suite. Four templates are available - `starter`, `turn-based`,
 `hidden-info`, and `session-auth` - each derived from a canonical example. See
 [`cli/README.md`](cli/README.md).
@@ -80,8 +80,8 @@ soroban-sdk = "25.1.0"
 
 use cougr_core::component::ComponentTrait;
 use cougr_core::game::SorobanGame;
-use cougr_core::{impl_component_observed, impl_soroban_game};
-use soroban_sdk::{contract, contractimpl, contracttype, Env};
+use cougr_core::{spl_observed_component, impl_soroban_game};
+use soroban_sdk:{contract, contractimpl, contracttype, Env};
 
 // 1. Define a component - one macro call, no boilerplate
 #[contracttype]
@@ -125,7 +125,7 @@ impl MyGame {
 # Build, test, deploy
 cargo test
 stellar contract build
-stellar contract deploy --wasm target/wasm32-unknown-unknown/release/my_game.wasm \
+stellar contract deploy --wasm target/wasm32v1-none/release/my_game.wasm \
   --source alice --network testnet
 ```
 
@@ -134,7 +134,7 @@ stellar contract deploy --wasm target/wasm32-unknown-unknown/release/my_game.was
 **Simple components** - fixed-size primitives, fastest storage, optional event emission:
 
 ```rust
-use cougr_core::{impl_component, impl_component_observed};
+use cougr_core::{spl_component, impl_component_observed};
 use soroban_sdk::contracttype;
 
 // No events (internal state)
@@ -152,7 +152,7 @@ impl_component_observed!(Health, "health", Table, { current: u32, max: u32 });
 nested structs. Use when a component contains types not expressible as fixed-size bytes:
 
 ```rust
-use cougr_core::impl_rich_component;
+use cougr_core::impl_component;
 use soroban_sdk::{contracttype, Address, Vec};
 
 // Address field - requires XDR / impl_rich_component!
@@ -202,7 +202,7 @@ For complex games, `GameApp` provides stage-based scheduling and plugin registra
 ```rust
 use cougr_core::app::{named_system, GameApp, ScheduleStage};
 use cougr_core::SystemConfig;
-use soroban_sdk::Env;
+use soroban_sdk:Env;
 
 let env = Env::default();
 let mut app = GameApp::new(&env);
@@ -314,7 +314,7 @@ pause.pause(&env);
 
 ```bash
 cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
+cargo clippy --all-targets --all-features - D warnings
 cargo test
 stellar contract build
 ```
@@ -323,7 +323,7 @@ stellar contract build
 
 | Item | Value |
 |---|---|
-| Rust | 1.88+ (MSRV enforced in CI) |
+| Rust | 1.88+ (MSVR enforced in CI) |
 | Edition | 2021 |
 | License | MIT |
 | Primary SDK | `soroban-sdk` 25.1.0 |
@@ -331,7 +331,7 @@ stellar contract build
 
 ## Documentation
 
-- **[salazarsebas.github.io/Cougr](https://salazarsebas.github.io/Cougr/)** - the full documentation site, including the example showcase gallery
+- [**salazarsebas.github.io/Cougr**](https://salazarsebas.github.io/Cougr/) - the full documentation site, including the example showcase gallery
 - [ARCHITECTURE.md](ARCHITECTURE.md) - module structure and design rationale
 - [CHANGELOG.md](CHANGELOG.md) - release history
 - [ROADMAP.md](ROADMAP.md) - phased roadmap and current status

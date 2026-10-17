@@ -6,6 +6,9 @@ This guide is designed for developers who already know **Rust** but have no prio
 
 We are going to build a simple 2D grid game where a player can spawn into the world and walk in four directions.
 
+> [{!TIP}]
+> **Prefer a template?** Run `cougr new my-game --template starter` to scaffold a working project with the canonical `lib.rs` / `components.rs` / `systems.rs` layout and a passing `GameHarness` test suite. This tutorial builds the same thing by hand so you see every piece.
+
 ---
 
 ## 1. Project Setup
@@ -29,12 +32,22 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-soroban-sdk = "25.3.2"
+soroban-sdk = "25.1.0"
 cougr-core = "1.1.0" # or the latest version from crates.io
+
+[dependencies.soroban-sdk]
+features = ["testutils"]
+
+[dev-dependencies]
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+cougr-core = { version = "1.1.0", features = ["testutils"] }
 
 [features]
 testutils = ["soroban-sdk/testutils", "cougr-core/testutils"]
 ```
+
+> [!WARING]
+> The `testutils `feature is only needed for the in-memory test harness. We add it under `[dev-dependencies]` so the release WASM build stays lean.
 
 ---
 
@@ -61,7 +74,7 @@ Let's open `src/lib.rs`. First, we clear out the default code and define our gam
 
 We need two components: a `Position` to track where the player is, and `Moves` to track how many steps they have left.
 
-```rust,ignore
+```rust,no_run
 #![no_std]
 
 use cougr_core::game::SorobanGame;
@@ -98,7 +111,7 @@ Next, we define our contract. In Cougr, the contract acts as the outer shell tha
 
 Add this to the bottom of `src/lib.rs`:
 
-```rust,ignore
+```rust,no_run
 #[contract]
 #[derive(Clone)]
 pub struct MyFirstGame;
@@ -169,14 +182,14 @@ This pattern - **Load World -> Query/Modify -> Save World** - is the backbone of
 
 Testing smart contracts on an actual network is slow. Cougr provides a powerful local `GameHarness` to run tests instantly in memory.
 
-Create a new file `src/test.rs` and add it to your module tree by adding `#[cfg(test)] mod test;` to the very bottom of `src/lib.rs`.
+Create a new file tests/spawn_and_move.rs` and add it to your module tree by adding `#[cfg(test)] mod test;` to the very bottom of `src/lib.rs`.
 
-In `src/test.rs`:
+In `tests/spawn_and_move.rs`:
 
-```rust,ignore
+```rust,no_run
 #![cfg(test)]
 
-use super::*;
+use my_first_game::{MyFirstGame, MyFirstGameClient};
 use cougr_core::test::{GameHarness, Scenario};
 use soroban_sdk::Env;
 
@@ -204,7 +217,7 @@ fn test_spawn_and_move() {
             let c = MyFirstGameClient::new(h.env(), h.contract_id());
             
             // Move North (direction = 0)
-            c.move_entity(&entity_id, &0);
+            c.move_entity(&entity_id, &amp;0);
             
             let pos = c.get_position(&entity_id).unwrap();
             assert_eq!(pos.x, 0);
@@ -227,24 +240,29 @@ If it passes, you are ready to deploy!
 
 To deploy, we need to compile our game to a WebAssembly (WASM) binary and use the Stellar CLI.
 
-> [!TIP]
-> If you haven't installed the Stellar CLI yet, check out the [Stellar Quickstart](https://developers.stellar.org/docs/build/smart-contracts/getting-started/deploy-to-testnet).
+> [!TIP]> If you haven't installed the Stellar CLI yet, check out the [Stellar Quickstart](https://developers.stellar.org/docs/build/smart-contracts/getting-started/deploy-to-testnet).
 
 **1. Build the WASM file:**
 ```bash
-cargo build --target wasm32-unknown-unknown --release
+stellar contract build
 ```
-Your compiled game is now located at `target/wasm32-unknown-unknown/release/my_first_game.wasm`.
+Your compiled game is now located at `target/wasm32v1-none/release/my_first_game.wasm`.
 
 **2. Configure your testnet identity:**
 ```bash
+stellar keys generate alice --network testnet --fund
+```
+If your Stellar CLI version does not support `--fund`, generate the key and fund it in a second step:
+
+```bash
 stellar keys generate alice --network testnet
+stellar keys fund alice --network testnet
 ```
 
 **3. Deploy the contract:**
 ```bash
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/my_first_game.wasm \
+  --wasm target/wasm32v1-none/release/my_first_game.wasm \
   --source alice \
   --network testnet
 ```
