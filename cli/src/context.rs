@@ -4,6 +4,7 @@
 //! auto-detection from cwd, explicit `--path`, and `--example` flags.
 
 use anyhow::{Context, Result};
+use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -75,20 +76,54 @@ pub fn example_dir(repo_root: &Path, name: &str) -> PathBuf {
     repo_root.join("examples").join(name)
 }
 
-/// Return the 10 currently-canonical example names per EXAMPLE_STANDARD.md §7.
-pub fn canonical_example_names() -> &'static [&'static str] {
-    &[
-        "spawn_and_move",
-        "tic_tac_toe",
-        "session_arena",
-        "hidden_hand",
-        "fog_explorer",
-        "dice_duel",
-        "blind_auction",
-        "snake",
-        "battleship",
-        "guild_arena",
-    ]
+/// A single `[example.<key>]` table in `examples/catalog.toml`.
+#[derive(Debug, Deserialize)]
+struct CatalogEntry {
+    name: String,
+    maturity: String,
+}
+
+/// Top-level shape of `examples/catalog.toml`.
+#[derive(Debug, Deserialize)]
+struct Catalog {
+    #[serde(default)]
+    example: std::collections::BTreeMap<String, CatalogEntry>,
+}
+
+/// Return the canonical example names declared in `examples/catalog.toml`.
+///
+/// The catalog is the single source of truth for example metadata; any entry
+/// with `maturity = "canonical"` is returned (using its `name` field, which
+/// maps to the directory under `examples/`).
+pub fn canonical_example_names(repo_root: &Path) -> Result<Vec<String>> {
+    let catalog_path = repo_root.join("examples").join("catalog.toml");
+    let contents = fs::read_to_string(&catalog_path).context(format!(
+        "cannot read example catalog at {}",
+        catalog_path.display()
+    ))?;
+
+    let catalog: Catalog = toml::from_str(&contents).context(format!(
+        "malformed example catalog at {}",
+        catalog_path.display()
+    ))?;
+
+    let mut names: Vec<String> = catalog
+        .example
+        .into_values()
+        .filter(|entry| entry.maturity == "canonical")
+        .map(|entry| entry.name)
+        .collect();
+    names.sort();
+    names.dedup();
+
+    if names.is_empty() {
+        anyhow::bail!(
+            "no canonical examples found in {} (expected entries with maturity = \"canonical\")",
+            catalog_path.display()
+        );
+    }
+
+    Ok(names)
 }
 
 // ---------------------------------------------------------------------------

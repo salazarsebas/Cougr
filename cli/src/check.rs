@@ -4,6 +4,10 @@
 //! `scripts/enforce_hygiene.sh`, ported to Rust for cross-platform
 //! operation with no external script dependencies (shells out only for
 //! `git ls-files` and `cargo metadata`, which are required regardless).
+//!
+//! Canonical example selection is driven by `examples/catalog.toml`
+//! (see `context::canonical_example_names`); this module only consumes
+//! the already-filtered `ctx.examples` list.
 
 use crate::context::{example_dir, CheckContext};
 use anyhow::{Context, Result};
