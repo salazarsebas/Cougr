@@ -1,4 +1,4 @@
-use soroban_sdk::crypto::bn254::{Bn254G1Affine, Bn254G2Affine, Fr};
+use soroban_sdk::crypto::bn254::{Bn254Fr, Bn254G1Affine, Bn254G2Affine};
 use soroban_sdk::{Env, Vec};
 
 use super::error::ZKError;
@@ -32,7 +32,7 @@ pub fn bn254_g1_neg(_env: &Env, point: &G1Point) -> G1Point {
 /// Wraps `env.crypto().bn254().g1_mul()`.
 pub fn bn254_g1_mul(env: &Env, point: &G1Point, scalar: &Scalar) -> Result<G1Point, ZKError> {
     let p = Bn254G1Affine::from_bytes(point.bytes.clone());
-    let s = Fr::from_bytes(scalar.bytes.clone());
+    let s = Bn254Fr::from_bytes(scalar.bytes.clone());
     let result = env.crypto().bn254().g1_mul(&p, &s);
     Ok(G1Point {
         bytes: result.to_bytes(),

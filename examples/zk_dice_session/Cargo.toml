@@ -12,10 +12,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # path dep - pending cougr-core 1.x publication of circuits::* and session::*
 cougr-core = { path = "../../" }
-soroban-sdk = "25.1.0"
+soroban-sdk = "29.0.1"
 
 [dev-dependencies]
-soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+soroban-sdk = { version = "29.0.1", features = ["testutils"] }
 cougr-core = { path = "../../", features = ["testutils"] }
 
 [profile.release]

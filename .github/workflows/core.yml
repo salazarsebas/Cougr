@@ -84,8 +84,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Rust 1.88.0
-        uses: dtolnay/rust-toolchain@1.88.0
+      - name: Setup Rust 1.91.0
+        uses: dtolnay/rust-toolchain@1.91.0
         with:
           targets: wasm32v1-none
 

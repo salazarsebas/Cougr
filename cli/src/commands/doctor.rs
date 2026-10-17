@@ -17,15 +17,14 @@ use std::process::Command;
 
 // ── Minimum versions ─────────────────────────────────────────────────────────
 //
-// The Rust minimum comes from the root workspace `Cargo.toml` (`rust-version =
-// "1.70.0"`).  The stellar-cli minimum tracks the first release of the
-// current stable v21 series.
+// The Rust minimum comes from the root workspace Cargo.toml. Stellar CLI 25.2
+// is the minimum required for Soroban SDK 28 and newer contract specs.
 
 /// Minimum Rust version required by the workspace (from root `Cargo.toml`).
-const MIN_RUST: (u64, u64, u64) = (1, 70, 0);
+const MIN_RUST: (u64, u64, u64) = (1, 91, 0);
 
-/// Minimum `stellar` CLI version that ships the v21 API surface.
-const MIN_STELLAR: (u64, u64, u64) = (21, 0, 0);
+/// Minimum `stellar` CLI version required by the current Soroban SDK.
+const MIN_STELLAR: (u64, u64, u64) = (25, 2, 0);
 
 /// WASM compilation target required for Soroban contracts.
 const WASM_TARGET: &str = "wasm32v1-none";

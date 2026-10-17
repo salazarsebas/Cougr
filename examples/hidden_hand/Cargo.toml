@@ -10,11 +10,11 @@ license = "MIT"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-soroban-sdk = "25.1.0"
+soroban-sdk = "29.0.1"
 cougr-core = { path = "../../" }
 
 [dev-dependencies]
-soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+soroban-sdk = { version = "29.0.1", features = ["testutils"] }
 cougr-core = { path = "../../", features = ["testutils"] }
 
 [profile.release]
