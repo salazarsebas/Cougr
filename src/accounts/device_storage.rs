@@ -49,7 +49,7 @@ impl DeviceStorage {
     // --- Helpers ---
 
     /// Update a specific device key by ID. Loads all devices, applies the
-    /// updater to the matching device, and writes back.
+    /// updater to the first ACTIVE matching device, and writes back.
     pub fn update_device(
         env: &Env,
         account: &Address,
@@ -63,7 +63,7 @@ impl DeviceStorage {
 
         for i in 0..devices.len() {
             if let Some(mut d) = devices.get(i) {
-                if &d.key_id == key_id {
+                if &d.key_id == key_id && d.is_active {
                     found = true;
                     if let Some(f) = updater.take() {
                         f(&mut d);
