@@ -32,4 +32,5 @@ pub enum AccountError {
     SignerNotRegistered = 44,
     InvalidThreshold = 45,
     InsufficientGuardians = 46,
+    DuplicateDeviceKey = 47,
 }

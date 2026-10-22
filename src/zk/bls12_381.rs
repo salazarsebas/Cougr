@@ -3,7 +3,7 @@
 //! Provides ergonomic wrappers around Stellar Protocol 22+ BLS12-381
 //! host functions. These complement the BN254 wrappers in `crypto.rs`.
 
-use soroban_sdk::crypto::bls12_381::{Bls12381G1Affine, Bls12381G2Affine, Fr as Bls12381Fr};
+use soroban_sdk::crypto::bls12_381::{Bls12381Fr, Bls12381G1Affine, Bls12381G2Affine};
 use soroban_sdk::{Env, Vec};
 
 use super::error::ZKError;

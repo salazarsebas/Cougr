@@ -113,6 +113,7 @@ pub enum MatchStatus {
 pub struct ArenaState {
     pub challenger: Address,
     pub defender: Address,
+    pub turn: Address,
     pub challenger_hp: u32,
     pub defender_hp: u32,
     pub round: u32,
@@ -188,6 +189,9 @@ impl GuildArenaContract {
         timelock: u64,
     ) {
         player.require_auth();
+        if env.storage().persistent().has(&player_key(&env, &player)) {
+            panic!("player already registered");
+        }
 
         let config = RecoveryConfig {
             threshold,
@@ -233,6 +237,15 @@ impl GuildArenaContract {
 
     pub fn add_device(env: Env, player: Address, device_key: Address, policy: DevicePolicyEntry) {
         player.require_auth();
+        device_key.require_auth();
+
+        let existing_owner: Option<Address> = env
+            .storage()
+            .persistent()
+            .get(&device_owner_key(&env, &device_key));
+        if existing_owner.is_some() {
+            panic!("device already registered");
+        }
 
         let mut dm = DeviceManager::load(player.clone());
         let key_bytes = Self::addr_to_bytes32(&env, &device_key);
@@ -279,6 +292,13 @@ impl GuildArenaContract {
             .get(&player_key(&env, &player))
             .unwrap_or_else(|| panic!("player not registered"));
 
+        let active_arena: Option<ArenaState> = env.storage().persistent().get(&ARENA_KEY);
+        if let Some(arena) = active_arena {
+            if arena.status == MatchStatus::InProgress {
+                panic!("match already in progress");
+            }
+        }
+
         let existing: Option<Address> = env.storage().persistent().get(&QUEUE_KEY);
 
         if let Some(challenger_addr) = existing {
@@ -295,6 +315,7 @@ impl GuildArenaContract {
             let arena = ArenaState {
                 challenger: challenger_addr.clone(),
                 defender: player.clone(),
+                turn: challenger_addr.clone(),
                 challenger_hp: challenger_profile.fighter.health,
                 defender_hp: profile.fighter.health,
                 round: 0,
@@ -332,6 +353,9 @@ impl GuildArenaContract {
         let is_challenger = arena.challenger == player;
         if !is_challenger && arena.defender != player {
             panic!("not a participant");
+        }
+        if arena.turn != player {
+            panic!("not your turn");
         }
 
         let challenger_profile: PlayerProfile = env
@@ -378,6 +402,12 @@ impl GuildArenaContract {
             arena.winner = arena.challenger.clone();
             finished = true;
         }
+
+        arena.turn = if is_challenger {
+            arena.defender.clone()
+        } else {
+            arena.challenger.clone()
+        };
 
         if finished {
             Self::update_ratings(&env, &arena);
@@ -477,17 +507,12 @@ impl GuildArenaContract {
             .unwrap();
 
         let k: u32 = 32;
-        let winner_expected = 100 / (100 + 1); // simplified elo
-        let loser_expected = 100 / (100 + 1);
 
         winner_profile.record.wins += 1;
-        winner_profile.record.rating += k * (100 - winner_expected) / 100;
+        winner_profile.record.rating = winner_profile.record.rating.saturating_add(k);
 
         loser_profile.record.losses += 1;
-        loser_profile.record.rating = loser_profile
-            .record
-            .rating
-            .saturating_sub(k * loser_expected / 100);
+        loser_profile.record.rating = loser_profile.record.rating.saturating_sub(k);
 
         if winner_profile.record.wins.is_multiple_of(3) {
             winner_profile.fighter.level += 1;

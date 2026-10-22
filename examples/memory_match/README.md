@@ -19,10 +19,10 @@ board, one player) with no dynamic entity population.
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `init_game` | `player: Address` | `GameState` | Seeds a fresh 16-card board (8 deterministic pairs) for `player` and returns the initial state. |
-| `reveal_card` | `player: Address`, `position: u32` | `RevealInfo` | Reveals the card at `position`. Resolves a pair once two cards are revealed (match, no-match, or game-over). Panics if not initialized, the caller isn't the registered player, the game is over, two cards are already revealed, the position is out of range, or the card is already revealed/matched. |
+| `init_game` | `player: Address` | `GameState` | Requires `player.require_auth()`. Seeds a fresh 16-card board (8 deterministic pairs) for `player` and returns the initial state. Panics if a game is already in progress and not over. Starting a fresh game after `game_over` is permitted. |
+| `reveal_card` | `player: Address`, `position: u32` | `RevealInfo` | Requires `player.require_auth()`. Reveals the card at `position`. Resolves a pair once two cards are revealed (match, no-match, or game-over). Panics if not initialized, the caller isn't the registered player, the game is over, two cards are already revealed, the position is out of range, or the card is already revealed/matched. |
 | `get_game_state` | - | `GameState` | Current board view, revealed/matched counts, move count, and game-over flag. |
-| `reset_game` | `player: Address` | `GameState` | Hides all cards and clears progress, keeping the same board layout. Panics if not initialized or the caller isn't the registered player. |
+| `reset_game` | `player: Address` | `GameState` | Requires `player.require_auth()`. Hides all cards and clears progress, keeping the same board layout. Panics if not initialized or the caller isn't the registered player. |
 
 ## Architecture overview
 

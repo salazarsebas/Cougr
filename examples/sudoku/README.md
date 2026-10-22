@@ -17,10 +17,10 @@ state (board, fixed-cell mask, status, move counter) is its own component with m
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `init_game` | `puzzle: Vec<u32>` | - | Seeds an empty 9×9 board from an 81-cell array (0=empty, 1–9=given). Cells with a non-zero starting value become fixed. Panics if already initialized, the length isn't 81, or a value exceeds 9. |
+| `init_game` | `puzzle: Vec<u32>` | - | Seeds an empty 9×9 board from an 81-cell array (0=empty, 1–9=given). Cells with a non-zero starting value become fixed. Panics if already initialized, the length isn't 81, a value exceeds 9, or initial givens violate row/column/block Sudoku constraints ("Puzzle givens violate Sudoku constraints"). |
 | `submit_value` | `row: u32`, `col: u32`, `value: u32` | - | Validates and places `value` at `(row, col)`. Panics if the puzzle is solved, the cell is fixed/out-of-bounds, the value is outside 1–9, or the placement violates a row/column/block constraint. |
 | `get_state` | - | `GameState` | Current status (0=playing, 1=solved) and move count. |
-| `get_cell` | `row: u32`, `col: u32` | `CellState` | Current value at the cell and whether it is a fixed given. |
+| `get_cell` | `row: u32`, `col: u32` | `CellState` | Current value at the cell and whether it is a fixed given. Panics with `Cell out of bounds` if `row >= 9` or `col >= 9`. |
 | `is_solved` | - | `bool` | Whether the puzzle is fully and correctly filled. |
 
 ## Architecture overview

@@ -15,6 +15,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+  pull-requests: read
+
 concurrency:
   group: cli-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -35,7 +39,7 @@ jobs:
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "cli -> target"
+          shared-key: cougr-workspace
 
       - name: Check formatting
         working-directory: ./cli
@@ -49,6 +53,27 @@ jobs:
         working-directory: ./cli
         run: cargo test
 
-      - name: Build CLI
-        working-directory: ./cli
-        run: cargo build
+  template-tests:
+    name: Generated template validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            templates:
+              - 'cli/templates/**'
+              - 'cli/src/template.rs'
+
+      - name: Setup Rust
+        if: steps.changes.outputs.templates == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+
+      - name: Compile generated templates
+        if: steps.changes.outputs.templates == 'true'
+        run: cargo test -p cougr-cli --test cougr_new -- --ignored --nocapture

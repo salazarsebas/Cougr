@@ -17,12 +17,22 @@ pub struct MemoryMatchContract;
 #[contractimpl]
 impl MemoryMatchContract {
     pub fn init_game(env: Env, player: Address) -> GameState {
+        player.require_auth();
+
+        if let Some(existing_world) = env.storage().instance().get::<_, ECSWorldState>(&WORLD_KEY) {
+            if !existing_world.game_state.game_over {
+                panic!("Game already in progress");
+            }
+        }
+
         let world_state = ECSWorldState::new(&env, player);
         env.storage().instance().set(&WORLD_KEY, &world_state);
         to_game_state(&env, &world_state)
     }
 
     pub fn reveal_card(env: Env, player: Address, position: u32) -> RevealInfo {
+        player.require_auth();
+
         let mut world_state: ECSWorldState = env
             .storage()
             .instance()
@@ -50,6 +60,8 @@ impl MemoryMatchContract {
     }
 
     pub fn reset_game(env: Env, player: Address) -> GameState {
+        player.require_auth();
+
         let mut world_state: ECSWorldState = env
             .storage()
             .instance()

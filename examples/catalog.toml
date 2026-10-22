@@ -98,6 +98,12 @@ category = "other"
 maturity = "canonical"
 cougr_features = ["token-escrow"]
 
+[example.sokoban]
+name = "sokoban"
+category = "puzzle"
+maturity = "canonical"
+cougr_features = ["ecs", "archetype-world"]
+
 # --- Transitional examples ----------------------------------------------------
 
 # Arcade
@@ -285,4 +291,3 @@ name = "tap_battle"
 category = "other"
 maturity = "transitional"
 cougr_features = ["auth", "session-auth", "ecs"]
-

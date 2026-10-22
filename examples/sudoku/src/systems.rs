@@ -67,7 +67,7 @@ pub(crate) fn placement_validation_system(
         && check_block(&board.cells, row, col, value)
 }
 
-fn check_row(cells: &Vec<u32>, row: u32, skip_col: u32, value: u32) -> bool {
+pub(crate) fn check_row(cells: &Vec<u32>, row: u32, skip_col: u32, value: u32) -> bool {
     for c in 0..BOARD_SIZE {
         if c == skip_col {
             continue;
@@ -79,7 +79,7 @@ fn check_row(cells: &Vec<u32>, row: u32, skip_col: u32, value: u32) -> bool {
     true
 }
 
-fn check_col(cells: &Vec<u32>, col: u32, skip_row: u32, value: u32) -> bool {
+pub(crate) fn check_col(cells: &Vec<u32>, col: u32, skip_row: u32, value: u32) -> bool {
     for r in 0..BOARD_SIZE {
         if r == skip_row {
             continue;
@@ -91,7 +91,7 @@ fn check_col(cells: &Vec<u32>, col: u32, skip_row: u32, value: u32) -> bool {
     true
 }
 
-fn check_block(cells: &Vec<u32>, row: u32, col: u32, value: u32) -> bool {
+pub(crate) fn check_block(cells: &Vec<u32>, row: u32, col: u32, value: u32) -> bool {
     let block_row = (row / 3) * 3;
     let block_col = (col / 3) * 3;
     for r in block_row..block_row + 3 {

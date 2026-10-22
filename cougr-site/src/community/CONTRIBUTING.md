@@ -23,15 +23,20 @@ Good contributions typically fall into one of these categories:
 
 ## Local Validation
 
-Run the relevant checks before opening a pull request:
+Run this from the repository root before you open or update a pull request:
 
 ```bash
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
+make check
 ```
 
-If you modify an example project, also run that example's local checks from its own directory. If the example supports Soroban contract builds, validate that flow as well. If you change `examples/catalog.toml` or the example directories it references, run `python3 scripts/validate_catalog.py` as described in [Adding Examples](#adding-examples).
+It runs the same checks as CI for the parts of the repository your branch changes (core library, CLI, examples, docs site, catalog, SDKs, clients, studio) and ends with a pass/fail summary. Fix everything it reports and run it again until it passes. A pull request is only merged when every CI workflow passes.
+
+- `make fix` applies the automatic fixes: `cargo fmt` and the docs site sync.
+- `make check-all` runs every check, whatever you changed.
+- If a tool is missing (for example `stellar`, `mdbook`, or `cargo-deny`), `make check` tells you how to install it. Skipped checks still run in CI.
+- CI tests your branch merged into `main`. Keep it current with `git fetch upstream && git rebase upstream/main` (add the remote once with `git remote add upstream https://github.com/salazarsebas/Cougr.git`).
+
+If you use an AI assistant, see [AGENTS.md](https://github.com/salazarsebas/Cougr/blob/main/AGENTS.md).
 
 ## Documentation Expectations
 

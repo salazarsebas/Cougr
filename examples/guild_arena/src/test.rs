@@ -44,6 +44,62 @@ fn test_register_player_with_guardians() {
 }
 
 #[test]
+fn test_duplicate_registration_preserves_existing_account_state() {
+    let (env, contract_id) = setup_env();
+    let player = Address::generate(&env);
+    let opponent = Address::generate(&env);
+    let guardians = [
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
+    let player_device = Address::generate(&env);
+    let opponent_device = Address::generate(&env);
+    let replacement_key = Address::generate(&env);
+
+    register_test_player(&env, &contract_id, &player, &guardians);
+    add_device_for_player(
+        &env,
+        &contract_id,
+        &player,
+        &player_device,
+        DevicePolicyLevel::Full,
+    );
+
+    let client = GuildArenaContractClient::new(&env, &contract_id);
+    let guardian_vec = Vec::from_slice(&env, &guardians);
+    assert!(client
+        .try_register_player(&player, &guardian_vec, &2, &604800)
+        .is_err());
+    let profile = client.get_player(&player);
+    assert_eq!(profile.record.rating, 1200);
+    assert_eq!(profile.record.wins, 0);
+    assert!(client.try_remove_device(&player, &player_device).is_ok());
+
+    add_device_for_player(
+        &env,
+        &contract_id,
+        &player,
+        &player_device,
+        DevicePolicyLevel::Full,
+    );
+    register_test_player(&env, &contract_id, &opponent, &guardians);
+    add_device_for_player(
+        &env,
+        &contract_id,
+        &opponent,
+        &opponent_device,
+        DevicePolicyLevel::Full,
+    );
+    client.start_match(&player_device);
+    client.start_match(&opponent_device);
+    assert_eq!(client.get_match().challenger, player);
+
+    client.initiate_recovery(&guardians[0], &player, &replacement_key);
+    client.approve_recovery(&guardians[1], &player, &replacement_key);
+}
+
+#[test]
 fn test_add_and_remove_device() {
     let (env, contract_id) = setup_env();
     let player = Address::generate(&env);
@@ -71,6 +127,51 @@ fn test_add_and_remove_device() {
 
     let client = GuildArenaContractClient::new(&env, &contract_id);
     client.remove_device(&player, &mobile);
+}
+
+#[test]
+fn test_add_device_rejects_another_players_device() {
+    let (env, contract_id) = setup_env();
+    let owner = Address::generate(&env);
+    let claimant = Address::generate(&env);
+    let opponent = Address::generate(&env);
+    let guardians = [
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
+    let owned_device = Address::generate(&env);
+    let opponent_device = Address::generate(&env);
+
+    register_test_player(&env, &contract_id, &owner, &guardians);
+    register_test_player(&env, &contract_id, &claimant, &guardians);
+    register_test_player(&env, &contract_id, &opponent, &guardians);
+    add_device_for_player(
+        &env,
+        &contract_id,
+        &owner,
+        &owned_device,
+        DevicePolicyLevel::Full,
+    );
+    add_device_for_player(
+        &env,
+        &contract_id,
+        &opponent,
+        &opponent_device,
+        DevicePolicyLevel::Full,
+    );
+
+    let client = GuildArenaContractClient::new(&env, &contract_id);
+    let policy = DevicePolicyEntry {
+        level: DevicePolicyLevel::Full,
+    };
+    assert!(client
+        .try_add_device(&claimant, &owned_device, &policy)
+        .is_err());
+
+    client.start_match(&owned_device);
+    client.start_match(&opponent_device);
+    assert_eq!(client.get_match().challenger, owner);
 }
 
 #[test]
@@ -196,8 +297,106 @@ fn test_rating_updates_after_match() {
 
     let arena = client.get_match();
     let winner_profile = client.get_player(&arena.winner);
+    let loser = if arena.winner == player1 {
+        player2
+    } else {
+        player1
+    };
+    let loser_profile = client.get_player(&loser);
     assert!(winner_profile.record.wins > 0);
     assert!(winner_profile.record.rating > 1200);
+    assert!(loser_profile.record.losses > 0);
+    assert!(loser_profile.record.rating < 1200);
+}
+
+#[test]
+fn test_submit_action_rejects_consecutive_actions_from_same_player() {
+    let (env, contract_id) = setup_env();
+    let player1 = Address::generate(&env);
+    let player2 = Address::generate(&env);
+    let guardians = [
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
+    let dev1 = Address::generate(&env);
+    let dev2 = Address::generate(&env);
+
+    register_test_player(&env, &contract_id, &player1, &guardians);
+    register_test_player(&env, &contract_id, &player2, &guardians);
+    add_device_for_player(&env, &contract_id, &player1, &dev1, DevicePolicyLevel::Full);
+    add_device_for_player(&env, &contract_id, &player2, &dev2, DevicePolicyLevel::Full);
+
+    let client = GuildArenaContractClient::new(&env, &contract_id);
+    client.start_match(&dev1);
+    client.start_match(&dev2);
+    client.submit_action(&dev1, &CombatAction::Attack);
+    let arena_after_first_action = client.get_match();
+
+    assert!(client
+        .try_submit_action(&dev1, &CombatAction::Attack)
+        .is_err());
+    let arena_after_rejected_action = client.get_match();
+    assert_eq!(
+        arena_after_rejected_action.round,
+        arena_after_first_action.round
+    );
+    assert_eq!(
+        arena_after_rejected_action.challenger_hp,
+        arena_after_first_action.challenger_hp
+    );
+    assert_eq!(
+        arena_after_rejected_action.defender_hp,
+        arena_after_first_action.defender_hp
+    );
+}
+
+#[test]
+fn test_start_match_rejects_while_another_match_is_in_progress() {
+    let (env, contract_id) = setup_env();
+    let players = [
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
+    let devices = [
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
+    let guardians = [
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
+
+    for index in 0..players.len() {
+        register_test_player(&env, &contract_id, &players[index], &guardians);
+        add_device_for_player(
+            &env,
+            &contract_id,
+            &players[index],
+            &devices[index],
+            DevicePolicyLevel::Full,
+        );
+    }
+
+    let client = GuildArenaContractClient::new(&env, &contract_id);
+    client.start_match(&devices[0]);
+    client.start_match(&devices[1]);
+    let arena_before = client.get_match();
+
+    assert!(client.try_start_match(&devices[2]).is_err());
+    assert!(client.try_start_match(&devices[0]).is_err());
+
+    let arena_after = client.get_match();
+    assert_eq!(arena_after.challenger, arena_before.challenger);
+    assert_eq!(arena_after.defender, arena_before.defender);
+    assert_eq!(arena_after.turn, arena_before.turn);
+    assert_eq!(arena_after.challenger_hp, arena_before.challenger_hp);
+    assert_eq!(arena_after.defender_hp, arena_before.defender_hp);
+    assert_eq!(arena_after.round, arena_before.round);
+    assert_eq!(arena_after.status, arena_before.status);
 }
 
 #[test]

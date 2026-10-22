@@ -51,8 +51,7 @@ fn verify_deal_accepts_pipeline_proof() {
     let player_id = player_id_for_test(&player);
     assert_eq!(
         client.verify_deal(&player, &deck, &hand, &proof),
-        spec
-            .verify_hidden_hand(harness.env(), &proof, &deck, &hand, player_id)
+        spec.verify_hidden_hand(harness.env(), &proof, &deck, &hand, player_id)
             .unwrap_or(false)
     );
 }

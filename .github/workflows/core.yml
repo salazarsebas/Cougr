@@ -49,6 +49,8 @@ jobs:
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: cougr-workspace
 
       - name: Check formatting
         run: cargo fmt --check
@@ -57,10 +59,7 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Run tests
-        run: cargo test --workspace --features testutils
-
-      - name: Build library
-        run: cargo build
+        run: cargo test --workspace --features testutils --exclude cougr-cli
 
       - name: Run hygiene check (cli)
         run: cargo run -p cougr-cli -- check --path .
@@ -84,8 +83,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Rust 1.88.0
-        uses: dtolnay/rust-toolchain@1.88.0
+      - name: Setup Rust 1.91.0
+        uses: dtolnay/rust-toolchain@1.91.0
         with:
           targets: wasm32v1-none
 

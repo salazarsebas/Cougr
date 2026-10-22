@@ -25,7 +25,7 @@ pub struct DeviceKey {
 pub struct DevicePolicy {
     /// Maximum number of devices that can be registered.
     pub max_devices: u32,
-    /// Number of ledger slots of inactivity before auto-revoke.
+    /// Number of seconds of inactivity before auto-revoke.
     /// Set to 0 to disable auto-revoke.
     pub auto_revoke_after: u64,
 }
@@ -105,16 +105,23 @@ impl MultiDeviceProvider for DeviceManager {
             DeviceStorage::load_policy(env, &self.address).ok_or(AccountError::StorageError)?;
         let devices = DeviceStorage::load_devices(env, &self.address);
 
-        // Check device limit (active only)
+        // Check for duplicate active key_id and count active devices
         let mut active_count: u32 = 0;
+        let mut revoked_index: Option<usize> = None;
+
         for i in 0..devices.len() {
             if let Some(d) = devices.get(i) {
+                if d.key_id == key_id {
+                    if d.is_active {
+                        // Key is already registered and active
+                        return Err(AccountError::DuplicateDeviceKey);
+                    } else {
+                        // Found a revoked entry with this key_id - we'll reuse it
+                        revoked_index = Some(i as usize);
+                    }
+                }
                 if d.is_active {
                     active_count += 1;
-                }
-                // Check for duplicate active key_id
-                if d.key_id == key_id && d.is_active {
-                    return Err(AccountError::DeviceLimitReached);
                 }
             }
         }
@@ -132,17 +139,46 @@ impl MultiDeviceProvider for DeviceManager {
             is_active: true,
         };
 
-        let mut new_devices = devices;
-        new_devices.push_back(device.clone());
+        let mut new_devices: Vec<DeviceKey> = Vec::new(env);
+
+        if let Some(revoked_idx) = revoked_index {
+            // Reuse the revoked entry by replacing it
+            for i in 0..devices.len() {
+                if i == revoked_idx as u32 {
+                    new_devices.push_back(device.clone());
+                } else if let Some(d) = devices.get(i) {
+                    new_devices.push_back(d);
+                }
+            }
+        } else {
+            // No revoked entry to reuse, add as new
+            new_devices = devices;
+            new_devices.push_back(device.clone());
+        }
+
         DeviceStorage::store_devices(env, &self.address, &new_devices);
         Ok(device)
     }
 
     fn revoke_device(&mut self, env: &Env, key_id: &BytesN<32>) -> Result<(), AccountError> {
-        DeviceStorage::update_device(env, &self.address, key_id, |d| {
-            if !d.is_active {
-                // Will still succeed but we need custom handling
+        let devices = DeviceStorage::load_devices(env, &self.address);
+        let mut found_active = false;
+
+        // Search for an active entry with this key_id
+        for i in 0..devices.len() {
+            if let Some(d) = devices.get(i) {
+                if &d.key_id == key_id && d.is_active {
+                    found_active = true;
+                    break;
+                }
             }
+        }
+
+        if !found_active {
+            return Err(AccountError::DeviceNotFound);
+        }
+
+        DeviceStorage::update_device(env, &self.address, key_id, |d| {
             d.is_active = false;
         })
     }
@@ -219,6 +255,8 @@ impl MultiDeviceProvider for DeviceManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::accounts::policy::{ActiveDevicePolicy, DeviceContext, Policy};
+    use soroban_sdk::testutils::Ledger;
     use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, Env};
 
     #[contract]
@@ -438,6 +476,236 @@ mod tests {
                 .register_device(&env, key2, symbol_short!("new"))
                 .unwrap();
             assert_eq!(manager.active_device_count(&env), 1);
+        });
+    }
+
+    #[test]
+    fn test_reregister_same_key_after_revoke() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut manager = DeviceManager::new(addr.clone(), default_policy(), &env);
+            let key_id = BytesN::from_array(&env, &[1u8; 32]);
+
+            // Register, revoke, then register the SAME key again
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone"))
+                .unwrap();
+            manager.revoke_device(&env, &key_id).unwrap();
+            assert_eq!(manager.active_device_count(&env), 0);
+
+            // Re-register with same key_id
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone2"))
+                .unwrap();
+            assert_eq!(manager.active_device_count(&env), 1);
+
+            // After re-register, ActiveDevicePolicy must accept the key
+            let device_policy = ActiveDevicePolicy;
+            device_policy
+                .evaluate(
+                    &env,
+                    &DeviceContext {
+                        account: &addr,
+                        key_id: &key_id,
+                    },
+                )
+                .unwrap();
+
+            // Now revoke again - should work
+            manager.revoke_device(&env, &key_id).unwrap();
+            assert_eq!(manager.active_device_count(&env), 0);
+
+            // After second revoke, ActiveDevicePolicy must reject the key
+            assert_eq!(
+                device_policy.evaluate(
+                    &env,
+                    &DeviceContext {
+                        account: &addr,
+                        key_id: &key_id,
+                    },
+                ),
+                Err(AccountError::DeviceNotFound)
+            );
+        });
+    }
+
+    #[test]
+    fn test_reregister_same_key_updates_last_used() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let policy = DevicePolicy {
+                max_devices: 3,
+                auto_revoke_after: 1000,
+            };
+            let mut manager = DeviceManager::new(addr, policy, &env);
+            let key_id = BytesN::from_array(&env, &[1u8; 32]);
+
+            // Register, revoke, re-register
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone"))
+                .unwrap();
+            manager.revoke_device(&env, &key_id).unwrap();
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone2"))
+                .unwrap();
+
+            // Advance time past auto-revoke threshold
+            env.ledger().with_mut(|li| {
+                li.timestamp = 2000;
+            });
+
+            // Update last_used on the re-registered key (this should set last_used to 2000)
+            manager.update_last_used(&env, &key_id).unwrap();
+
+            // Cleanup should NOT revoke it because we just updated last_used to 2000
+            let revoked = manager.cleanup_inactive(&env);
+            assert_eq!(revoked, 0);
+            assert_eq!(manager.active_device_count(&env), 1);
+        });
+    }
+
+    #[test]
+    fn test_duplicate_active_key_error() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut manager = DeviceManager::new(addr, default_policy(), &env);
+            let key_id = BytesN::from_array(&env, &[1u8; 32]);
+
+            // Register once
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone"))
+                .unwrap();
+
+            // Try to register the same active key again
+            let result = manager.register_device(&env, key_id, symbol_short!("phone2"));
+            assert_eq!(result, Err(AccountError::DuplicateDeviceKey));
+        });
+    }
+
+    #[test]
+    fn test_revoke_already_revoked_device_fails() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut manager = DeviceManager::new(addr, default_policy(), &env);
+            let key_id = BytesN::from_array(&env, &[1u8; 32]);
+
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone"))
+                .unwrap();
+            manager.revoke_device(&env, &key_id).unwrap();
+
+            // Try to revoke again - should fail
+            let result = manager.revoke_device(&env, &key_id);
+            assert_eq!(result, Err(AccountError::DeviceNotFound));
+        });
+    }
+
+    #[test]
+    fn test_cleanup_inactive_with_reregistered_key() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let policy = DevicePolicy {
+                max_devices: 3,
+                auto_revoke_after: 500,
+            };
+            let mut manager = DeviceManager::new(addr, policy, &env);
+            let key_id = BytesN::from_array(&env, &[1u8; 32]);
+
+            // Register and use at time 0
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone"))
+                .unwrap();
+
+            // Advance time and revoke
+            env.ledger().with_mut(|li| {
+                li.timestamp = 100;
+            });
+            manager.revoke_device(&env, &key_id).unwrap();
+
+            // Re-register at time 100
+            manager
+                .register_device(&env, key_id.clone(), symbol_short!("phone2"))
+                .unwrap();
+
+            // Advance time to 700 (600 seconds after re-registration)
+            env.ledger().with_mut(|li| {
+                li.timestamp = 700;
+            });
+
+            // Should auto-revoke because last_used was at registration (time 100)
+            // and now it's been > 500 seconds
+            let revoked = manager.cleanup_inactive(&env);
+            assert_eq!(revoked, 1);
+            assert_eq!(manager.active_device_count(&env), 0);
+        });
+    }
+
+    #[test]
+    fn test_revoke_with_stale_duplicate_in_storage() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            // Simulate legacy state: stale revoked entry followed by live active entry
+            let key_id = BytesN::from_array(&env, &[1u8; 32]);
+            let mut devices = Vec::new(&env);
+
+            // Stale entry (revoked)
+            devices.push_back(DeviceKey {
+                key_id: key_id.clone(),
+                device_name: symbol_short!("old"),
+                registered_at: 0,
+                last_used: 0,
+                is_active: false,
+            });
+
+            // Live entry (active)
+            devices.push_back(DeviceKey {
+                key_id: key_id.clone(),
+                device_name: symbol_short!("new"),
+                registered_at: 0,
+                last_used: 0,
+                is_active: true,
+            });
+
+            DeviceStorage::store_devices(&env, &addr, &devices);
+
+            let mut manager = DeviceManager::load(addr.clone());
+
+            // revoke_device should succeed and target the active entry
+            manager.revoke_device(&env, &key_id).unwrap();
+
+            // Active count should now be 0
+            assert_eq!(manager.active_device_count(&env), 0);
+
+            // ActiveDevicePolicy should reject the key
+            let device_policy = ActiveDevicePolicy;
+            assert_eq!(
+                device_policy.evaluate(
+                    &env,
+                    &DeviceContext {
+                        account: &addr,
+                        key_id: &key_id,
+                    },
+                ),
+                Err(AccountError::DeviceNotFound)
+            );
         });
     }
 }

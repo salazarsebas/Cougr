@@ -1,9 +1,13 @@
 use super::*;
 use crate::components::RevealResult;
-use soroban_sdk::{testutils::Address as _, Env};
+use soroban_sdk::{
+    testutils::{Address as _, MockAuth, MockAuthInvoke},
+    Env, IntoVal,
+};
 
 fn setup_game() -> (Env, MemoryMatchContractClient<'static>, Address) {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register(MemoryMatchContract, ());
     let client = MemoryMatchContractClient::new(&env, &contract_id);
 
@@ -16,6 +20,7 @@ fn setup_game() -> (Env, MemoryMatchContractClient<'static>, Address) {
 #[test]
 fn test_init_game() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register(MemoryMatchContract, ());
     let client = MemoryMatchContractClient::new(&env, &contract_id);
 
@@ -144,6 +149,7 @@ fn test_reset_game() {
 #[should_panic(expected = "Game not initialized")]
 fn test_reveal_without_init() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register(MemoryMatchContract, ());
     let client = MemoryMatchContractClient::new(&env, &contract_id);
 
@@ -157,6 +163,7 @@ fn test_reveal_without_init() {
 #[should_panic(expected = "Not authorized player")]
 fn test_unauthorized_player() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register(MemoryMatchContract, ());
     let client = MemoryMatchContractClient::new(&env, &contract_id);
 
@@ -210,6 +217,7 @@ fn test_reveal_three_cards_sequence() {
 #[test]
 fn test_card_values() {
     let env = Env::default();
+    env.mock_all_auths();
     let contract_id = env.register(MemoryMatchContract, ());
     let client = MemoryMatchContractClient::new(&env, &contract_id);
 
@@ -230,6 +238,107 @@ fn test_card_values() {
 
         // Reset after each reveal to avoid the 2-card limit
         client.reset_game(&player);
-        client.init_game(&player);
     }
+}
+
+#[test]
+#[should_panic(expected = "Game already in progress")]
+fn test_init_game_already_in_progress_panics() {
+    let (_, client, player) = setup_game();
+
+    // Calling init_game while a game is active must panic
+    client.init_game(&player);
+}
+
+#[test]
+fn test_init_game_after_game_over_allowed() {
+    let (_env, client, player) = setup_game();
+
+    // Match all 8 pairs (0 with 8, 1 with 9, ..., 7 with 15)
+    for i in 0..8 {
+        client.reveal_card(&player, &i);
+        client.reveal_card(&player, &(i + 8));
+    }
+
+    let game_state = client.get_game_state();
+    assert!(game_state.game_over);
+    assert_eq!(game_state.matched_pairs, 8);
+
+    // Initializing a new game after game_over should be permitted
+    let new_game = client.init_game(&player);
+    assert!(!new_game.game_over);
+    assert_eq!(new_game.matched_pairs, 0);
+    assert_eq!(new_game.moves_count, 0);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
+fn test_stranger_cannot_authorize_reveal_card() {
+    let env = Env::default();
+    let contract_id = env.register(MemoryMatchContract, ());
+    let client = MemoryMatchContractClient::new(&env, &contract_id);
+    let player = Address::generate(&env);
+    let stranger = Address::generate(&env);
+
+    env.mock_all_auths();
+    client.init_game(&player);
+
+    env.mock_auths(&[MockAuth {
+        address: &stranger,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "reveal_card",
+            args: (&player, 0u32).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+
+    client.reveal_card(&player, &0);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
+fn test_stranger_cannot_authorize_reset_game() {
+    let env = Env::default();
+    let contract_id = env.register(MemoryMatchContract, ());
+    let client = MemoryMatchContractClient::new(&env, &contract_id);
+    let player = Address::generate(&env);
+    let stranger = Address::generate(&env);
+
+    env.mock_all_auths();
+    client.init_game(&player);
+
+    env.mock_auths(&[MockAuth {
+        address: &stranger,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "reset_game",
+            args: (&player,).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+
+    client.reset_game(&player);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
+fn test_stranger_cannot_authorize_init_game() {
+    let env = Env::default();
+    let contract_id = env.register(MemoryMatchContract, ());
+    let client = MemoryMatchContractClient::new(&env, &contract_id);
+    let player = Address::generate(&env);
+    let stranger = Address::generate(&env);
+
+    env.mock_auths(&[MockAuth {
+        address: &stranger,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "init_game",
+            args: (&player,).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+
+    client.init_game(&player);
 }

@@ -1,3 +1,5 @@
+use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
+use soroban_sdk::IntoVal;
 use soroban_sdk::{testutils::Address as _, Address, Env};
 
 use crate::{CheckersContract, CheckersContractClient, CheckersError, GameStatus};
@@ -15,6 +17,28 @@ fn setup() -> (Env, CheckersContractClient<'static>, Address, Address) {
 
 fn cell(client: &CheckersContractClient, row: u32, col: u32) -> i32 {
     client.get_board().cells.get(row * 8 + col).unwrap()
+}
+
+#[test]
+fn test_submit_move_rejects_wrong_signer() {
+    let env = Env::default();
+    let id = env.register(CheckersContract, ());
+    let client = CheckersContractClient::new(&env, &id);
+    let p1 = Address::generate(&env);
+    let p2 = Address::generate(&env);
+    client.init_game(&p1, &p2);
+
+    // p2 signs, but the move is attributed to p1
+    env.mock_auths(&[MockAuth {
+        address: &p2,
+        invoke: &MockAuthInvoke {
+            contract: &id,
+            fn_name: "submit_move",
+            args: (&p1, 2u32, 1u32, 3u32, 2u32).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_submit_move(&p1, &2, &1, &3, &2).is_err());
 }
 
 // 1. Initialisation

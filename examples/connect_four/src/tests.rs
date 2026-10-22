@@ -1,11 +1,62 @@
 use super::*;
 use soroban_sdk::testutils::Address as _;
+use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
+use soroban_sdk::IntoVal;
 use soroban_sdk::{Address, Env};
 
 fn create_test_addresses(env: &Env) -> (Address, Address) {
+    env.mock_all_auths();
     let player_one = Address::generate(env);
     let player_two = Address::generate(env);
     (player_one, player_two)
+}
+
+#[test]
+fn test_drop_piece_rejects_wrong_signer() {
+    let env = Env::default();
+    let contract_id = env.register(ConnectFourContract, ());
+    let client = ConnectFourContractClient::new(&env, &contract_id);
+    let p1 = Address::generate(&env);
+    let p2 = Address::generate(&env);
+    client.init_game(&p1, &p2);
+
+    // p2 signs, but the call is attributed to p1
+    env.mock_auths(&[MockAuth {
+        address: &p2,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "drop_piece",
+            args: (&p1, 3u32).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_drop_piece(&p1, &3).is_err());
+}
+
+#[test]
+fn test_second_init_game_rejected() {
+    let env = Env::default();
+    let contract_id = env.register(ConnectFourContract, ());
+    let client = ConnectFourContractClient::new(&env, &contract_id);
+    let p1 = Address::generate(&env);
+    let p2 = Address::generate(&env);
+    client.init_game(&p1, &p2);
+
+    let res = client.try_init_game(&p1, &p2);
+    assert_eq!(res.err(), Some(Ok(Error::AlreadyInitialised)));
+}
+
+#[test]
+fn test_reset_game_requires_player_auth() {
+    let env = Env::default();
+    let contract_id = env.register(ConnectFourContract, ());
+    let client = ConnectFourContractClient::new(&env, &contract_id);
+    let p1 = Address::generate(&env);
+    let p2 = Address::generate(&env);
+    client.init_game(&p1, &p2);
+
+    // Nobody has authorized this call
+    assert!(client.try_reset_game().is_err());
 }
 
 // ==================== Initialization Tests ====================

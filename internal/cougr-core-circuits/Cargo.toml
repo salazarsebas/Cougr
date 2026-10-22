@@ -5,13 +5,13 @@ edition = "2021"
 publish = false
 description = "Internal ZK game circuit builders - compiled into cougr-core via include"
 license = "MIT"
-rust-version = "1.88.0"
+rust-version = "1.91.0"
 
 [lib]
 path = "src/lib.rs"
 
 [dependencies]
-soroban-sdk = "25.1.0"
+soroban-sdk = "29.0.1"
 
 [features]
 default = []

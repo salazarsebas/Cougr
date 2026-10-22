@@ -280,3 +280,58 @@ fn test_reject_move_after_solved() {
     let result = client.try_submit_value(&0, &2, &4);
     assert!(result.is_err());
 }
+
+// ── Contradictory givens rejection tests (#466) ───────────────────────────────
+
+#[test]
+#[should_panic(expected = "Puzzle givens violate Sudoku constraints")]
+fn test_reject_duplicate_givens_in_row() {
+    let env = Env::default();
+    let client = setup(&env);
+    // Duplicate 5 at (0, 0) and (0, 2) in the first row
+    let mut puzzle = fixture(&env);
+    puzzle.set(2, 5);
+    client.init_game(&puzzle);
+}
+
+#[test]
+#[should_panic(expected = "Puzzle givens violate Sudoku constraints")]
+fn test_reject_duplicate_givens_in_column() {
+    let env = Env::default();
+    let client = setup(&env);
+    // Cell (0, 0) is 5. Place another 5 at (2, 0) in the first column
+    let mut puzzle = fixture(&env);
+    puzzle.set(18, 5);
+    client.init_game(&puzzle);
+}
+
+#[test]
+#[should_panic(expected = "Puzzle givens violate Sudoku constraints")]
+fn test_reject_duplicate_givens_in_block() {
+    let env = Env::default();
+    let client = setup(&env);
+    // Top-left 3x3 block has 5 at (0, 0) and 3 at (0, 1). Place duplicate 5 at (1, 1)
+    let mut puzzle = fixture(&env);
+    puzzle.set(10, 5);
+    client.init_game(&puzzle);
+}
+
+// ── get_cell bounds checking tests (#466) ────────────────────────────────────
+
+#[test]
+#[should_panic(expected = "Cell out of bounds")]
+fn test_get_cell_out_of_bounds_col() {
+    let env = Env::default();
+    let client = setup(&env);
+    client.init_game(&fixture(&env));
+    client.get_cell(&0, &9);
+}
+
+#[test]
+#[should_panic(expected = "Cell out of bounds")]
+fn test_get_cell_out_of_bounds_row() {
+    let env = Env::default();
+    let client = setup(&env);
+    client.init_game(&fixture(&env));
+    client.get_cell(&9, &0);
+}

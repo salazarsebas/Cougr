@@ -12,7 +12,7 @@
   <a href="https://crates.io/crates/cougr-core"><img src="https://img.shields.io/crates/v/cougr-core.svg" alt="crates.io" /></a>
   <a href="https://github.com/salazarsebas/Cougr/actions/workflows/core.yml"><img src="https://github.com/salazarsebas/Cougr/actions/workflows/core.yml/badge.svg" alt="Core CI" /></a>
   <a href="https://stellar.org"><img src="https://img.shields.io/badge/Stellar-Soroban-blue?logo=stellar" alt="Stellar" /></a>
-  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-1.88%2B-orange?logo=rust" alt="Rust" /></a>
+  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-1.91%2B-orange?logo=rust" alt="Rust" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License" /></a>
 </p>
 
@@ -323,11 +323,15 @@ stellar contract build
 
 | Item | Value |
 |---|---|
-| Rust | 1.88+ (MSRV enforced in CI) |
+| Rust | 1.91+ (MSRV enforced in CI) |
 | Edition | 2021 |
 | License | MIT |
-| Primary SDK | `soroban-sdk` 25.1.0 |
+| Workspace SDK | `soroban-sdk` 29.0.1 |
 | Target | `wasm32v1-none` (Soroban WASM) |
+
+The installation examples above use the published `cougr-core` 1.1.0 release
+and therefore remain on SDK 25.1.0. The workspace is moving to SDK 29 ahead of
+the next core release.
 
 ## Documentation
 

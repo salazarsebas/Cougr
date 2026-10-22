@@ -114,6 +114,7 @@ impl TradingCardGame {
         if !is_a && !is_b {
             panic_with_error!(&env, GameError::NotAPlayer);
         }
+        player.require_auth();
 
         let expires_at = env.ledger().timestamp() + 7200;
         let _scope = SessionBuilder::new(&env)
@@ -144,6 +145,13 @@ impl TradingCardGame {
             .get(&WORLD_KEY)
             .unwrap_or_else(|| panic_with_error!(&env, GameError::NotInitialized));
 
+        let is_a = player == world.player_a;
+        let is_b = player == world.player_b;
+        if !is_a && !is_b {
+            panic_with_error!(&env, GameError::NotAPlayer);
+        }
+        player.require_auth();
+
         if world.match_state.status != STATUS_IN_PROGRESS {
             panic_with_error!(&env, GameError::GameOver);
         }
@@ -151,8 +159,6 @@ impl TradingCardGame {
         if player != world.match_state.active_player {
             panic_with_error!(&env, GameError::NotYourTurn);
         }
-
-        let is_a = player == world.player_a;
 
         let session_expires = if is_a {
             world.session_a_expires
@@ -249,6 +255,12 @@ impl TradingCardGame {
             .get(&WORLD_KEY)
             .unwrap_or_else(|| panic_with_error!(&env, GameError::NotInitialized));
 
+        let is_a = player == world.player_a;
+        let is_b = player == world.player_b;
+        if !is_a && !is_b {
+            panic_with_error!(&env, GameError::NotAPlayer);
+        }
+
         let hand = if player == world.player_a {
             &world.hand_a
         } else {
@@ -282,6 +294,13 @@ impl TradingCardGame {
             .instance()
             .get(&WORLD_KEY)
             .unwrap_or_else(|| panic_with_error!(&env, GameError::NotInitialized));
+
+        let is_a = player == world.player_a;
+        let is_b = player == world.player_b;
+        if !is_a && !is_b {
+            panic_with_error!(&env, GameError::NotAPlayer);
+        }
+
         if player == world.player_a {
             world.stats_a
         } else {
@@ -297,14 +316,15 @@ impl TradingCardGame {
             .get(&WORLD_KEY)
             .unwrap_or_else(|| panic_with_error!(&env, GameError::NotInitialized));
 
-        if world.match_state.status != STATUS_IN_PROGRESS {
-            panic_with_error!(&env, GameError::GameOver);
-        }
-
         let is_a = player == world.player_a;
         let is_b = player == world.player_b;
         if !is_a && !is_b {
             panic_with_error!(&env, GameError::NotAPlayer);
+        }
+        player.require_auth();
+
+        if world.match_state.status != STATUS_IN_PROGRESS {
+            panic_with_error!(&env, GameError::GameOver);
         }
 
         world.match_state.status = STATUS_CONCEDED;

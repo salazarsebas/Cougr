@@ -10,18 +10,10 @@ Closes #
 
 ## How it was validated
 
-<!-- List the checks you ran. The baseline is the three commands from CONTRIBUTING.md: -->
+<!-- Run `make check` from the repository root. It runs the same checks as CI for what you changed. -->
 
-```bash
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
-```
-
-- [ ] `cargo fmt --check` passes
-- [ ] `cargo clippy -- -D warnings` passes
-- [ ] `cargo test` passes
-- [ ] Affected example(s) build and their tests pass
+- [ ] `make check` passes
+- [ ] I read my own diff and it only contains changes for this issue (no generated files, logs, or unrelated edits)
 
 ## Follow-up work or constraints
 

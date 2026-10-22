@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feat/issue-409-fix-accounts-clear-the-executed-recovery",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "feat/issue-409-fix-accounts-clear-the-executed-recovery": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "feat/issue-409-fix-accounts-clear-the-executed-recovery",
+    "origin"
+  ]
+}

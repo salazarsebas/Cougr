@@ -20,14 +20,13 @@ use std::process::Command;
 // The Rust minimum comes from this crate's `rust-version` in `cli/Cargo.toml`,
 // which Cargo exposes at compile time as `CARGO_PKG_RUST_VERSION`. Reading it
 // here keeps the doctor in step with the MSRV the rest of the repository pins.
-// The stellar-cli minimum tracks the first release of the current stable v21
-// series.
+// The stellar-cli minimum tracks the Soroban SDK used by this workspace.
 
 /// The `rust-version` declared by `cli/Cargo.toml`.
 const MIN_RUST: &str = env!("CARGO_PKG_RUST_VERSION");
 
-/// Minimum `stellar` CLI version that ships the v21 API surface.
-const MIN_STELLAR: (u64, u64, u64) = (21, 0, 0);
+/// Minimum `stellar` CLI version required by the current Soroban SDK.
+const MIN_STELLAR: (u64, u64, u64) = (25, 2, 0);
 
 /// WASM compilation target required for Soroban contracts.
 const WASM_TARGET: &str = "wasm32v1-none";
@@ -618,7 +617,7 @@ mod tests {
         let r = check_rust();
         assert!(
             r.is_pass(),
-            "rustc should be available and meet the declared rust-version during tests"
+            "rustc should be available and >= 1.91.0 during tests"
         );
     }
 }

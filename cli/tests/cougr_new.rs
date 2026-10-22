@@ -86,6 +86,27 @@ fn success_output_names_the_next_commands() {
     let output = generate("demo", "starter", dir.path());
     let stdout = String::from_utf8_lossy(&output.stdout);
 
+    let target = dir.path().join("demo");
+    let expected_cd = if target.display().to_string().contains(' ') {
+        format!("cd \"{}\"", target.display())
+    } else {
+        format!("cd {}", target.display())
+    };
+    assert!(stdout.contains(&expected_cd));
+    assert!(stdout.contains("cargo test"));
+    assert!(stdout.contains("stellar contract build"));
+}
+
+#[test]
+fn success_output_without_path_uses_bare_crate_name() {
+    let dir = tempfile::tempdir().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .current_dir(dir.path())
+        .args(["new", "demo"])
+        .output()
+        .expect("run the cougr binary");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+
     assert!(stdout.contains("cd demo"));
     assert!(stdout.contains("cargo test"));
     assert!(stdout.contains("stellar contract build"));

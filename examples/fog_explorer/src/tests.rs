@@ -54,7 +54,5 @@ fn explore_rejects_mismatched_map_root() {
 
     let bad_root = BytesN::from_array(harness.env(), &[0u8; 32]);
     let next = BytesN::from_array(harness.env(), &public[2].bytes.to_array());
-    assert!(!client.explore(
-        &player, &bad_root, &prior, &next, &0, &0, &1, &2, &proof,
-    ));
+    assert!(!client.explore(&player, &bad_root, &prior, &next, &0, &0, &1, &2, &proof,));
 }

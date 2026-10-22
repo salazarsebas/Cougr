@@ -86,9 +86,9 @@ enum Command {
     /// are installed and meet the minimum versions:
     ///
     ///   - cargo (sanity check)
-    ///   - Rust toolchain (at least the CLI's `rust-version` from Cargo.toml)
+    ///   - Rust toolchain (>= 1.91.0, from Cargo.toml rust-version)
     ///   - wasm32v1-none target (required for Soroban contracts)
-    ///   - Stellar CLI (>= 21.0.0)
+    ///   - Stellar CLI (>= 25.2.0)
     ///
     /// Each failure prints the exact command to fix it. The command exits
     /// non-zero if any check fails.

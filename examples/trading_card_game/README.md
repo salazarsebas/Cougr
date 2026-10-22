@@ -119,17 +119,17 @@ Each player calls `start_session` at the beginning of the match. This builds a `
 ```rust
 // Setup
 fn new_match(env, player_a, player_b, deck_a, deck_b)
-fn start_session(env, player) -> u64  // returns session expiry
+fn start_session(env, player) -> u64  // requires auth, returns session expiry
 
 // Gameplay
-fn submit_turn(env, player, actions: Vec<Action>) -> TurnResult
-fn concede(env, player)
+fn submit_turn(env, player, actions: Vec<Action>) -> TurnResult // requires auth
+fn concede(env, player) // requires auth
 
 // Queries
 fn get_state(env) -> MatchState
-fn get_hand(env, player) -> Vec<Card>
+fn get_hand(env, player) -> Vec<Card> // returns NotAPlayer for unknown addresses
 fn get_field(env) -> FieldState
-fn get_stats(env, player) -> PlayerStats
+fn get_stats(env, player) -> PlayerStats // returns NotAPlayer for unknown addresses
 ```
 
 ## Building and Testing

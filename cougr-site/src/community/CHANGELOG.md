@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+### Changed
+
+- Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
+
 ### Added
 
+- **`cougr_core::accounts::AccountError::DuplicateDeviceKey`** - new error variant (code 45) returned when attempting to register a device key that is already active, distinguishing "device already registered" from "device limit reached"
 - **`cougr_core::accounts::derive_session_key_id`** - deterministic session-key identifier derivation, so the Rust core and the TypeScript session client agree on session identity instead of re-deriving it off-chain
 - **`cougr_core::cors`** - CORS configuration validation and dynamic origin
   allowlist for HTTP gateways in front of a game contract: `CorsConfig`
@@ -20,8 +25,8 @@
 - **Four embedded templates**, each derived from a canonical example and compiled into
   the binary so `cougr new` works offline: `starter` (`spawn_and_move`), `turn-based`
   (`tic_tac_toe`), `hidden-info` (`hidden_hand`), `session-auth` (`session_arena`)
-- **CLI CI workflow** - lints and tests `cougr-cli`, then generates each template and
-  runs `cargo fmt`, `clippy`, `cargo test`, and a `wasm32v1-none` release build against it
+- **CLI CI workflow** - validates `cougr-cli` once, caches the root workspace target,
+  and compiles generated projects when template sources change
 
 ### Fixed
 

@@ -43,6 +43,15 @@ fn default_export_matches_new_template() {
     let readme = fs::read_to_string(project.join("README.md")).unwrap();
     assert!(readme.contains("cargo test"));
     assert!(readme.contains("stellar contract build"));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let expected_cd = if project.display().to_string().contains(' ') {
+        format!("cd \"{}\"", project.display())
+    } else {
+        format!("cd {}", project.display())
+    };
+    assert!(stdout.contains(&expected_cd));
+    assert!(stdout.contains("cargo test"));
+    assert!(stdout.contains("stellar contract build"));
     let check = Command::new(env!("CARGO_BIN_EXE_cougr"))
         .arg("check")
         .arg("--path")

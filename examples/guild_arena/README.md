@@ -21,13 +21,13 @@ Player registers → sets 3 guild members as guardians (threshold 2-of-3)
 
 ### Gameplay
 
-Players queue for PvP matches. Combat is turn-based with three actions:
+Players queue for PvP matches. The challenger moves first, then the players alternate turns. Combat has three actions:
 
 - **Attack** - standard damage
 - **Defend** - reduced damage
 - **Special** - high damage
 
-Elo-style ratings update after each match. Every 3 wins triggers a level-up with stat boosts.
+After each match, the winner gains 32 rating points and the loser loses 32 points (without dropping below zero). Every 3 wins triggers a level-up with stat boosts.
 
 ### Recovery Flow
 
@@ -66,6 +66,7 @@ Player loses key → Guardian 1 initiates recovery
 
 ```bash
 cargo build
+cargo test
 stellar contract build
 ```
 
@@ -82,6 +83,7 @@ Tests cover:
 - Device policy enforcement
 - Full combat match resolution
 - Rating updates after matches
+- Out-of-turn actions, active-match protection, duplicate registration, and device ownership
 - Complete recovery lifecycle (initiate → approve → timelock → finalize)
 - Recovery with insufficient approvals (rejected)
 - Game state preservation through recovery

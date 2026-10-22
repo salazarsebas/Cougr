@@ -39,6 +39,18 @@ impl SudokuContract {
             }
         }
         let (board, fixed) = init_board(&env, puzzle);
+        for row in 0..BOARD_SIZE {
+            for col in 0..BOARD_SIZE {
+                let val = systems::get_cell(&board.cells, row, col);
+                if val != 0
+                    && (!systems::check_row(&board.cells, row, col, val)
+                        || !systems::check_col(&board.cells, col, row, val)
+                        || !systems::check_block(&board.cells, row, col, val))
+                {
+                    panic!("Puzzle givens violate Sudoku constraints");
+                }
+            }
+        }
         let world = ECSWorldState {
             board,
             fixed,
@@ -76,6 +88,9 @@ impl SudokuContract {
     }
 
     pub fn get_cell(env: Env, row: u32, col: u32) -> CellState {
+        if row >= BOARD_SIZE || col >= BOARD_SIZE {
+            panic!("Cell out of bounds");
+        }
         let world = Self::load_world(&env);
         CellState {
             value: get_cell(&world.board.cells, row, col),

@@ -39,12 +39,12 @@ fn run_with_config(
 ) -> Result<(), CliError> {
     let name = ProjectName::parse(raw_name)?;
 
-    let parent = match parent {
+    let target_parent = match parent {
         Some(dir) => dir.to_path_buf(),
         None => std::env::current_dir()
             .map_err(|err| CliError::io("resolve the current directory", ".", err))?,
     };
-    let target = parent.join(name.crate_name());
+    let target = target_parent.join(name.crate_name());
 
     if target.exists() {
         return Err(CliError::TargetExists {
@@ -72,7 +72,13 @@ fn run_with_config(
         return Err(err);
     }
 
-    report_success(&target, name.crate_name(), template, &files);
+    report_success(
+        &target,
+        name.crate_name(),
+        template,
+        &files,
+        parent.is_some(),
+    );
     Ok(())
 }
 
@@ -89,7 +95,13 @@ fn write_all(target: &Path, files: &[RenderedFile]) -> Result<(), CliError> {
     Ok(())
 }
 
-fn report_success(target: &Path, crate_name: &str, template: Template, files: &[RenderedFile]) {
+fn report_success(
+    target: &Path,
+    crate_name: &str,
+    template: Template,
+    files: &[RenderedFile],
+    has_path: bool,
+) {
     println!(
         "Created `{crate_name}` from the `{}` template (based on examples/{}).",
         template.id(),
@@ -101,14 +113,69 @@ fn report_success(target: &Path, crate_name: &str, template: Template, files: &[
         println!("    {}", file.path);
     }
     println!();
-    println!("Next steps:");
-    println!("  cd {crate_name}");
-    println!("  cargo test                # run the GameHarness test suite");
-    println!("  stellar contract build    # compile the contract to WASM");
+    println!("{}", next_steps(target, crate_name, has_path));
     println!();
     println!("`stellar contract build` needs the Stellar CLI and the wasm32v1-none target:");
     println!("  rustup target add wasm32v1-none");
     println!("  cargo install --locked stellar-cli");
+}
+
+pub(crate) fn next_steps(target: &Path, crate_name: &str, has_path: bool) -> String {
+    let cd_target = format_cd_path(target, crate_name, has_path);
+    format!(
+        "Next steps:\n  cd {cd_target}\n  cargo test                # run the GameHarness test suite\n  stellar contract build    # compile the contract to WASM"
+    )
+}
+
+pub(crate) fn format_cd_path(target: &Path, crate_name: &str, has_path: bool) -> String {
+    if !has_path {
+        return crate_name.to_string();
+    }
+
+    let path_str = if let Ok(cwd) = std::env::current_dir() {
+        let norm_cwd = normalize_path(&cwd);
+        let abs_target = if target.is_absolute() {
+            normalize_path(target)
+        } else {
+            normalize_path(&norm_cwd.join(target))
+        };
+
+        if let Ok(rel) = abs_target.strip_prefix(&norm_cwd) {
+            if rel.as_os_str().is_empty() {
+                ".".to_string()
+            } else {
+                rel.display().to_string()
+            }
+        } else {
+            abs_target.display().to_string()
+        }
+    } else {
+        target.display().to_string()
+    };
+
+    if path_str.contains(' ') {
+        format!("\"{path_str}\"")
+    } else {
+        path_str
+    }
+}
+
+fn normalize_path(path: &Path) -> std::path::PathBuf {
+    let mut components = Vec::new();
+    for component in path.components() {
+        match component {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                if let Some(std::path::Component::Normal(_)) = components.last() {
+                    components.pop();
+                } else {
+                    components.push(component);
+                }
+            }
+            c => components.push(c),
+        }
+    }
+    components.into_iter().collect()
 }
 
 #[cfg(test)]
@@ -227,5 +294,61 @@ mod tests {
                 template.id()
             );
         }
+    }
+
+    #[test]
+    fn next_steps_without_path_uses_bare_crate_name() {
+        let dir = tempdir();
+        let target = dir.path().join("my-game");
+        let text = next_steps(&target, "my-game", false);
+        assert!(
+            text.contains("  cd my-game\n"),
+            "expected 'cd my-game' without --path, got:\n{text}"
+        );
+    }
+
+    #[test]
+    fn next_steps_with_path_uses_target_path() {
+        let dir = tempdir();
+        let target = dir.path().join("my-game");
+        let text = next_steps(&target, "my-game", true);
+        let expected = format!("  cd {}\n", target.display());
+        assert!(
+            text.contains(&expected),
+            "expected '{expected}' with --path, got:\n{text}"
+        );
+    }
+
+    #[test]
+    fn next_steps_with_space_in_path_quotes_target() {
+        let dir = tempdir();
+        let space_dir = dir.path().join("my games");
+        let target = space_dir.join("my-game");
+        let text = next_steps(&target, "my-game", true);
+        let expected = format!("  cd \"{}\"\n", target.display());
+        assert!(
+            text.contains(&expected),
+            "expected '{expected}' for path with spaces, got:\n{text}"
+        );
+    }
+
+    #[test]
+    fn next_steps_with_relative_path_under_cwd() {
+        let rel_target = Path::new("sub/my-game");
+        let text = next_steps(rel_target, "my-game", true);
+        assert!(
+            text.contains("  cd sub/my-game\n"),
+            "expected relative path 'cd sub/my-game', got:\n{text}"
+        );
+    }
+
+    #[test]
+    fn next_steps_with_relative_path_containing_space() {
+        let rel_target = Path::new("my games/my-game");
+        let text = next_steps(rel_target, "my-game", true);
+        assert!(
+            text.contains("  cd \"my games/my-game\"\n"),
+            "expected quoted relative path 'cd \"my games/my-game\"', got:\n{text}"
+        );
     }
 }

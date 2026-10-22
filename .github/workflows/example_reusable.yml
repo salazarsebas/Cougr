@@ -54,7 +54,7 @@ jobs:
 
       - name: Install Stellar CLI
         if: ${{ inputs.build_stellar_contract }}
-        uses: stellar/stellar-cli@v25.1.0
+        uses: stellar/stellar-cli@v25.2.0
 
       - name: Stellar contract build
         if: ${{ inputs.build_stellar_contract }}

@@ -39,15 +39,7 @@ Read the doc that governs the area you're touching, don't guess at Cougr's conve
 
 ## Before calling something done
 
-Run, and fix everything these report:
-
-```bash
-cargo fmt --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
-```
-
-If the change touches a Soroban contract (`src/`, `examples/*`, `cli/templates/*`), also run `stellar contract build` for every affected crate. A crate that passes `cargo build` but fails `stellar contract build` is not a valid contract, and CI will reject it.
+Run `make check` from the repository root and fix everything it reports until it passes. It runs the same checks as CI for the parts of the repository you changed, including `stellar contract build` for affected contracts. `make fix` applies formatting and the docs site sync. Then follow the pre-push checklist in [AGENTS.md](AGENTS.md).
 
 ## Writing style
 

@@ -1,5 +1,5 @@
 use super::*;
-use soroban_sdk::{testutils::Address as _, vec, Env};
+use soroban_sdk::{testutils::Address as _, vec, Env, IntoVal};
 
 // ─── Test helpers ────────────────────────────────────────────────────────────
 
@@ -19,6 +19,7 @@ fn setup_match() -> (Env, TradingCardGameClient<'static>, Address, Address) {
     client.new_match(&player_a, &player_b, &deck_a, &deck_b);
 
     // Both players start sessions
+    env.mock_all_auths();
     client.start_session(&player_a);
     client.start_session(&player_b);
 
@@ -39,6 +40,106 @@ fn actions(env: &Env, items: &[Action]) -> Vec<Action> {
         v.push_back(item.clone());
     }
     v
+}
+
+// ─── Auth and access control tests ──────────────────────────────────────────
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
+fn test_concede_wrong_auth() {
+    let env = Env::default();
+    let contract_id = env.register(TradingCardGame, ());
+    let client = TradingCardGameClient::new(&env, &contract_id);
+
+    let player_a = Address::generate(&env);
+    let player_b = Address::generate(&env);
+    let deck = vec![&env, 1u32, 2u32, 3u32, 4u32, 5u32];
+
+    client.new_match(&player_a, &player_b, &deck, &deck);
+
+    // Mock auth for player_a only
+    env.mock_auths(&[soroban_sdk::testutils::MockAuth {
+        address: &player_a,
+        invoke: &soroban_sdk::testutils::MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "concede",
+            args: (player_b.clone(),).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+
+    // This should panic because player_b requires auth but only player_a is authenticated
+    client.concede(&player_b);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
+fn test_submit_turn_wrong_auth() {
+    let env = Env::default();
+    let contract_id = env.register(TradingCardGame, ());
+    let client = TradingCardGameClient::new(&env, &contract_id);
+
+    let player_a = Address::generate(&env);
+    let player_b = Address::generate(&env);
+    let deck = vec![&env, 1u32, 2u32, 3u32, 4u32, 5u32];
+
+    client.new_match(&player_a, &player_b, &deck, &deck);
+
+    env.mock_all_auths();
+    client.start_session(&player_a);
+    client.start_session(&player_b);
+
+    // Now limit mock auth to player_a only
+    let actions = single_action(&env, Action::PlayCreature(1));
+    env.mock_auths(&[soroban_sdk::testutils::MockAuth {
+        address: &player_a,
+        invoke: &soroban_sdk::testutils::MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "submit_turn",
+            args: (player_b.clone(), actions.clone()).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+
+    // player_b submitting turn without auth should fail
+    client.submit_turn(&player_b, &actions);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
+fn test_start_session_requires_auth() {
+    let env = Env::default();
+    let contract_id = env.register(TradingCardGame, ());
+    let client = TradingCardGameClient::new(&env, &contract_id);
+
+    let player_a = Address::generate(&env);
+    let player_b = Address::generate(&env);
+    let deck = vec![&env, 1u32];
+
+    client.new_match(&player_a, &player_b, &deck, &deck);
+
+    // No mock_all_auths here
+    client.start_session(&player_a);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
+fn test_read_methods_reject_unknown_player_hand() {
+    let (env, client, _, _) = setup_match();
+    let stranger = Address::generate(&env);
+
+    // Should panic with NotAPlayer (#4)
+    client.get_hand(&stranger);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #4)")]
+fn test_read_methods_reject_unknown_player_stats() {
+    let (env, client, _, _) = setup_match();
+    let stranger = Address::generate(&env);
+
+    // Should panic with NotAPlayer (#4)
+    client.get_stats(&stranger);
 }
 
 // ─── Match initialisation tests ──────────────────────────────────────────────
@@ -93,6 +194,7 @@ fn test_start_session_returns_expiry() {
 
     client.new_match(&player_a, &player_b, &deck, &deck);
 
+    env.mock_all_auths();
     let expiry = client.start_session(&player_a);
     // Expiry should be in the future (ledger timestamp + 7200)
     assert!(expiry >= env.ledger().timestamp() + 7200);
@@ -354,6 +456,7 @@ fn test_win_condition_health_zero() {
     let deck_a = vec![&env, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32];
     let deck_b = vec![&env, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32];
     client.new_match(&pa, &pb, &deck_a, &deck_b);
+    env.mock_all_auths();
     client.start_session(&pa);
     client.start_session(&pb);
 
@@ -416,6 +519,7 @@ fn test_win_by_spell_damage() {
     let deck_a = vec![&env, 9u32, 9u32, 9u32, 9u32, 9u32, 9u32, 9u32, 9u32];
     let deck_b = vec![&env, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32, 1u32];
     client.new_match(&pa, &pb, &deck_a, &deck_b);
+    env.mock_all_auths();
     client.start_session(&pa);
     client.start_session(&pb);
 
