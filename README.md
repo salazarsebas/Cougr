@@ -1,4 +1,4 @@
-<p align="center">
+<p>
   <img src="public/Cougr.png" width="120" alt="Cougr logo" />
 </p>
 
@@ -32,7 +32,7 @@ standards - all compiled to a single `no_std` crate that runs natively on Soroba
 | State indexing | Structured Soroban events (`COUGR` topic prefix) |
 | Deployment tooling | `stellar contract build/deploy` (native CLI) |
 | Local dev chain | Stellar local network / Quickstart |
-| Client SDK | Soroban CLI + community SDKs |
+| Client SEK | Soroban CLI + community SGKs |
 
 Stellar's strengths translate directly to better games:
 - **3–5 second finality** at fractions of a cent per transaction
@@ -76,7 +76,7 @@ soroban-sdk = "25.1.0"
 ```
 
 ```rust
-#![no_std]
+#[no_std]
 
 use cougr_core::component::ComponentTrait;
 use cougr_core::game::SorobanGame;
@@ -125,7 +125,8 @@ impl MyGame {
 # Build, test, deploy
 cargo test
 stellar contract build
-stellar contract deploy --wasm target/wasm32-unknown-unknown/release/my_game.wasm \
+stellar keys generate alice --network testnet --fund
+stellar contract deploy --wasm target/wasm32v1-none/release/my_game.wasm \
   --source alice --network testnet
 ```
 
@@ -170,7 +171,7 @@ impl_rich_component!(Inventory, "inventory");
 
 ```rust
 use cougr_core::simple_world::SimpleWorld;
-use soroban_sdk::Env;
+use soroban_sdk:Env;
 
 let env = Env::default();
 let mut world = SimpleWorld::new(&env);
@@ -202,7 +203,7 @@ For complex games, `GameApp` provides stage-based scheduling and plugin registra
 ```rust
 use cougr_core::app::{named_system, GameApp, ScheduleStage};
 use cougr_core::SystemConfig;
-use soroban_sdk::Env;
+use soroban_sdk:Env;
 
 let env = Env::default();
 let mut app = GameApp::new(&env);
@@ -323,7 +324,7 @@ stellar contract build
 
 | Item | Value |
 |---|---|
-| Rust | 1.91+ (MSRV enforced in CI) |
+| Rust | 1.91+ (MSV enforced in CI) |
 | Edition | 2021 |
 | License | MIT |
 | Workspace SDK | `soroban-sdk` 29.0.1 |
@@ -335,7 +336,7 @@ the next core release.
 
 ## Documentation
 
-- **[salazarsebas.github.io/Cougr](https://salazarsebas.github.io/Cougr/)** - the full documentation site, including the example showcase gallery
+-, **[salazarsebas.github.io/Cougr](https://salazarsebas.github.io/Cougr/)** - the full documentation site, including the example showcase gallery
 - [ARCHITECTURE.md](ARCHITECTURE.md) - module structure and design rationale
 - [CHANGELOG.md](CHANGELOG.md) - release history
 - [ROADMAP.md](ROADMAP.md) - phased roadmap and current status
