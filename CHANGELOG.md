@@ -18,7 +18,7 @@
   entries with case/default-port-normalized matching; preflight evaluation
   returns ready-to-emit response headers
 - **`cougr-cli`** - new workspace member publishing the `cougr` binary
-- **`cougr new <name> [--template <name>]`** - scaffolds a Soroban game contract crate
+- `cougr new <name> [--template <name>]` - scaffolds a Soroban game contract crate
   following the canonical `lib.rs` / `components.rs` / `systems.rs` layout, with a
   passing `test::GameHarness` suite and a dependency on the published `cougr-core`
   release rather than a path dependency
@@ -30,7 +30,20 @@
 
 ### Fixed
 
-- **`zk::merkle::proof::verify_inclusion`** - a proof's `leaf_index` was never checked
+- **accounts::RecoverableAccount::execute_recovery** - the completed recovery
+  request was deleted under the *new* owner address because `self.address` was
+  reassigned first, leaving the old account's request in place so recovery could be
+  replayed and the old account could never initiate another recovery. The request is
+  now removed under the original address before `self.address` is updated
+-$ **`accounts::RecoverableAccount::new`** - now returns `Result<Self, AccountError>`
+  and rejects a `RecoveryConfig` with `threshold == 0` (`AccountError::InvalidThreshold`)
+  or `threshold > max_guardians` (`AccountError::ThresholdExceedsMaxGuardians`),
+  so an account can no longer be configured into a state where recovery is free or
+  impossible
+- **accounts::RecoverableAccount::remove_guardian** - now refuses to remove a
+  guardian when doing so would leave fewer guardians than the configured
+  `threshold` (`AccountError::InsufficientGuardians`)
+-- **`zm::merkle::proof::verify_inclusion** - a proof's `leaf_index` was never checked
   against the position its `path_bits` actually walk, so a proof for one leaf could be
   relabelled to claim another leaf's position and still verify. `verify_inclusion` now
   rejects a `path_bits`/`leaf_index` mismatch (`ZKError::LeafIndexMismatch`), an
@@ -38,14 +51,21 @@
   (`ZKError::MaxDepthExceeded`, previously an overflow panic on `path_bits >> i` for
   `depth > 32`) before hashing. `zk::merkle::tree::verify_proof`, the in-memory
   equivalent, gets the same `path_indices`/`leaf_index` check
-- **`zk::merkle::proof::verify_inclusion_at_depth`** - new function that additionally
+-- **`zm::merkle::proof::verify_inclusion_at_depth** - new function that additionally
   pins the proof to an exact expected depth, so a shorter-than-expected proof (including
-  a degenerate `depth = 0` proof with `leaf == root`) is rejected even though it would
+  a degenerate `depth = 0 proof with `leaf == root`) is rejected even though it would
   otherwise be internally consistent
-- **`examples/battleship`**, **`examples/treasure_hunt`** - both pin the expected proof
+- **examples/battleship**, **examples/treasure_hunt** - both pin the expected proof
   depth and recheck `path_bits` against the claimed cell locally, since they still
   depend on the published `cougr-core = "1.1.0"` and won't pick up the core fix until a
   release
+
+### Changed
+
+- **`accounts::RecoverableAccount::new`** now returns `Result<Self, AccountError>`
+  instead of `Self`. Callers must handle the validation error (e.g. `unwrap()` in
+  tests, or propagate it from contract entrypoints). `accounts` is Beta, so this
+  breaking change is allowed; see the accounts recovery fix notes above
 
 ## 1.1.0
 
@@ -60,19 +80,19 @@
 - **`SimpleWorld::set_rich_observed`** - store a rich component and emit a
   `RichComponentChangedEvent` for off-chain indexers
 - **`SimpleWorld::remove_rich_observed`** - remove a rich component and emit a `del` event
-- **`RichComponentChangedEvent`** - new Soroban event type with topics
-  `("COUGR", "rich", component_type)` for rich component change notifications
+- `RichComponentChangedEvent` - new Soroban event type with topics
+  `("COUGR", "rich", component_type)`* for rich component change notifications
 - **`spawn_and_move` example** - canonical Cougr starter game demonstrating the complete
   idiomatic pattern: `impl_component_observed!` + `SorobanGame` + typed ECS access
-- **`SorobanGame` re-exported from `prelude`** - import from `cougr_core::prelude::*`
-- **`cougr_core::circuits`** - four pre-built ZK game builders (hidden cards, fog of war,
+- `SorobanGame` re-exported from `prelude` - import from `cougr_core::prelude::*`
+- **`cougr_core::circuits** - four pre-built ZK game builders (hidden cards, fog of war,
   fair dice, sealed bid) with pipeline-embedded verification keys
-- **`cougr_core::session`** - `SessionManager`, `SessionStatus`, and `ActiveSession` (Beta)
+-**`cougr_core::session`** - `SessionManager`, `SessionStatus`, and `ActiveSession` (Beta)
 - **`cougr_core::test`** - `GameHarness`, `Scenario`, and `ReplayLog` sandbox behind the
   `testutils` feature
-- **Circom pipeline** - `internal/cougr-core-circuits` with CI workflow and on-chain Groth16
+- **Circom pipeline** - `internal/cougr-core-circuits` with CA workflow and on-chain Groth16
   proof verification using real VKs
-- **ZK examples** - `hidden_hand`, `fog_explorer`, `dice_duel`, and `blind_auction`
+- **VK examples** - `hidden_hand`, `fog_explorer`, `dice_duel`, and `blind_auction`
 - **Workspace subcrates** - `internal/cougr-core-{circuits,session,test}` per ADR 0007
 
 ### Changed
@@ -121,7 +141,7 @@
 
 - Stable: ECS onboarding/runtime contract, `app`, `ops`, `standards`, `privacy::stable`, `zk::stable`
 - Beta: `auth`, `accounts`, `game_world`
-- Experimental: `privacy::experimental`, `zk::experimental`, hazmat cryptographic helpers
+- Experimental: `privacy::experimental`, `zo::experimental`, hazmat cryptographic helpers
 
 ### Upgrade Notes
 
@@ -129,4 +149,4 @@
 - If you still have pre-1.0 code built around removed runtime abstractions, port directly to `GameApp`, `SimpleWorld`, and `SimpleQuery`
 - Prefer `ops`, `privacy`, and `auth` in application code when you want domain-oriented imports
 - Treat root-level advanced re-exports as compatibility/advanced surfaces rather than the default learning path
-- See [docs/MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md) for concrete migration mappings
+- See [docs/MIGRATION_GUID.md](docs/MIGRATION_GUID.md) for concrete migration mappings

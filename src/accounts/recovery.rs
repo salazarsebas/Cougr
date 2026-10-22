@@ -83,10 +83,20 @@ pub struct RecoverableAccount {
 
 impl RecoverableAccount {
     /// Create a new recoverable account and persist the initial config.
-    pub fn new(address: Address, config: RecoveryConfig, env: &Env) -> Self {
+    ///
+    /// Returns `AccountError::InvalidThreshold` if `threshold` is zero or
+    /// greater than `max_guardians`.
+    pub fn new(
+        address: Address,
+        config: RecoveryConfig,
+        env: &Env,
+    ) -> Result<Self, AccountError> {
+        if config.threshold == 0 || config.threshold > config.max_guardians {
+            return Err(AccountError::InvalidThreshold);
+        }
         RecoveryStorage::store_config(env, &address, &config);
         RecoveryStorage::store_guardians(env, &address, &Vec::new(env));
-        Self { address }
+        Ok(Self { address })
     }
 
     /// Load an existing recoverable account (config must already be stored).
@@ -135,6 +145,8 @@ impl RecoveryProvider for RecoverableAccount {
     }
 
     fn remove_guardian(&mut self, env: &Env, guardian: &Address) -> Result<(), AccountError> {
+        let config =
+            RecoveryStorage::load_config(env, &self.address).ok_or(AccountError::StorageError)?;
         let guardians = RecoveryStorage::load_guardians(env, &self.address);
         let mut new_guardians: Vec<Guardian> = Vec::new(env);
         let mut found = false;
@@ -151,6 +163,10 @@ impl RecoveryProvider for RecoverableAccount {
 
         if !found {
             return Err(AccountError::InvalidScope);
+        }
+
+        if (new_guardians.len() as u32) < config.threshold {
+            return Err(AccountError::ThresholdNotMet);
         }
 
         RecoveryStorage::store_guardians(env, &self.address, &new_guardians);
@@ -252,8 +268,8 @@ impl RecoveryProvider for RecoverableAccount {
         }
 
         let new_owner = request.new_owner.clone();
-        self.address = new_owner.clone();
         RecoveryStorage::remove_request(env, &self.address);
+        self.address = new_owner.clone();
         Ok(new_owner)
     }
 
@@ -274,6 +290,7 @@ impl RecoveryProvider for RecoverableAccount {
 mod tests {
     use super::*;
     use soroban_sdk::{contract, contractimpl, testutils::Address as _, Env};
+    use soroban_sdk::testutils::Ledger as _;
 
     #[contract]
     pub struct TestContract;
@@ -297,7 +314,7 @@ mod tests {
         let guardian = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account.add_guardian(&env, guardian).unwrap();
             assert_eq!(account.guardian_count(&env), 1);
         });
@@ -311,7 +328,7 @@ mod tests {
         let guardian = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account.add_guardian(&env, guardian.clone()).unwrap();
             let result = account.add_guardian(&env, guardian);
             assert_eq!(result, Err(AccountError::GuardianAlreadyExists));
@@ -330,7 +347,7 @@ mod tests {
         };
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, config, &env);
+            let mut account = RecoverableAccount::new(addr, config, &env).unwrap();
             account.add_guardian(&env, Address::generate(&env)).unwrap();
             account.add_guardian(&env, Address::generate(&env)).unwrap();
             let result = account.add_guardian(&env, Address::generate(&env));
@@ -346,7 +363,7 @@ mod tests {
         let guardian = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account.add_guardian(&env, guardian.clone()).unwrap();
             account.remove_guardian(&env, &guardian).unwrap();
             assert_eq!(account.guardian_count(&env), 0);
@@ -361,7 +378,7 @@ mod tests {
         let new_owner = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             let request = account.initiate_recovery(&env, new_owner).unwrap();
             assert!(!request.cancelled);
             assert_eq!(request.approvals.len(), 0);
@@ -375,7 +392,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account
                 .initiate_recovery(&env, Address::generate(&env))
                 .unwrap();
@@ -393,7 +410,7 @@ mod tests {
         let guardian2 = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account.add_guardian(&env, guardian1.clone()).unwrap();
             account.add_guardian(&env, guardian2.clone()).unwrap();
             account
@@ -416,7 +433,7 @@ mod tests {
         let non_guardian = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account
                 .initiate_recovery(&env, Address::generate(&env))
                 .unwrap();
@@ -433,7 +450,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account
                 .initiate_recovery(&env, Address::generate(&env))
                 .unwrap();
@@ -450,7 +467,7 @@ mod tests {
         let guardian1 = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account.add_guardian(&env, guardian1.clone()).unwrap();
             account
                 .initiate_recovery(&env, Address::generate(&env))
@@ -472,7 +489,7 @@ mod tests {
         let guardian2 = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = RecoverableAccount::new(addr, default_config(), &env);
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
             account.add_guardian(&env, guardian1.clone()).unwrap();
             account.add_guardian(&env, guardian2.clone()).unwrap();
             account
@@ -495,10 +512,101 @@ mod tests {
         let config = default_config();
 
         env.as_contract(&contract_id, || {
-            let account = RecoverableAccount::new(addr, config, &env);
+            let account = RecoverableAccount::new(addr, config, &env).unwrap();
             assert_eq!(account.recovery_config(&env).threshold, 2);
             assert_eq!(account.recovery_config(&env).timelock_period, 100);
             assert_eq!(account.recovery_config(&env).max_guardians, 5);
+        });
+    }
+
+    #[test]
+    fn test_new_rejects_zero_threshold() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let config = RecoveryConfig {
+            threshold: 0,
+            timelock_period: 100,
+            max_guardians: 5,
+        };
+
+        env.as_contract(&contract_id, || {
+            let result = RecoverableAccount::new(addr, config, &env);
+            assert_eq!(result.err(), Some(AccountError::InvalidThreshold));
+        });
+    }
+
+    #[test]
+    fn test_new_rejects_threshold_above_max_guardians() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let config = RecoveryConfig {
+            threshold: 6,
+            timelock_period: 100,
+            max_guardians: 5,
+        };
+
+        env.as_contract(&contract_id, || {
+            let result = RecoverableAccount::new(addr, config, &env);
+            assert_eq!(result.err(), Some(AccountError::InvalidThreshold));
+        });
+    }
+
+    #[test]
+    fn test_remove_guardian_cannot_go_below_threshold() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let guardian1 = Address::generate(&env);
+        let guardian2 = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = RecoverableAccount::new(addr, default_config(), &env).unwrap();
+            account.add_guardian(&env, guardian1.clone()).unwrap();
+            account.add_guardian(&env, guardian2.clone()).unwrap();
+
+            // Removing one guardian leaves 1, below threshold of 2.
+            let result = account.remove_guardian(&env, &guardian1);
+            assert_eq!(result, Err(AccountError::ThresholdNotMet));
+            assert_eq!(account.guardian_count(&env), 2);
+        });
+    }
+
+    #[test]
+    fn test_execute_recovery_clears_request() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let guardian1 = Address::generate(&env);
+        let guardian2 = Address::generate(&env);
+        let new_owner = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = RecoverableAccount::new(addr.clone(), default_config(), &env).unwrap();
+            account.add_guardian(&env, guardian1.clone()).unwrap();
+            account.add_guardian(&env, guardian2.clone()).unwrap();
+            account.initiate_recovery(&env, new_owner.clone()).unwrap();
+            account.approve_recovery(&env, &guardian1).unwrap();
+            account.approve_recovery(&env, &guardian2).unwrap();
+
+            env.ledger().set_timestamp(200);
+            let executed = account.execute_recovery(&env).unwrap();
+            assert_eq!(executed, new_owner);
+
+            // Request under the original address must be gone.
+            let old_account = RecoverableAccount::load(addr.clone());
+            assert!(old_account.active_request(&env).is_none());
+
+            // A second execute must fail.
+            let result = account.execute_recovery(&env);
+            assert_eq!(result, Err(AccountError::RecoveryNotInitiated));
+
+            // The old account can initiate a new recovery.
+            let mut old_account = RecoverableAccount::load(addr);
+            assert!(old_account
+                .initiate_recovery(&env, Address::generate(&env))
+                .is_ok());
         });
     }
 }
