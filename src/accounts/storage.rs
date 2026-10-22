@@ -1,6 +1,7 @@
 use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
 
 use super::error::AccountError;
+use super::ttl;
 use super::types::SessionKey;
 
 /// Symbol used as the storage key prefix for session keys.
@@ -56,6 +57,7 @@ impl SessionStorage {
         new_keys.push_back(key.clone());
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        ttl::extend_persistent(env, &storage_key);
     }
 
     /// Load a specific session key by ID.
@@ -74,10 +76,11 @@ impl SessionStorage {
     /// Load all session keys for an account.
     pub fn load_all(env: &Env, account: &Address) -> Vec<SessionKey> {
         let storage_key = Self::storage_key(env, account);
-        env.storage()
-            .persistent()
-            .get(&storage_key)
-            .unwrap_or_else(|| Vec::new(env))
+        let existing = env.storage().persistent().get(&storage_key);
+        if existing.is_some() {
+            ttl::extend_persistent(env, &storage_key);
+        }
+        existing.unwrap_or_else(|| Vec::new(env))
     }
 
     /// Remove a session key by ID. Returns true if found and removed.
@@ -102,6 +105,7 @@ impl SessionStorage {
                 env.storage().persistent().remove(&storage_key);
             } else {
                 env.storage().persistent().set(&storage_key, &new_keys);
+                ttl::extend_persistent(env, &storage_key);
             }
         }
         found
@@ -135,6 +139,7 @@ impl SessionStorage {
 
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        ttl::extend_persistent(env, &storage_key);
         Ok(())
     }
 
@@ -168,6 +173,7 @@ impl SessionStorage {
         let updated = updated.ok_or(AccountError::SessionRevoked)?;
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        ttl::extend_persistent(env, &storage_key);
         Ok(updated)
     }
 
@@ -200,6 +206,7 @@ impl SessionStorage {
         let updated = updated.ok_or(AccountError::SessionRevoked)?;
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        ttl::extend_persistent(env, &storage_key);
         Ok(updated)
     }
 
@@ -227,6 +234,7 @@ impl SessionStorage {
                 env.storage().persistent().remove(&storage_key);
             } else {
                 env.storage().persistent().set(&storage_key, &new_keys);
+                ttl::extend_persistent(env, &storage_key);
             }
         }
 
