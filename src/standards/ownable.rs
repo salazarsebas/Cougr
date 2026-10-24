@@ -43,6 +43,10 @@ impl Ownable {
         Self { id }
     }
 
+    /// Initializes the module with an initial `owner`.
+    ///
+    /// Note: This helper does not call `owner.require_auth()`; the integrating
+    /// contract must authenticate the caller before invoking this method.
     pub fn initialize(
         &self,
         env: &Env,
@@ -79,6 +83,11 @@ impl Ownable {
         Ok(())
     }
 
+    /// Transfers ownership from `caller` to `new_owner`.
+    ///
+    /// Note: This helper compares `caller` against the stored owner but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn transfer_ownership(
         &self,
         env: &Env,
@@ -100,6 +109,11 @@ impl Ownable {
         })
     }
 
+    /// Renounces ownership when called by the current owner.
+    ///
+    /// Note: This helper compares `caller` against the stored owner but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn renounce_ownership(
         &self,
         env: &Env,
@@ -134,6 +148,10 @@ impl Ownable2Step {
         }
     }
 
+    /// Initializes the two-step ownership module with an initial `owner`.
+    ///
+    /// Note: This helper does not call `owner.require_auth()`; the integrating
+    /// contract must authenticate the caller before invoking this method.
     pub fn initialize(
         &self,
         env: &Env,
@@ -154,6 +172,11 @@ impl Ownable2Step {
         self.inner.require_owner(env, caller)
     }
 
+    /// Starts a two-step ownership handoff to `pending_owner`.
+    ///
+    /// Note: This helper compares `caller` against the stored owner but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn begin_transfer(
         &self,
         env: &Env,
@@ -171,6 +194,11 @@ impl Ownable2Step {
         })
     }
 
+    /// Completes a pending ownership transfer when called by `pending_owner`.
+    ///
+    /// Note: This helper compares `caller` against the stored pending owner but
+    /// does not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn accept_transfer(
         &self,
         env: &Env,
@@ -197,6 +225,11 @@ impl Ownable2Step {
         })
     }
 
+    /// Cancels an active two-step ownership transfer when called by the owner.
+    ///
+    /// Note: This helper compares `caller` against the stored owner but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn cancel_transfer(
         &self,
         env: &Env,
@@ -214,5 +247,210 @@ impl Ownable2Step {
             owner: caller.clone(),
             pending_owner,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _};
+
+    #[contract]
+    struct DummyContract;
+
+    #[contractimpl]
+    impl DummyContract {}
+
+    #[test]
+    fn ownable_initialize_sets_owner_and_rejects_duplicate_init() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let owner = Address::generate(&env);
+        let other = Address::generate(&env);
+        let ownable = Ownable::new(symbol_short!("own"));
+
+        env.as_contract(&contract_id, || {
+            assert_eq!(ownable.owner(&env), None);
+            assert_eq!(ownable.pending_owner(&env), None);
+
+            let event = ownable.initialize(&env, &owner).unwrap();
+            assert_eq!(
+                event,
+                OwnershipTransferredEvent {
+                    previous_owner: None,
+                    new_owner: Some(owner.clone()),
+                }
+            );
+            assert_eq!(ownable.owner(&env), Some(owner.clone()));
+
+            assert_eq!(
+                ownable.initialize(&env, &other),
+                Err(StandardsError::AlreadyInitialized)
+            );
+        });
+    }
+
+    #[test]
+    fn ownable_require_owner_enforces_initialized_and_matching_caller() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let owner = Address::generate(&env);
+        let outsider = Address::generate(&env);
+        let ownable = Ownable::new(symbol_short!("own"));
+
+        env.as_contract(&contract_id, || {
+            assert_eq!(
+                ownable.require_owner(&env, &owner),
+                Err(StandardsError::OwnerNotSet)
+            );
+
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq!(ownable.require_owner(&env, &owner), Ok(()));
+            assert_eq!(
+                ownable.require_owner(&env, &outsider),
+                Err(StandardsError::Unauthorized)
+            );
+        });
+    }
+
+    #[test]
+    fn ownable_transfer_and_renounce_check_caller_and_clear_pending_owner() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let owner = Address::generate(&env);
+        let next_owner = Address::generate(&env);
+        let outsider = Address::generate(&env);
+        let ownable = Ownable::new(symbol_short!("own"));
+        let two_step = Ownable2Step::new(symbol_short!("own"));
+
+        env.as_contract(&contract_id, || {
+            assert_eq!(
+                ownable.transfer_ownership(&env, &owner, &next_owner),
+                Err(StandardsError::OwnerNotSet)
+            );
+            assert_eq!(
+                ownable.renounce_ownership(&env, &owner),
+                Err(StandardsError::OwnerNotSet)
+            );
+
+            ownable.initialize(&env, &owner).unwrap();
+            two_step.begin_transfer(&env, &owner, &outsider).unwrap();
+            assert_eq!(ownable.pending_owner(&env), Some(outsider.clone()));
+
+            assert_eq!(
+                ownable.transfer_ownership(&env, &outsider, &next_owner),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let transferred = ownable
+                .transfer_ownership(&env, &owner, &next_owner)
+                .unwrap();
+            assert_eq!(
+                transferred,
+                OwnershipTransferredEvent {
+                    previous_owner: Some(owner.clone()),
+                    new_owner: Some(next_owner.clone()),
+                }
+            );
+            assert_eq!(ownable.owner(&env), Some(next_owner.clone()));
+            assert_eq!(ownable.pending_owner(&env), None);
+
+            assert_eq!(
+                ownable.renounce_ownership(&env, &owner),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let renounced = ownable.renounce_ownership(&env, &next_owner).unwrap();
+            assert_eq!(
+                renounced,
+                OwnershipTransferredEvent {
+                    previous_owner: Some(next_owner),
+                    new_owner: None,
+                }
+            );
+            assert_eq!(ownable.owner(&env), None);
+        });
+    }
+
+    #[test]
+    fn ownable_2step_begin_accept_and_cancel_transfer_cover_all_paths() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let owner = Address::generate(&env);
+        let pending = Address::generate(&env);
+        let outsider = Address::generate(&env);
+        let ownable = Ownable2Step::new(symbol_short!("own2"));
+
+        env.as_contract(&contract_id, || {
+            assert_eq!(
+                ownable.begin_transfer(&env, &owner, &pending),
+                Err(StandardsError::OwnerNotSet)
+            );
+            assert_eq!(
+                ownable.cancel_transfer(&env, &owner),
+                Err(StandardsError::OwnerNotSet)
+            );
+            assert_eq!(
+                ownable.accept_transfer(&env, &pending),
+                Err(StandardsError::PendingOwnerNotSet)
+            );
+
+            ownable.initialize(&env, &owner).unwrap();
+            assert_eq!(ownable.require_owner(&env, &owner), Ok(()));
+            assert_eq!(
+                ownable.cancel_transfer(&env, &owner),
+                Err(StandardsError::PendingOwnerNotSet)
+            );
+            assert_eq!(
+                ownable.begin_transfer(&env, &outsider, &pending),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let started = ownable.begin_transfer(&env, &owner, &pending).unwrap();
+            assert_eq!(
+                started,
+                OwnershipTransferStartedEvent {
+                    owner: owner.clone(),
+                    pending_owner: pending.clone(),
+                }
+            );
+            assert_eq!(ownable.pending_owner(&env), Some(pending.clone()));
+
+            assert_eq!(
+                ownable.cancel_transfer(&env, &outsider),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let cancelled = ownable.cancel_transfer(&env, &owner).unwrap();
+            assert_eq!(
+                cancelled,
+                OwnershipTransferCancelledEvent {
+                    owner: owner.clone(),
+                    pending_owner: pending.clone(),
+                }
+            );
+            assert_eq!(ownable.pending_owner(&env), None);
+            assert_eq!(
+                ownable.accept_transfer(&env, &pending),
+                Err(StandardsError::PendingOwnerNotSet)
+            );
+
+            ownable.begin_transfer(&env, &owner, &pending).unwrap();
+            assert_eq!(
+                ownable.accept_transfer(&env, &outsider),
+                Err(StandardsError::PendingOwnerMismatch)
+            );
+
+            let accepted = ownable.accept_transfer(&env, &pending).unwrap();
+            assert_eq!(
+                accepted,
+                OwnershipTransferredEvent {
+                    previous_owner: Some(owner),
+                    new_owner: Some(pending.clone()),
+                }
+            );
+            assert_eq!(ownable.owner(&env), Some(pending));
+            assert_eq!(ownable.pending_owner(&env), None);
+        });
     }
 }

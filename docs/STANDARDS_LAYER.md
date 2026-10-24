@@ -75,7 +75,7 @@ Where authorization matters:
 - `AccessControl` checks the caller against the relevant admin role
 - `Pausable`, `RecoveryGuard`, and similar state machines leave the surrounding authorization decision to the integrating contract
 
-This is intentional. Cougr keeps authorization visible at the integration boundary instead of burying it in generic helpers.
+This is intentional. Cougr keeps authorization visible at the integration boundary instead of burying it in generic helpers. None of the standards helpers call `caller.require_auth()` internally (`Ownable` and `AccessControl` compare `caller` against stored state, while `Pausable` and `RecoveryGuard` record `caller` in their emitted events), so the integrating contract is always responsible for authenticating `caller` first.
 
 ## Error Semantics
 

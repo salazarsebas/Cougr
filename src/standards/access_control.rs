@@ -43,6 +43,10 @@ impl AccessControl {
         Self { id }
     }
 
+    /// Initializes the module and grants [`DEFAULT_ADMIN_ROLE_NAME`] to `admin`.
+    ///
+    /// Note: This helper does not call `admin.require_auth()`; the integrating
+    /// contract must authenticate the caller before invoking this method.
     pub fn initialize(
         &self,
         env: &Env,
@@ -95,6 +99,11 @@ impl AccessControl {
             .unwrap_or_else(|| self.default_admin_role(env))
     }
 
+    /// Grants `role` to `account` when `caller` holds the admin role for `role`.
+    ///
+    /// Note: This helper checks `caller`'s role membership in storage but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn grant_role(
         &self,
         env: &Env,
@@ -116,6 +125,11 @@ impl AccessControl {
         })
     }
 
+    /// Revokes `role` from `account` when `caller` holds the admin role for `role`.
+    ///
+    /// Note: This helper checks `caller`'s role membership in storage but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn revoke_role(
         &self,
         env: &Env,
@@ -140,6 +154,11 @@ impl AccessControl {
         })
     }
 
+    /// Renounces `role` for `caller`.
+    ///
+    /// Note: This helper checks `caller`'s role membership in storage but does
+    /// not call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn renounce_role(
         &self,
         env: &Env,
@@ -161,6 +180,11 @@ impl AccessControl {
         })
     }
 
+    /// Updates the admin role that governs `role` to `new_admin_role`.
+    ///
+    /// Note: This helper checks `caller`'s admin role in storage but does not
+    /// call `caller.require_auth()`; the integrating contract must
+    /// authenticate `caller` before invoking this method.
     pub fn set_role_admin(
         &self,
         env: &Env,
@@ -209,5 +233,166 @@ impl AccessControl {
             self.id.clone(),
             role.clone(),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _};
+
+    #[contract]
+    struct DummyContract;
+
+    #[contractimpl]
+    impl DummyContract {}
+
+    #[test]
+    fn initialize_grants_default_admin_and_rejects_duplicate_init() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let admin = Address::generate(&env);
+        let other = Address::generate(&env);
+        let acl = AccessControl::new(symbol_short!("acl"));
+
+        env.as_contract(&contract_id, || {
+            let default_admin = acl.default_admin_role(&env);
+            assert!(!acl.has_role(&env, &default_admin, &admin));
+
+            let event = acl.initialize(&env, &admin).unwrap();
+            assert_eq!(
+                event,
+                RoleGrantedEvent {
+                    role: default_admin.clone(),
+                    account: admin.clone(),
+                    sender: admin.clone(),
+                }
+            );
+            assert!(acl.has_role(&env, &default_admin, &admin));
+            assert_eq!(acl.require_role(&env, &default_admin, &admin), Ok(()));
+            assert_eq!(
+                acl.require_role(&env, &default_admin, &other),
+                Err(StandardsError::Unauthorized)
+            );
+            assert_eq!(
+                acl.initialize(&env, &other),
+                Err(StandardsError::AlreadyInitialized)
+            );
+        });
+    }
+
+    #[test]
+    fn grant_and_revoke_role_enforce_admin_and_membership_errors() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let admin = Address::generate(&env);
+        let member = Address::generate(&env);
+        let outsider = Address::generate(&env);
+        let acl = AccessControl::new(symbol_short!("acl"));
+        let ops_role = symbol_short!("OPS");
+
+        env.as_contract(&contract_id, || {
+            acl.initialize(&env, &admin).unwrap();
+
+            assert_eq!(
+                acl.grant_role(&env, &outsider, &ops_role, &member),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let granted = acl.grant_role(&env, &admin, &ops_role, &member).unwrap();
+            assert_eq!(
+                granted,
+                RoleGrantedEvent {
+                    role: ops_role.clone(),
+                    account: member.clone(),
+                    sender: admin.clone(),
+                }
+            );
+            assert!(acl.has_role(&env, &ops_role, &member));
+
+            assert_eq!(
+                acl.grant_role(&env, &admin, &ops_role, &member),
+                Err(StandardsError::RoleAlreadyGranted)
+            );
+
+            assert_eq!(
+                acl.revoke_role(&env, &outsider, &ops_role, &member),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let revoked = acl.revoke_role(&env, &admin, &ops_role, &member).unwrap();
+            assert_eq!(
+                revoked,
+                RoleRevokedEvent {
+                    role: ops_role.clone(),
+                    account: member.clone(),
+                    sender: admin.clone(),
+                }
+            );
+            assert!(!acl.has_role(&env, &ops_role, &member));
+
+            assert_eq!(
+                acl.revoke_role(&env, &admin, &ops_role, &member),
+                Err(StandardsError::RoleNotGranted)
+            );
+        });
+    }
+
+    #[test]
+    fn renounce_role_and_set_role_admin_cover_success_and_errors() {
+        let env = Env::default();
+        let contract_id = env.register(DummyContract, ());
+        let admin = Address::generate(&env);
+        let delegated_admin = Address::generate(&env);
+        let member = Address::generate(&env);
+        let acl = AccessControl::new(symbol_short!("acl"));
+        let ops_role = symbol_short!("OPS");
+        let ops_admin_role = symbol_short!("OPADM");
+
+        env.as_contract(&contract_id, || {
+            acl.initialize(&env, &admin).unwrap();
+            let default_admin = acl.default_admin_role(&env);
+            assert_eq!(acl.role_admin(&env, &ops_role), default_admin);
+
+            assert_eq!(
+                acl.renounce_role(&env, &ops_role, &member),
+                Err(StandardsError::RoleNotGranted)
+            );
+            assert_eq!(
+                acl.set_role_admin(&env, &member, &ops_role, &ops_admin_role),
+                Err(StandardsError::Unauthorized)
+            );
+
+            let admin_changed = acl
+                .set_role_admin(&env, &admin, &ops_role, &ops_admin_role)
+                .unwrap();
+            assert_eq!(
+                admin_changed,
+                RoleAdminChangedEvent {
+                    role: ops_role.clone(),
+                    previous_admin_role: default_admin,
+                    new_admin_role: ops_admin_role.clone(),
+                    sender: admin.clone(),
+                }
+            );
+            assert_eq!(acl.role_admin(&env, &ops_role), ops_admin_role);
+
+            acl.grant_role(&env, &admin, &ops_admin_role, &delegated_admin)
+                .unwrap();
+            acl.grant_role(&env, &delegated_admin, &ops_role, &member)
+                .unwrap();
+            assert!(acl.has_role(&env, &ops_role, &member));
+
+            let renounced = acl.renounce_role(&env, &ops_role, &member).unwrap();
+            assert_eq!(
+                renounced,
+                RoleRevokedEvent {
+                    role: ops_role.clone(),
+                    account: member.clone(),
+                    sender: member.clone(),
+                }
+            );
+            assert!(!acl.has_role(&env, &ops_role, &member));
+        });
     }
 }
