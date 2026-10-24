@@ -73,6 +73,23 @@ Session enforcement requires all of:
 
 On success the session consumes one operation and advances `next_nonce`.
 
+## Storage Lifetime
+
+Persistent account entries—specifically per-account replay nonces (`ReplayProtection`) and per-account session-key lists (`SessionStorage`)—automatically refresh their Soroban state-archival TTL on both read and write via [src/accounts/ttl.rs](../src/accounts/ttl.rs):
+
+- `DAY_IN_LEDGERS`: `17,280` ledgers (~24 hours at ~5 seconds per Stellar ledger)
+- `ACCOUNT_TTL_THRESHOLD`: `7 * DAY_IN_LEDGERS` (`120,960` ledgers, ~7 days)
+- `ACCOUNT_TTL_EXTEND_TO`: `30 * DAY_IN_LEDGERS` (`518,400` ledgers, ~30 days)
+
+Whenever a persistent nonce or session-key entry is written—or read while present in persistent storage—`extend_persistent_ttl` calls `env.storage().persistent().extend_ttl(key, ACCOUNT_TTL_THRESHOLD, ACCOUNT_TTL_EXTEND_TO)`. If the entry's remaining lifetime has fallen at or below the 7-day threshold, its TTL is bumped back to 30 days.
+
+### Rationale
+
+Without explicit TTL extension, Soroban persistent entries expire after the network's minimum initial TTL:
+
+1. **Replay protection continuity**: If an account's `acct_nonce` entry is archived or evicted, `next_account_nonce` would fall back to `0` (`unwrap_or(0)`), reopening previously consumed nonces (`0..N`) to replay attacks if old signed intents are still within their expiry window.
+2. **Multi-session gameplay continuity**: Game accounts routinely go days or weeks between sessions. A 30-day target TTL refreshed whenever remaining TTL drops below 7 days keeps active nonces and long-lived session keys live across normal play intervals without requiring manual storage-bump transactions on every ledger.
+
 ## Signers
 
 Current base signer implementations:
