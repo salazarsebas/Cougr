@@ -345,3 +345,26 @@ impl StorageWorld {
             if let Some(entity_index) = loaded_entity_index(&self.loaded_entities, entity_id) {
                 let key = keys::entity_key(env, entity_id);
                 env.storage()
+                    .persistent()
+                    .set(&key, &self.loaded_entities[entity_index].component_types);
+            }
+        }
+    }
+
+    fn flush_components(&self, env: &Env) {
+        for (entity_id, component_type) in self.dirty.dirty_components() {
+            let key = keys::component_key(env, *entity_id, component_type);
+            match self.get_component(*entity_id, component_type) {
+                Some(data) => env.storage().persistent().set(&key, &data),
+                None => env.storage().persistent().remove(&key),
+            }
+        }
+    }
+
+    fn flush_despawned_entities(&self, env: &Env) {
+        for &entity_id in self.dirty.despawned_entities() {
+            let key = keys::entity_key(env, entity_id);
+            env.storage().persistent().remove(&key);
+        }
+    }
+}

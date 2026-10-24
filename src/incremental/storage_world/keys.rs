@@ -3,6 +3,11 @@ use soroban_sdk::{Env, Symbol};
 /// Default namespace used by `StorageWorld::load_metadata`.
 pub(super) const DEFAULT_NAMESPACE: &str = "default";
 
+/// Build a namespaced entity-index bucket key.
+pub(super) fn entity_bucket_key(env: &Env, namespace: &Symbol, bucket: u32) -> (Symbol, Symbol, u32) {
+    (Symbol::new(env, "cougr_eix"), namespace.clone(), bucket)
+}
+
 /// Build a namespaced metadata key.
 pub(super) fn metadata_key(env: &Env, namespace: &Symbol) -> (Symbol, Symbol) {
     (Symbol::new(env, "cougr_meta"), namespace.clone())

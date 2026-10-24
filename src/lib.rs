@@ -17,29 +17,6 @@ The public API is intentionally split into:
 - `cors` for HTTP gateway policy validation and dynamic origin allowlists
 - `test` for the on-chain game sandbox (`GameHarness`, `Scenario`, `WorldFixture`; `testutils` feature)
 
-# Golden Path
-
-```rust
-use cougr_core::app::{named_system, GameApp, ScheduleStage};
-use cougr_core::{Position, SystemConfig};
-use soroban_sdk::Env;
-
-let env = Env::default();
-let mut app = GameApp::new(&env);
-
-app.add_systems((
-    named_system("spawn_player", |world, env| {
-        let player = world.spawn_entity();
-        world.set_typed(env, player, &Position::new(1, 2));
-    })
-    .in_stage(ScheduleStage::Startup),
-    named_system("tick", |_world, _env| {})
-        .with_config(SystemConfig::new().in_stage(ScheduleStage::Update)),
-));
-
-app.run(&env).unwrap();
-```
-
 # Stability
 
 - ECS runtime and storage: Stable
@@ -51,10 +28,6 @@ app.run(&env).unwrap();
 "#]
 
 extern crate alloc;
-
-// The `alloc` feature on soroban-sdk registers its own global allocator (a
-// bump-pointer allocator suited to Soroban's run-to-completion invocation
-// model). See soroban_sdk::alloc for details.
 
 // Macros must be declared before modules that use them
 #[macro_use]
@@ -173,7 +146,7 @@ pub mod runtime {
         archetype_world::{ArchetypeQueryCache, ArchetypeQueryState},
         change_tracker::{ChangeTracker, TrackedWorld},
         hooks::{HookRegistry, HookedWorld},
-        incremental::{StorageConfig, StorageWorld, TtlPolicy, WorldMetadata},
+        incremental::{StorageWorld, WorldMetadata},
         observers::{ObservedWorld, ObserverRegistry},
         query::{SimpleQueryCache, SimpleQueryState},
         resource::Resource,

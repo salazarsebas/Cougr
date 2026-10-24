@@ -19,7 +19,7 @@
 //!
 //! Every persistent entry read or written by a world has its TTL extended
 //! according to a `TtlConfig` attached to the world. Defaults are conservative
-//! and can be replaced via `StorageWorld::with_ttl_config`; a policy with
+//! and can be replaced via `StorageWorld::with_ttl_config`; a config with
 //! `threshold == 0` and `extend_to == 0` disables extension.
 //!
 //! # Load / mutate / flush contract
@@ -28,7 +28,7 @@
 //! 2. Entities are loaded on demand (`load_entity`) or implicitly by mutation.
 //! 3. Mutations update memory and mark entries dirty.
 //! 4. `flush(env)` writes dirty entries, deletes removed components and
-//!    despawned entities, and persists the index and metadata.
+//! despawned entities, and persists the index and metadata.
 //!
 //! Storage entries are only consistent with memory after `flush()`.
 //!

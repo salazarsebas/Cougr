@@ -3,9 +3,10 @@ use soroban_sdk::{contracttype, Bytes, Symbol};
 
 /// Metadata stored as a single persistent entry.
 ///
-/// The live entity index is no longer stored here; it lives in bounded
-/// buckets (see `keys::entity_index_key`) so spawn and despawn never rewrite
-/// a list proportional to the world size.
+/// The live entity index is not stored here. It lives in bounded buckets
+/// (see `keys::entity_index_key`) so spawn and despawn never rewrite a list
+/// proportional to the world size, and it is read back through
+/// `StorageWorld::entity_ids_page`.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct WorldMetadata {
