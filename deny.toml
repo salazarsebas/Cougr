@@ -15,6 +15,10 @@ ignore = [
     { crate = "spin@0.9.8", reason = "transitive via soroban-wasmi, upgrade tracks soroban-sdk releases" },
     # Transitive through soroban-env-host's arkworks (BLS12-381 / BN254) dependency chain.
     { id = "RUSTSEC-2024-0388", reason = "unmaintained `derivative`, pulled in transitively by soroban-env-host via ark-ec/ark-ff" },
+    # Transitive through soroban-env-host via ark-std (rand 0.8.5).
+    { id = "RUSTSEC-2026-0097", reason = "unsound `rand` 0.8.5 with a custom logger; pulled in transitively by soroban-env-host via ark-std" },
+    # Transitive through published cougr-core 1.1.0 in standalone example crates; already removed in workspace cougr-core and can be dropped once examples bump past 1.1.0.
+    { id = "RUSTSEC-2022-0054", reason = "unmaintained `wee_alloc` 0.4.5, pulled in transitively by published `cougr-core` 1.1.0 in example lockfiles" },
 ]
 
 [licenses]
