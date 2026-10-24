@@ -285,8 +285,7 @@ fn session_execute_fails_when_intent_expired() {
 
         let action = make_action(&env, "tap");
         // The session is still live, but the intent's own expiry has passed.
-        let err = SessionManager::execute_action(&env, &owner, &mock.key, action, 5_000)
-            .unwrap_error();
+        let err = SessionManager::execute_action(&env, &owner, &mock.key, action, 5_000).unwrap_error();
         assert_eq!(err, AccountError::IntentExpired);
     });
 }

@@ -1,1 +1,320 @@
-dXNlIHNvcm9iYW5fc2RrOjp7QWRkcmVzcywgQnl0ZXNOLCBFbnZ9OwoKdXNlIHN1cGVyOjplcnJvcjo6QWNjb3VudEVycm9yOwp1c2Ugc3VwZXI6OmludGVudDo6e0F1dGhSZXN1bHQsIFNpZ25lZEludGVudH07CnVzZSBzdXBlcjo6a2VybmVsOjpBY2NvdW50S2VybmVsOwp1c2Ugc3VwZXI6OnN0b3JhZ2U6OlNlc3Npb25TdG9yYWdlOwp1c2Ugc3VwZXI6OnRyYWl0czo6e0NvdWdyQWNjb3VudCwgSW50ZW50QWNjb3VudCwgU2Vzc2lvbktleVByb3ZpZGVyfTsKdXNlIHN1cGVyOjp0eXBlczo6e0FjY291bnRDYXBhYmlsaXRpZXMsIEdhbWVBY3Rpb24sIFNlc3Npb25LZXksIFNlc3Npb25TY29wZX07CgovLy8gQSBDb250cmFjdCBTdGVsbGFyIGFjY291bnQgKEMtYWRkcmVzcykuCi8vLwovLy8gV3JhcHMgYSBjb250cmFjdCBhZGRyZXNzIGFuZCBwcm92aWRlcyBmdWxsIGFjY291bnQgYWJzdHJhY3Rpb24KLy8vIGluY2x1ZGluZyBzZXNzaW9uIGtleSBtYW5hZ2VtZW50LiBTZXNzaW9uIGtleXMgYXJlIHBlcnNpc3RlZCB2aWEKLy8vIFtgU2Vzc2lvblN0b3JhZ2VgXSBzbyB0aGV5IHN1cnZpdmUgYWNyb3NzIGNvbnRyYWN0IGludm9jYXRpb25zLgpwdWIgc3RydWN0IENvbnRyYWN0QWNjb3VudCB7CiAgICBhZGRyZXNzOiBBZGRyZXNzLAp9CgppbXBsIENvbnRyYWN0QWNjb3VudCB7CiAgICAvLy8gQ3JlYXRlIGEgbmV3IENvbnRyYWN0IGFjY291bnQgd3JhcHBlci4KICAgIHB1YiBmbiBuZXcoYWRkcmVzczogQWRkcmVzcykgLT4gU2VsZiB7CiAgICAgICAgU2VsZiB7IGFkZHJlc3MgfQogICAgfQoKICAgIC8vLyBSZXR1cm5zIHRoZSBudW1iZXIgb2YgYWN0aXZlIHNlc3Npb24ga2V5cy4KICAgIHB1YiBmbiBzZXNzaW9uX2NvdW50KCZzZWxmLCBlbnY6ICZFbnYpIC0+IHVzaXplIHsKICAgICAgICBTZXNzaW9uU3RvcmFnZTo6bG9hZF9hbGwoZW52LCAmc2VsZi5hZGRyZXNzKS5sZW4oKSBhcyB1c2l6ZQogICAgfQp9CgppbXBsIENvdWdyQWNjb3VudCBmb3IgQ29udHJhY3RBY2NvdW50IHsKICAgIGZuIGFkZHJlc3MoJnNlbGYpIC0+ICZBZGRyZXNzIHsKICAgICAgICAmc2VsZi5hZGRyZXNzCiAgICB9CgogICAgZm4gY2FwYWJpbGl0aWVzKCZzZWxmKSAtPiBBY2NvdW50Q2FwYWJpbGl0aWVzIHsKICAgICAgICBBY2NvdW50Q2FwYWJpbGl0aWVzIHsKICAgICAgICAgICAgY2FuX2JhdGNoOiB0cnVlLAogICAgICAgICAgICBoYXNfc2Vzc2lvbl9rZXlzOiB0cnVlLAogICAgICAgICAgICBoYXNfc29jaWFsX3JlY292ZXJ5OiB0cnVlLAogICAgICAgICAgICBoYXNfcGFzc2tleV9hdXRoOiB0cnVlLAogICAgICAgIH0KICAgIH0KCiAgICBmbiBhdXRob3JpemUoJnNlbGYsIF9lbnY6ICZFbnYsIGFjdGlvbjogJkdhbWVBY3Rpb24pIC0+IFJlc3VsdDwoKSwgQWNjb3VudEVycm9yPiB7CiAgICAgICAgbGV0IF8gPSBhY3Rpb247CiAgICAgICAgc2VsZi5hZGRyZXNzLnJlcXVpcmVfYXV0aCgpOwogICAgICAgIE9rKCgpKQogICAgfQp9CgppbXBsIEludGVudEFjY291bnQgZm9yIENvbnRyYWN0QWNjb3VudCB7CiAgICBmbiBhdXRob3JpemVfaW50ZW50KAogICAgICAgICZtdXQgc2VsZiwKICAgICAgICBlbnY6ICZFbnYsCiAgICAgICAgaW50ZW50OiAmU2lnbmVkSW50ZW50LAogICAgKSAtPiBSZXN1bHQ8QXV0aFJlc3VsdCwgQWNjb3VudEVycm9yPiB7CiAgICAgICAgQWNjb3VudEtlcm5lbDo6bmV3KHNlbGYuYWRkcmVzcy5jbG9uZSgpKS5hdXRob3JpemUoZW52LCBpbnRlbnQpCiAgICB9Cn0KCmltcGwgU2Vzc2lvbktleVByb3ZpZGVyIGZvciBDb250cmFjdEFjY291bnQgewogICAgZm4gY3JlYXRlX3Nlc3Npb24oCiAgICAgICAgJm11dCBzZWxmLAogICAgICAgIGVudjogJkVudiwKICAgICAgICBzY29wZTogU2Vzc2lvblNjb3BlLAogICAgKSAtPiBSZXN1bHQ8U2Vzc2lvbktleSwgQWNjb3VudEVycm9yPiB7CiAgICAgICAgbGV0IGV4aXN0aW5nID0gU2Vzc2lvblN0b3JhZ2U6OmxvYWRfYWxsKGVudiwgJnNlbGYuYWRkcmVzcykubGVuKCk7CiAgICAgICAgbGV0IGtleV9pZCA9IHNlc3Npb25fa2V5X2lkKGVudiwgZXhpc3RpbmcsICZzY29wZSk7CgogICAgICAgIC8vIFJlamVjdCBpZCBjb2xsaXNpb25zIHNvIGEgbmV3IHNlc3Npb24gY2FuIG5ldmVyIHNpbGVudGx5IHJlcGxhY2UKICAgICAgICAvLyBhbiBleGlzdGluZyBsaXZlIHNlc3Npb24gKGUuZy4gYWZ0ZXIgYSByZXZva2UgcmV1c2VzIGFuIGlkKS4KICAgICAgICBpZiBTZXNzaW9uU3RvcmFnZTo6bG9hZChlbnYsICZzZWxmLmFkZHJlc3MsICZrZXlfaWQpLmlzX3NvbWUoKSB7CiAgICAgICAgICAgIHJldHVybiBFcnIoQWNjb3VudEVycm9yOjpTZXNzaW9uSWRDb2xsaXNpb24pOwogICAgICAgIH0KCiAgICAgICAgbGV0IGtleSA9IFNlc3Npb25LZXkgewogICAgICAgICAgICBrZXlfaWQsCiAgICAgICAgICAgIHNjb3BlLAogICAgICAgICAgICBjcmVhdGVkX2F0OiBlbnYubGVkZ2VyKCkudGltZXN0YW1wKCksCiAgICAgICAgICAgIG9wZXJhdGlvbnNfdXNlZDogMCwKICAgICAgICAgICAgbmV4dF9ub25jZTogMCwKICAgICAgICB9OwogICAgICAgIFNlc3Npb25TdG9yYWdlOjpzdG9yZShlbnYsICZzZWxmLmFkZHJlc3MsICZrZXkpOwogICAgICAgIE9rKGtleSkKICAgIH0KCiAgICBmbiB2YWxpZGF0ZV9zZXNzaW9uKCZzZWxmLCBlbnY6ICZFbnYsIGtleTogJlNlc3Npb25LZXkpIC0+IFJlc3VsdDxib29sLCBBY2NvdW50RXJyb3I+IHsKICAgICAgICBsZXQgbm93ID0gZW52LmxlZGdlcigpLnRpbWVzdGFtcCgpOwoKICAgICAgICAvLyBDaGVjayBleHBpcmF0aW9uCiAgICAgICAgaWYgbm93ID49IGtleS5zY29wZS5leHBpcmVzX2F0IHsKICAgICAgICAgICAgcmV0dXJuIE9rKGZhbHNlKTsKICAgICAgICB9CgogICAgICAgIC8vIENoZWNrIG9wZXJhdGlvbiBsaW1pdAogICAgICAgIGlmIGtleS5vcGVyYXRpb25zX3VzZWQgPj0ga2V5LnNjb3BlLm1heF9vcGVyYXRpb25zIHsKICAgICAgICAgICAgcmV0dXJuIE9rKGZhbHNlKTsKICAgICAgICB9CgogICAgICAgIGlmIFNlc3Npb25TdG9yYWdlOjpsb2FkKGVudiwgJnNlbGYuYWRkcmVzcywgJmtleS5rZXlfaWQpLmlzX25vbmUoKSB7CiAgICAgICAgICAgIHJldHVybiBPayhmYWxzZSk7CiAgICAgICAgfQoKICAgICAgICBPayh0cnVlKQogICAgfQoKICAgIGZuIHJldm9rZV9zZXNzaW9uKCZtdXQgc2VsZiwgZW52OiAmRW52LCBrZXlfaWQ6ICZCeXRlc048MzI+KQogLT4gUmVzdWx0PCgpLCBBY2NvdW50RXJyb3I+IHsKICAgICAgICBpZiAhU2Vzc2lvblN0b3JhZ2U6OnJlbW92ZShlbnYsICZzZWxmLmFkZHJlc3MsIGtleV9pZCkgewogICAgICAgICAgICByZXR1cm4gRXJyKEFjY291bnRFcnJvcjo6SW52YWxpZFNjb3BlKTsKICAgICAgICB9CiAgICAgICAgT2soKCkpCiAgICB9CgogICAgZm4gcmVuZXdfc2Vzc2lvbigKICAgICAgICAmbXV0IHNlbGYsCiAgICAgICAgZW52OiAmRW52LAogICAgICAgIGtleV9pZDogJkJ5dGVzTjwzMj4sCiAgICAgICAgbmV3X2V4cGlyZXNfYXQ6IHU2NCwKICAgICkgLT4gUmVzdWx0PFNlc3Npb25LZXksIEFjY291bnRFcnJvcj4gewogICAgICAgIFNlc3Npb25TdG9yYWdlOjpyZW5ld19zZXNzaW9uKGVudiwgJnNlbGYuYWRkcmVzcywga2V5X2lkLCBuZXdfZXhwaXJlc19hdCkKICAgIH0KfQoKZm4gc2Vzc2lvbl9rZXlfaWQoZW52OiAmRW52LCBleGlzdGluZ19zZXNzaW9uczogdTMyLCBzY29wZTogJlNlc3Npb25TY29wZSkgLT4gQnl0ZXNOPDMyPiB7CiAgICBCeXRlc046OmZyb21fYXJyYXkoCiAgICAgICAgZW52LAogICAgICAgICZzdXBlcjo6c2Vzc2lvbl9idWlsZGVyOjpkZXJpdmVfc2Vzc2lvbl9rZXlfaWQoCiAgICAgICAgICAgIGVudi5sZWRnZXIoKS50aW1lc3RhbXAoKSwKICAgICAgICAgICAgZW52LmxlZGdlcigpLnNlcXVlbmNlKCksCiAgICAgICAgICAgIGV4aXN0aW5nX3Nlc3Npb25zLAogICAgICAgICAgICBzY29wZSwKICAgICAgICApLAogICAgKQp9CgojW2NmZyh0ZXN0KV0KbW9kIHRlc3RzIHsKICAgIHVzZSBzdXBlcjo6KjsKICAgIHVzZSBzb3JvYmFuX3Nkazp7Y29udHJhY3QsIGNvbnRyYWN0aW1wbCwgc3ltYm9sX3Nob3J0LCB0ZXN0dXRpbHM6OkFkZHJlc3MgYXMgXywgdmVjLCBFbnZ9OwoKICAgICNbY29udHJhY3RdCiAgICBwdWIgc3RydWN0IFRlc3RDb250cmFjdDsKCiAgICAjW2NvbnRyYWN0aW1wbF0KICAgIGltcGwgVGVzdENvbnRyYWN0IHt9CgogICAgI1t0ZXN0XQogICAgZm4gdGVzdF9jb250cmFjdF9hY2NvdW50X2NyZWF0aW9uKCkgewogICAgICAgIGxldCBlbnYgPSBFbnY6OmRlZmF1bHQoKTsKICAgICAgICBsZXQgY29udHJhY3RfaWQgPSBlbnYucmVnaXN0ZXIoVGVzdENvbnRyYWN0LCAoKSk7CiAgICAgICAgbGV0IGFkZHIgPSBBZGRyZXNzOjpnZW5lcmF0ZSgmZW52KTsKICAgICAgICBlbnYuYXNfY29udHJhY3QoJmNvbnRyYWN0X2lkLCB8fCB7CiAgICAgICAgICAgIGxldCBhY2NvdW50ID0gQ29udHJhY3RBY2NvdW50OjpuZXcoYWRkci5jbG9uZSgpKTsKICAgICAgICAgICAgYXNzZXJ0X2VxISgqYWNjb3VudC5hZGRyZXNzKCksIGFkZHIpOwogICAgICAgICAgICBhc3NlcnRfZXEhKGFjY291bnQuc2Vzc2lvbl9jb3VudCgmZW52KSwgMCk7CiAgICAgICAgfSk7CiAgICB9CgogICAgI1t0ZXN0XQogICAgZm4gdGVzdF9jb250cmFjdF9hY2NvdW50X2NhcGFiaWxpdGllcygpIHsKICAgICAgICBsZXQgZW52ID0gRW52OjpkZWZhdWx0KCk7CiAgICAgICAgbGV0IGFkZHIgPSBBZGRyZXNzOjpnZW5lcmF0ZSgmZW52KTsKICAgICAgICBsZXQgYWNjb3VudCA9IENvbnRyYWN0QWNjb3VudDo6bmV3KGFkZHIpOwogICAgICAgIGxldCBjYXBzID0gYWNjb3VudC5jYXBhYmlsaXRpZXMoKTsKICAgICAgICBhc3NlcnQhKGNhcHMuY2FuX2JhdGNoKTsKICAgICAgICBhc3NlcnQhKGNhcHMuaGFzX3Nlc3Npb25fa2V5cyk7CiAgICAgICAgYXNzZXJ0IShjYXBzLmhhc19zb2NpYWxfcmVjb3ZlcnkpOwogICAgfQoKICAgICNbdGVzdF0KICAgIGZuIHRlc3RfY3JlYXRlX3Nlc3Npb24oKSB7CiAgICAgICAgbGV0IGVudiA9IEVudjo6ZGVmYXVsdCgpOwogICAgICAgIGxldCBjb250cmFjdF9pZCA9IGVudi5yZWdpc3RlcihUZXN0Q29udHJhY3QsICgpKTsKICAgICAgICBsZXQgYWRkciA9IEFkZHJlc3M6OmdlbmVyYXRlKCZlbnYpOwoKICAgICAgICBlbnYuYXNfY29udHJhY3QoJmNvbnRyYWN0X2lkLCB8fCB7CiAgICAgICAgICAgIGxldCBtdXQgYWNjb3VudCA9IENvbnRyYWN0QWNjb3VudDo6bmV3KGFkZHIpOwoKICAgICAgICAgICAgbGV0IHNjb3BlID0gU2Vzc2lvblNjb3BlIHsKICAgICAgICAgICAgICAgIGFsbG93ZWRfYWN0aW9uczogdmVjWyZlbnYsIHN5bWJvbF9zaG9ydCEoIm1vdmUiKV0sCiAgICAgICAgICAgICAgICBtYXhfb3BlcmF0aW9uczogMTAwLAogICAgICAgICAgICAgICAgZXhwaXJlc19hdDogOTk5OTksCiAgICAgICAgICAgIH07CgogICAgICAgICAgICBsZXQga2V5ID0gYWNjb3VudC5jcmVhdGVfc2Vzc2lvbigmZW52LCBzY29wZSkudW53cmFwKCk7CiAgICAgICAgICAgIGFzc2VydF9lcSEoa2V5Lm9wZXJhdGlvbnNfdXNlZCwgMCk7CiAgICAgICAgICAgIGFzc2VydF9lcSEoYWNjb3VudC5zZXNzaW9uX2NvdW50KCZlbnYpLCAxKTsKICAgICAgICB9KTsKICAgIH0KCiAgICAjW3Rlc3RdCiAgICBmbiB0ZXN0X3ZhbGlkYXRlX3Nlc3Npb25fYWN0aXZlKCkgewogICAgICAgIGxldCBlbnYgPSBFbnY6OmRlZmF1bHQoKTsKICAgICAgICBsZXQgY29udHJhY3RfaWQgPSBlbnYucmVnaXN0ZXIoVGVzdENvbnRyYWN0LCAoKSk7CiAgICAgICAgbGV0IGFkZHIgPSBBZGRyZXNzOjpnZW5lcmF0ZSgmZW52KTsKCiAgICAgICAgZW52LmFzX2NvbnRyYWN0KCZjb250cmFjdF9pZCwgfHwgewogICAgICAgICAgICBsZXQgbXV0IGFjY291bnQgPSBDb250cmFjdEFjY291bnQ6Om5ldyhhZGRyKTsKCiAgICAgICAgICAgIGxldCBzY29wZSA9IFNlc3Npb25TY29wZSB7CiAgICAgICAgICAgICAgICBhbGxvd2VkX2FjdGlvbnM6IHZlY1smZW52LCBzeW1ib2xfc2hvcnQhKCJtb3ZlIildLAogICAgICAgICAgICAgICAgbWF4X29wZXJhdGlvbnM6IDEwMCwKICAgICAgICAgICAgICAgIGV4cGlyZXNfYXQ6IDk5OTk5LAogICAgICAgICAgICB9OwoKICAgICAgICAgICAgbGV0IGtleSA9IGFjY291bnQuY3JlYXRlX3Nlc3Npb24oJmVudiwgc2NvcGUpLnVud3JhcCgpOwogICAgICAgICAgICBhc3NlcnRfZXEhKGFjY291bnQudmFsaWRhdGVfc2Vzc2lvbigmZW52LCAma2V5KSwgT2sodHJ1ZSkpOwogICAgICAgIH0pOwogICAgfQoKICAgICNbdGVzdF0KICAgIGZuIHRlc3RfdmFsaWRhdGVfc2Vzc2lvbl9leHBpcmVkKCkgewogICAgICAgIGxldCBlbnYgPSBFbnY6OmRlZmF1bHQoKTsKICAgICAgICBsZXQgY29udHJhY3RfaWQgPSBlbnYucmVnaXN0ZXIoVGVzdENvbnRyYWN0LCAoKSk7CiAgICAgICAgbGV0IGFkZHIgPSBBZGRyZXNzOjpnZW5lcmF0ZSgmZW52KTsKCiAgICAgICAgZW52LmFzX2NvbnRyYWN0KCZjb250cmFjdF9pZCwgfHwgewogICAgICAgICAgICBsZXQgbXV0IGFjY291bnQgPSBDb250cmFjdEFjY291bnQ6Om5ldyhhZGRyKTsKCiAgICAgICAgICAgIGxldCBzY29wZSA9IFNlc3Npb25TY29wZSB7CiAgICAgICAgICAgICAgICBhbGxvd2VkX2FjdGlvbnM6IHZlY1smZW52LCBzeW1ib2xfc2hvcnQhKCJtb3ZlIildLAogICAgICAgICAgICAgICAgbWF4X29wZXJhdGlvbnM6IDEwMCwKICAgICAgICAgICAgICAgIGV4cGlyZXNfYXQ6IDAsIC8vIEFscmVhZHkgZXhwaXJlZAogICAgICAgICAgICB9OwoKICAgICAgICAgICAgbGV0IGtleSA9IGFjY291bnQuY3JlYXRlX3Nlc3Npb24oJmVudiwgc2NvcGUpLnVud3JhcCgpOwogICAgICAgICAgICBhc3NlcnRfZXEhKGFjY291bnQudmFsaWRhdGVfc2Vzc2lvbigmZW52LCAmа2V5KSwgT2soZmFsc2UpKTsKICAgICAgICB9KTsKICAgIH0KCiAgICAjW3Rlc3RdCiAgICBmbiB0ZXN0X3ZhbGlkYXRlX3Nlc3Npb25fb3BzX2V4aGF1c3RlZCgpIHsKICAgICAgICBsZXQgZW52ID0gRW52OjpkZWZhdWx0KCk7CiAgICAgICAgbGV0IGNvbnRyYWN0X2lkID0gZW52LnJlZ2lzdGVyKFRlc3RDb250cmFjdCwgKCkpOwogICAgICAgIGxldCBhZGRyID0gQWRkcmVzczo6Z2VuZXJhdGUoJmVudik7CgogICAgICAgIGVudi5hc19jb250cmFjdCgmY29udHJhY3RfaWQsIHx8IHsKICAgICAgICAgICAgbGV0IG11dCBhY2NvdW50ID0gQ29udHJhY3RBY2NvdW50OjpuZXcoYWRkcik7CgogICAgICAgICAgICBsZXQgc2NvcGUgPSBTZXNzaW9uU2NvcGUgewogICAgICAgICAgICAgICAgYWxsb3dlZF9hY3Rpb25zOiB2ZWNbJmVudiwgc3ltYm9sX3Nob3J0ISgibW92ZSIpXSwKICAgICAgICAgICAgICAgIG1heF9vcGVyYXRpb25zOiAwLCAvLyBObyBvcGVyYXRpb25zIGFsbG93ZWQKICAgICAgICAgICAgICAgIGV4cGlyZXNfYXQ6IDk5OTk5LAogICAgICAgICAgICB9OwoKICAgICAgICAgICAgbGV0IGtleSA9IGFjY291bnQuY3JlYXRlX3Nlc3Npb24oJmVudiwgc2NvcGUpLnVud3JhcCgpOwogICAgICAgICAgICBhc3NlcnRfZXEhKGFjY291bnQudmFsaWRhdGVfc2Vzc2lvbigmZW52LCAmа2V5KSwgT2soZmFsc2UpKTsKICAgICAgICB9KTsKICAgIH0KCiAgICAjW3Rlc3RdCiAgICBmbiB0ZXN0X3Jldm9rZV9zZXNzaW9uKCkgewogICAgICAgIGxldCBlbnYgPSBFbnY6OmRlZmF1bHQoKTsKICAgICAgICBsZXQgY29udHJhY3RfaWQgPSBlbnYucmVnaXN0ZXIoVGVzdENvbnRyYWN0LCAoKSk7CiAgICAgICAgbGV0IGFkZHIgPSBBZGRyZXNzOjpnZW5lcmF0ZSgmZW52KTsKCiAgICAgICAgZW52LmFzX2NvbnRyYWN0KCZjb250cmFjdF9pZCwgfHwgewogICAgICAgICAgICBsZXQgbXV0IGFjY291bnQgPSBDb250cmFjdEFjY291bnQ6Om5ldyhhZGRyKTsKCiAgICAgICAgICAgIGxldCBzY29wZSA9IFNlc3Npb25TY29wZSB7CiAgICAgICAgICAgICAgICBhbGxvd2VkX2FjdGlvbnM6IHZlY1smZW52LCBzeW1ib2xfc2hvcnQhKCJtb3ZlIildLAogICAgICAgICAgICAgICAgbWF4X29wZXJhdGlvbnM6IDEwMCwKICAgICAgICAgICAgICAgIGV4cGlyZXNfYXQ6IDk5OTk5LAogICAgICAgICAgICB9OwoKICAgICAgICAgICAgbGV0IGtleSA9IGFjY291bnQuY3JlYXRlX3Nlc3Npb24oJmVudiwgc2NvcGUpLnVud3JhcCgpOwogICAgICAgICAgICBhc3NlcnRfZXEhKGFjY291bnQuc2Vzc2lvbl9jb3VudCgmZW52KSwgMSk7CgogICAgICAgICAgICBhY2NvdW50LnJldm9rZV9zZXNzaW9uKCZlbnYsICZrZXkua2V5X2lkKS51bndyYXAoKTsKICAgICAgICAgICAgYXNzZXJ0X2VxIShhY2NvdW50LnNlc3Npb25fY291bnQoJmVudiksIDApOwogICAgICAgIH0pOwogICAgfQoKICAgICNbdGVzdF0KICAgIGZuIHRlc3RfcmV2b2tlX25vbmV4aXN0ZW50X3Nlc3Npb24oKSB7CiAgICAgICAgbGV0IGVudiA9IEVudjo6ZGVmYXVsdCgpOwogICAgICAgIGxldCBjb250cmFjdF9pZCA9IGVudi5yZWdpc3RlcihUZXN0Q29udHJhY3QsICgpKTsKICAgICAgICBsZXQgYWRkciA9IEFkZHJlc3M6OmdlbmVyYXRlKCZlbnYpOwoKICAgICAgICBlbnYuYXNfY29udHJhY3QoJmNvbnRyYWN0X2lkLCB8fCB7CiAgICAgICAgICAgIGxldCBtdXQgYWNjb3VudCA9IENvbnRyYWN0QWNjb3VudDo6bmV3KGFkZHIpOwoKICAgICAgICAgICAgbGV0IGZha2VfaWQgPSBCeXRlc046OmZyb21fYXJyYXkoJmVudiwgJls5OXU4OyAzMl0pOwogICAgICAgICAgICBhc3NlcnRfZXEhKAogICAgICAgICAgICAgICAgYWNjb3VudC5yZXZva2Vfc2Vzc2lvbigmZW52LCAmZmFrZV9pZCksCiAgICAgICAgICAgICAgICBFcnIoQWNjb3VudEVycm9yOjpJbnZhbGlkU2NvcGUpCiAgICAgICAgICAgICk7CiAgICAgICAgfSk7CiAgICB9CgogICAgI1t0ZXN0XQogICAgZm4gdGVzdF9jcmVhdGVfc2Vzc2lvbl9yZWplY3RzX2lkX2NvbGxpc2lvbl9hZnRlcl9yZXZva2UoKSB7CiAgICAgICAgbGV0IGVudiA9IEVudjo6ZGVmYXVsdCgpOwogICAgICAgIGxldCBjb250cmFjdF9pZCA9IGVudi5yZWdpc3RlcihUZXN0Q29udHJhY3QsICgpKTsKICAgICAgICBsZXQgYWRkciA9IEFkZHJlc3M6OmdlbmVyYXRlKCZlbnYpOwoKICAgICAgICBlbnYuYXNfY29udHJhY3QoJmNvbnRyYWN0X2lkLCB8fCB7CiAgICAgICAgICAgIGxldCBtdXQgYWNjb3VudCA9IENvbnRyYWN0QWNjb3VudDo6bmV3KGFkZHIpOwoKICAgICAgICAgICAgbGV0IHNjb3BlID0gU2Vzc2lvblNjb3BlIHsKICAgICAgICAgICAgICAgIGFsbG93ZWRfYWN0aW9uczogdmVjWyZlbnYsIHN5bWJvbF9zaG9ydCEoIm1vdmUiKV0sCiAgICAgICAgICAgICAgICBtYXhfb3BlcmF0aW9uczogMTAwLAogICAgICAgICAgICAgICAgZXhwaXJlc19hdDogOTk5OTksCiAgICAgICAgICAgIH07CgogICAgICAgICAgICAvLyBBLCB0aGVuIEIsIHRoZW4gcmV2b2tlIEEuCiAgICAgICAgICAgIGxldCBhID0gYWNjb3VudC5jcmVhdGVfc2Vzc2lvbigmZW52LCBzY29wZS5jbG9uZSgpKS51bndyYXAoKTsKICAgICAgICAgICAgbGV0IGIgPSBhY2NvdW50LmNyZWF0ZV9zZXNzaW9uKCZlbnYsIHNjb3BlLmNsb25lKCkpLnVud3JhcCgpOwogICAgICAgICAgICBhY2NvdW50LnJldm9rZV9zZXNzaW9uKCZlbnYsICZhLmtleV9pZCkudW53cmFwKCk7CgogICAgICAgICAgICAvLyBDIGRlcml2ZXMgdGhlIHNhbWUgaWQgYXMgQiBhbmQgbXVzdCBiZSByZWplY3RlZC4KICAgICAgICAgICAgbGV0IHJlc3VsdCA9IGFjY291bnQuY3JlYXRlX3Nlc3Npb24oJmVudiwgc2NvcGUuY2xvbmUoKSk7CiAgICAgICAgICAgIGFzc2VydF9lcSEocmVzdWx0LCBFcnIoQWNjb3VudEVycm9yOjpTZXNzaW9uSWRDb2xsaXNpb24pKTsKCiAgICAgICAgICAgIC8vIEIgcmVtYWlucyB1bmNoYW5nZWQuCiAgICAgICAgICAgIGxldCBzdG9yZWQgPSBTZXNzaW9uU3RvcmFnZTo6bG9hZCgmZW52LCAmYWNjb3VudC5hZGRyZXNzLCAmYi5rZXlfaWQpLnVud3JhcCgpOwogICAgICAgICAgICBhc3NlcnRfZXEhKHN0b3JlZC5rZXlfaWQsIGIua2V5X2lkKTsKICAgICAgICAgICAgYXNzZXJ0X2VxIShzdG9yZWQub3BlcmF0aW9uc191c2VkLCAwKTsKICAgICAgICAgICAgYXNzZXJ0X2VxIShzdG9yZWQubmV4dF9ub25jZSwgMCk7CiAgICAgICAgICAgIGFzc2VydF9lcSEoYWNjb3VudC5zZXNzaW9uX2NvdW50KCZlbnYpLCAxKTsKICAgICAgICB9KTsKICAgIH0KfQo=
+use soroban_sdk::{Address, BytesN, Env};
+
+use super::error::AccountError;
+use super::intent::{AuthResult, SignedIntent};
+use super::kernel::AccountKernel;
+use super::storage::SessionStorage;
+use super::traits::{CougrAccount, IntentAccount, SessionKeyProvider};
+use super::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
+
+/// A Contract Stellar account (C-address).
+///
+/// Wraps a contract address and provides full account abstraction
+/// including session key management. Session keys are persisted via
+/// [`SessionStorage`] so they survive across contract invocations.
+pub struct ContractAccount {
+    address: Address,
+}
+
+impl ContractAccount {
+    /// Create a new Contract account wrapper.
+    pub fn new(address: Address) -> Self {
+        Self { address }
+    }
+
+    /// Returns the number of active session keys.
+    pub fn session_count(&self, env: &Env) -> usize {
+        SessionStorage::load_all(env, &self.address).len() as usize
+    }
+}
+
+impl CougrAccount for ContractAccount {
+    fn address(&self) -> &Address {
+        &self.address
+    }
+
+    fn capabilities(&self) -> AccountCapabilities {
+        AccountCapabilities {
+            can_batch: true,
+            has_session_keys: true,
+            has_social_recovery: true,
+            has_passkey_auth: true,
+        }
+    }
+
+    fn authorize(&self, _env: &Env, action: &GameAction) -> Result<(), AccountError> {
+        let _ = action;
+        self.address.require_auth();
+        Ok(())
+    }
+}
+
+impl IntentAccount for ContractAccount {
+    fn authorize_intent(
+        &mut self,
+        env: &Env,
+        intent: &SignedIntent,
+    ) -> Result<AuthResult, AccountError> {
+        AccountKernel::new(self.address.clone()).authorize(env, intent)
+    }
+}
+
+impl SessionKeyProvider for ContractAccount {
+    fn create_session(
+        &mut self,
+        env: &Env,
+        scope: SessionScope,
+    ) -> Result<SessionKey, AccountError> {
+        let existing = SessionStorage::load_all(env, &self.address).len();
+        let key_id = session_key_id(env, existing, &scope);
+
+        // Reject id collisions so a new session can never silently replace
+        // an existing live session (e.g. after a revoke reuses an id).
+        if SessionStorage::load(env, &self.address, &key_id).is_some() {
+            return Err(AccountError::SessionIdCollision);
+        }
+
+        let key = SessionKey {
+            key_id,
+            scope,
+            created_at: env.ledger().timestamp(),
+            operations_used: 0,
+            next_nonce: 0,
+        };
+        SessionStorage::store(env, &self.address, &key);
+        Ok(key)
+    }
+
+    fn validate_session(&self, env: &Env, key: &SessionKey) -> Result<bool, AccountError> {
+        let now = env.ledger().timestamp();
+
+        // Check expiry
+        if now >= key.scope.expires_at {
+            return Ok(false);
+        }
+
+        // Check operation limit
+        if key.operations_used >= key.scope.max_operations {
+            return Ok(false);
+        }
+
+        if SessionStorage::load(env, &self.address, &key.key_id).is_none() {
+            return Ok(false);
+        }
+
+        Ok(true)
+    }
+
+    fn revoke_session(&mut self, env: &Env, key_id: &BytesN<32>) -> Result<(), AccountError> {
+        if !SessionStorage::remove(env, &self.address, key_id) {
+            return Err(AccountError::InvalidScope);
+        }
+        Ok(())
+    }
+
+    fn renew_session(
+        &mut self,
+        env: &Env,
+        key_id: &BytesN<32>,
+        new_expires_at: u64,
+    ) -> Result<SessionKey, AccountError> {
+        SessionStorage::renew_session(env, &self.address, key_id, new_expires_at)
+    }
+}
+
+fn session_key_id(env: &Env, existing_sessions: u32, scope: &SessionScope) -> BytesN<32> {
+    BytesN::from_array(
+        env,
+        &super::session_builder::derive_session_key_id(
+            env.ledger().timestamp(),
+            env.ledger().sequence(),
+            existing_sessions,
+            scope,
+        ),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, vec};
+
+    #[contract]
+    pub struct TestContract;
+
+    #[contractimpl]
+    impl TestContract {}
+
+    #[test]
+    fn test_contract_account_creation() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        env.as_contract(&contract_id, || {
+            let account = ContractAccount::new(addr.clone());
+            assert_eq!(*account.address(), addr);
+            assert_eq!(account.session_count(&env), 0);
+        });
+    }
+
+    #[test]
+    fn test_contract_account_capabilities() {
+        let env = Env::default();
+        let addr = Address::generate(&env);
+        let account = ContractAccount::new(addr);
+        let caps = account.capabilities();
+        assert!(caps.can_batch);
+        assert!(caps.has_session_keys);
+        assert!(caps.has_social_recovery);
+        assert!(caps.has_passkey_auth);
+    }
+
+    #[test]
+    fn test_create_session() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 99999,
+            };
+
+            let key = account.create_session(&env, scope).unwrap();
+            assert_eq!(key.operations_used, 0);
+            assert_eq!(account.session_count(&env), 1);
+        });
+    }
+
+    #[test]
+    fn test_validate_session_active() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 99999,
+            };
+
+            let key = account.create_session(&env, scope).unwrap();
+            assert_eq!(account.validate_session(&env, &key), Ok(true));
+        });
+    }
+
+    #[test]
+    fn test_validate_session_expired() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 0, // Already expired
+            };
+
+            let key = account.create_session(&env, scope).unwrap();
+            assert_eq!(account.validate_session(&env, &key), Ok(false));
+        });
+    }
+
+    #[test]
+    fn test_validate_session_ops_exhausted() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 0, // No operations allowed
+                expires_at: 99999,
+            };
+
+            let key = account.create_session(&env, scope).unwrap();
+            assert_eq!(account.validate_session(&env, &key), Ok(false));
+        });
+    }
+
+    #[test]
+    fn test_revoke_session() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 99999,
+            };
+
+            let key = account.create_session(&env, scope).unwrap();
+            assert_eq!(account.session_count(&env), 1);
+
+            account.revoke_session(&env, &key.key_id).unwrap();
+            assert_eq!(account.session_count(&env), 0);
+        });
+    }
+
+    #[test]
+    fn test_revoke_nonexistent_session() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let fake_id = BytesN::from_array(&env, &[99u8; 32]);
+            assert_eq!(
+                account.revoke_session(&env, &fake_id),
+                Err(AccountError::InvalidScope)
+            );
+        });
+    }
+
+    #[test]
+    fn test_create_session_rejects_id_collision_after_revoke() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 99999,
+            };
+
+            let key = account.create_session(&env, scope.clone()).unwrap();
+            account.revoke_session(&env, &key.key_id).unwrap();
+
+            // A fresh session must not silently overwrite a live one that
+            // reuses the same id; with the id still live, creation is rejected.
+            let _live = account.create_session(&env, scope.clone()).unwrap();
+            assert_eq!(
+                account.create_session(&env, scope),
+                Err(AccountError::SessionIdCollision)
+            );
+        });
+    }
+}

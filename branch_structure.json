@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feat/issue-410-fix-accounts-reject-session-key-id-collisions",
+    "fix/issue-416-test-cli-cover-check-rs-context-rs-and-error",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "feat/issue-410-fix-accounts-reject-session-key-id-collisions": "main",
+    "fix/issue-416-test-cli-cover-check-rs-context-rs-and-error": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "feat/issue-410-fix-accounts-reject-session-key-id-collisions",
+    "fix/issue-416-test-cli-cover-check-rs-context-rs-and-error",
+    "origin"
+  ]
+}
