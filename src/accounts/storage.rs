@@ -1,6 +1,7 @@
 use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
 
 use super::error::AccountError;
+use super::ttl::extend_persistent_ttl;
 use super::types::SessionKey;
 
 /// Symbol used as the storage key prefix for session keys.
@@ -56,6 +57,7 @@ impl SessionStorage {
         new_keys.push_back(key.clone());
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        extend_persistent_ttl(env, &storage_key);
     }
 
     /// Load a specific session key by ID.
@@ -74,10 +76,12 @@ impl SessionStorage {
     /// Load all session keys for an account.
     pub fn load_all(env: &Env, account: &Address) -> Vec<SessionKey> {
         let storage_key = Self::storage_key(env, account);
-        env.storage()
-            .persistent()
-            .get(&storage_key)
-            .unwrap_or_else(|| Vec::new(env))
+        if let Some(keys) = env.storage().persistent().get(&storage_key) {
+            extend_persistent_ttl(env, &storage_key);
+            keys
+        } else {
+            Vec::new(env)
+        }
     }
 
     /// Remove a session key by ID. Returns true if found and removed.
@@ -102,6 +106,7 @@ impl SessionStorage {
                 env.storage().persistent().remove(&storage_key);
             } else {
                 env.storage().persistent().set(&storage_key, &new_keys);
+                extend_persistent_ttl(env, &storage_key);
             }
         }
         found
@@ -135,6 +140,7 @@ impl SessionStorage {
 
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        extend_persistent_ttl(env, &storage_key);
         Ok(())
     }
 
@@ -168,6 +174,7 @@ impl SessionStorage {
         let updated = updated.ok_or(AccountError::SessionRevoked)?;
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        extend_persistent_ttl(env, &storage_key);
         Ok(updated)
     }
 
@@ -200,6 +207,7 @@ impl SessionStorage {
         let updated = updated.ok_or(AccountError::SessionRevoked)?;
         let storage_key = Self::storage_key(env, account);
         env.storage().persistent().set(&storage_key, &new_keys);
+        extend_persistent_ttl(env, &storage_key);
         Ok(updated)
     }
 
@@ -227,6 +235,7 @@ impl SessionStorage {
                 env.storage().persistent().remove(&storage_key);
             } else {
                 env.storage().persistent().set(&storage_key, &new_keys);
+                extend_persistent_ttl(env, &storage_key);
             }
         }
 
@@ -257,7 +266,12 @@ impl SessionStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, vec, Env};
+    use crate::accounts::ttl::{ACCOUNT_TTL_EXTEND_TO, ACCOUNT_TTL_THRESHOLD};
+    use soroban_sdk::{
+        contract, contractimpl, symbol_short,
+        testutils::{Address as _, Ledger as _},
+        vec, Env,
+    };
 
     use crate::accounts::types::SessionScope;
 
@@ -432,6 +446,64 @@ mod tests {
 
             let loaded = SessionStorage::load(&env, &addr, &key.key_id).unwrap();
             assert_eq!(loaded.operations_used, 42);
+        });
+    }
+
+    #[test]
+    fn test_session_storage_extends_ttl_on_write() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let key = make_session_key(&env, 1, 99999);
+
+        env.as_contract(&contract_id, || {
+            SessionStorage::store(&env, &addr, &key);
+            let storage_key = SessionStorage::storage_key(&env, &addr);
+            let initial_ttl = env.storage().persistent().get_ttl(&storage_key);
+            assert!(initial_ttl >= ACCOUNT_TTL_EXTEND_TO);
+        });
+
+        env.ledger().with_mut(|li| {
+            li.sequence_number += ACCOUNT_TTL_EXTEND_TO - ACCOUNT_TTL_THRESHOLD + 100;
+        });
+
+        env.as_contract(&contract_id, || {
+            let storage_key = SessionStorage::storage_key(&env, &addr);
+            let ttl_before = env.storage().persistent().get_ttl(&storage_key);
+            assert!(ttl_before < ACCOUNT_TTL_THRESHOLD);
+
+            SessionStorage::increment_usage(&env, &addr, &key.key_id).unwrap();
+
+            let ttl_after = env.storage().persistent().get_ttl(&storage_key);
+            assert!(ttl_after >= ACCOUNT_TTL_EXTEND_TO);
+        });
+    }
+
+    #[test]
+    fn test_session_storage_extends_ttl_on_read() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let key = make_session_key(&env, 1, 99999);
+
+        env.as_contract(&contract_id, || {
+            SessionStorage::store(&env, &addr, &key);
+        });
+
+        env.ledger().with_mut(|li| {
+            li.sequence_number += ACCOUNT_TTL_EXTEND_TO - ACCOUNT_TTL_THRESHOLD + 100;
+        });
+
+        env.as_contract(&contract_id, || {
+            let storage_key = SessionStorage::storage_key(&env, &addr);
+            let ttl_before = env.storage().persistent().get_ttl(&storage_key);
+            assert!(ttl_before < ACCOUNT_TTL_THRESHOLD);
+
+            let loaded = SessionStorage::load(&env, &addr, &key.key_id);
+            assert!(loaded.is_some());
+
+            let ttl_after = env.storage().persistent().get_ttl(&storage_key);
+            assert!(ttl_after >= ACCOUNT_TTL_EXTEND_TO);
         });
     }
 }
