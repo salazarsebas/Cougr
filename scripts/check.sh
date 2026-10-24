@@ -136,6 +136,7 @@ run . "PR sanity: no merge conflict markers" bash -c '
     echo "Resolve the merge conflict markers above."
     exit 1
   fi'
+run . "PR sanity: example workflow coverage" bash scripts/check_example_workflows.sh
 
 # ---------------------------------------------------------------------------
 # Core CI (core.yml): library validation and MSRV.

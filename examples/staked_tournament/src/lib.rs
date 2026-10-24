@@ -200,7 +200,7 @@ impl StakedTournament {
 
         token::Client::new(&env, &state.token).transfer(
             &player,
-            &env.current_contract_address(),
+            env.current_contract_address(),
             &state.stake,
         );
         *paid = true;
