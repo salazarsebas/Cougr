@@ -193,12 +193,7 @@ mod tests {
     fn resolve_explicit_root_missing_bails() {
         let repo = fake_repo(&["alpha"]);
         let missing = repo.path().join("does-not-exist");
-        let err = resolve(
-            repo.path(),
-            Some(missing.to_str().unwrap()),
-            None,
-        )
-        .unwrap_err();
+        let err = resolve(repo.path(), Some(missing.to_str().unwrap()), None).unwrap_err();
         let msg = format!("{:#}", err);
         assert!(
             msg.contains("explicit --path does not exist"),
@@ -261,12 +256,7 @@ mod tests {
     #[test]
     fn resolve_no_examples_found_bails() {
         let repo = fake_repo(&[]);
-        let err = resolve(
-            repo.path(),
-            Some(repo.path().to_str().unwrap()),
-            None,
-        )
-        .unwrap_err();
+        let err = resolve(repo.path(), Some(repo.path().to_str().unwrap()), None).unwrap_err();
         let msg = format!("{:#}", err);
         assert!(
             msg.contains("no examples found under"),

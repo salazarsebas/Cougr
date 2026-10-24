@@ -238,11 +238,9 @@ mod tests {
         for (err, expected) in cases {
             let actual = err.hint();
             match expected {
-                Some(want) => assert_eq!(
-                    actual.as_deref(),
-                    Some(want),
-                    "unexpected hint for {err:?}"
-                ),
+                Some(want) => {
+                    assert_eq!(actual.as_deref(), Some(want), "unexpected hint for {err:?}")
+                }
                 None => assert_eq!(actual, None, "expected no hint for {err:?}"),
             }
         }

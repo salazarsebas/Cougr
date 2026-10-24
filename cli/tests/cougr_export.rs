@@ -28,14 +28,14 @@ fn fake_repo() -> FakeRepo {
     let root = dir.path().to_path_buf();
     fs::write(
         root.join("Cargo.toml"),
-        r""[package]
+        r#"[package]
 name = "fake-repo"
 version = "0.1.0"
 edition = "2021"
 
-"[workspace]
+[workspace]
 members = []
-"",
+"#,
     )
     .unwrap();
     fs::create_dir_all(root.join("examples")).unwrap();
@@ -49,15 +49,15 @@ fn write_valid_example(repo: &FakeRepo, name: &str) {
     fs::write(
         example.join("Cargo.toml"),
         format!(
-            r""[package]
+            r#"[package]
 name = "{name}"
 version = "0.1.0"
 edition = "2021"
 description = "A Cougr example for {}"
 
-"[dependencies]
-cougr = {path = "../.."}
-"",
+[dependencies]
+cougr = {{ path = "../.." }}
+"#,
             name
         ),
     )
@@ -73,7 +73,7 @@ cougr = {path = "../.."}
 
 #[test]
 fn default_export_matches_new_template() {
-    let (dir, output) = export(r#" {"board_width":3,"board_height":3,"win_length":3}"#);
+    let (dir, output) = export(r#"{"board_width":3,"board_height":3,"win_length":3}"#);
     assert!(
         output.status.success(),
         "{}",
@@ -121,7 +121,7 @@ fn default_export_matches_new_template() {
 
 #[test]
 fn non_default_export_applies_config() {
-    let (dir, output) = export(r#" {"board_width":5,"board_height":4,"win_length":4}"");
+    let (dir, output) = export(r#"{"board_width":5,"board_height":4,"win_length":4}"#);
     assert!(
         output.status.success(),
         "{}",
@@ -155,8 +155,8 @@ fn non_default_export_applies_config() {
 #[test]
 fn invalid_config_creates_no_project() {
     for config in [
-        r#" {"board_width":2,"board_height":3,"win_length":3}"",
-        r#" {"board_width":4,"board_height":3,"win_length":4}"",
+        r#"{"board_width":2,"board_height":3,"win_length":3}"#,
+        r#"{"board_width":4,"board_height":3,"win_length":4}"#,
         "{}",
     ] {
         let (dir, output) = export(config);
@@ -174,7 +174,7 @@ fn export_never_overwrites_existing_directory() {
     let config_path = dir.path().join("config.json");
     fs::write(
         &config_path,
-        r#" {"board_width":3,"board_height":3,"win_length":3}"",
+        r#"{"board_width":3,"board_height":3,"win_length":3}"#,
     )
     .unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
@@ -185,7 +185,7 @@ fn export_never_overwrites_existing_directory() {
         .output()
         .unwrap();
     assert!(!output.status.success());
-    assert_eq(
+    assert_eq!(
         fs::read_to_string(project.join("keep.txt")).unwrap(),
         "mine"
     );
@@ -225,7 +225,7 @@ fn export_malformed_json_fails() {
 
 #[test]
 fn export_rejects_out_of_bounds_config() {
-    let (dir, output) = export(r#" {"board_width":9,"board_height":3,"win_length":3}"");
+    let (dir, output) = export(r#"{"board_width":9,"board_height":3,"win_length":3}"#);
     assert!(!output.status.success());
     assert!(!dir.path().join("demo").exists());
 }
