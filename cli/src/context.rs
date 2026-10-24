@@ -4,6 +4,8 @@
 //! auto-detection from cwd, explicit `--path`, and `--example` flags.
 
 use anyhow::{Context, Result};
+use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -75,20 +77,60 @@ pub fn example_dir(repo_root: &Path, name: &str) -> PathBuf {
     repo_root.join("examples").join(name)
 }
 
-/// Return the 10 currently-canonical example names per EXAMPLE_STANDARD.md §7.
-pub fn canonical_example_names() -> &'static [&'static str] {
-    &[
-        "spawn_and_move",
-        "tic_tac_toe",
-        "session_arena",
-        "hidden_hand",
-        "fog_explorer",
-        "dice_duel",
-        "blind_auction",
-        "snake",
-        "battleship",
-        "guild_arena",
-    ]
+/// Return the canonical example directory names from `examples/catalog.toml`.
+pub fn canonical_example_names(repo_root: &Path) -> Result<Vec<String>> {
+    let catalog_path = repo_root.join("examples").join("catalog.toml");
+    let contents = fs::read_to_string(&catalog_path)
+        .with_context(|| format!("cannot read example catalog at {}", catalog_path.display()))?;
+
+    let catalog: Catalog = toml::from_str(&contents)
+        .with_context(|| format!("malformed example catalog at {}", catalog_path.display()))?;
+
+    if catalog.example.is_empty() {
+        anyhow::bail!(
+            "malformed example catalog at {}: no [example.<key>] entries found",
+            catalog_path.display()
+        );
+    }
+
+    let mut canonical = Vec::new();
+    for (key, entry) in catalog.example {
+        if entry.name.trim().is_empty() {
+            anyhow::bail!(
+                "malformed example catalog at {}: example.{} has an empty name",
+                catalog_path.display(),
+                key
+            );
+        }
+        match entry.maturity.as_str() {
+            "canonical" => canonical.push(entry.name),
+            "transitional" => {}
+            other => anyhow::bail!(
+                "malformed example catalog at {}: example.{} has invalid maturity '{}'",
+                catalog_path.display(),
+                key,
+                other
+            ),
+        }
+    }
+
+    Ok(canonical)
+}
+
+#[derive(Deserialize)]
+struct Catalog {
+    #[serde(default)]
+    example: BTreeMap<String, CatalogEntry>,
+}
+
+#[derive(Deserialize)]
+struct CatalogEntry {
+    name: String,
+    #[allow(dead_code)]
+    category: String,
+    maturity: String,
+    #[allow(dead_code)]
+    cougr_features: Vec<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -153,4 +195,80 @@ fn discover_examples(repo_root: &Path) -> Result<Vec<Example>> {
     }
 
     Ok(examples)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn write_catalog(repo_root: &Path, content: &str) {
+        let examples_dir = repo_root.join("examples");
+        fs::create_dir_all(&examples_dir).unwrap();
+        fs::write(examples_dir.join("catalog.toml"), content).unwrap();
+    }
+
+    #[test]
+    fn canonical_example_names_returns_canonical_names_from_name_field() {
+        let dir = tempfile::tempdir().unwrap();
+        write_catalog(
+            dir.path(),
+            r#"
+[example.starter_key]
+name = "spawn_and_move"
+category = "other"
+maturity = "canonical"
+cougr_features = ["soroban-game", "ecs"]
+
+[example.arcade_pong]
+name = "pong"
+category = "arcade"
+maturity = "transitional"
+cougr_features = ["game-app", "ecs"]
+
+[example.board_key]
+name = "tic_tac_toe"
+category = "board"
+maturity = "canonical"
+cougr_features = ["soroban-game"]
+"#,
+        );
+
+        let names = canonical_example_names(dir.path()).unwrap();
+        assert_eq!(
+            names,
+            vec!["tic_tac_toe".to_string(), "spawn_and_move".to_string()]
+        );
+    }
+
+    #[test]
+    fn canonical_example_names_errors_when_catalog_is_missing() {
+        let dir = tempfile::tempdir().unwrap();
+        let err = canonical_example_names(dir.path()).unwrap_err();
+        assert!(err.to_string().contains("cannot read example catalog"));
+    }
+
+    #[test]
+    fn canonical_example_names_errors_when_catalog_is_malformed() {
+        let dir = tempfile::tempdir().unwrap();
+        write_catalog(dir.path(), "[example.broken\nname = 123");
+        let err = canonical_example_names(dir.path()).unwrap_err();
+        assert!(err.to_string().contains("malformed example catalog"));
+
+        write_catalog(
+            dir.path(),
+            r#"
+[example.invalid_maturity]
+name = "demo"
+category = "other"
+maturity = "experimental"
+cougr_features = ["ecs"]
+"#,
+        );
+        let err = canonical_example_names(dir.path()).unwrap_err();
+        assert!(err.to_string().contains("invalid maturity"));
+
+        write_catalog(dir.path(), "# empty catalog\n");
+        let err = canonical_example_names(dir.path()).unwrap_err();
+        assert!(err.to_string().contains("no [example.<key>] entries found"));
+    }
 }

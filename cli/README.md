@@ -80,6 +80,15 @@ second add reports the files that would have been written. Pieces and their
 descriptions are defined in [`pieces/pieces.toml`](pieces/pieces.toml) and are
 embedded in the CLI binary for offline use.
 
+## `cougr check`
+
+```bash
+cougr check --path .
+cougr check --path . --verified --canonical-only --output verified.json
+```
+
+Runs repository hygiene checks across `examples/` (or a single generated project). With `--verified`, evaluates examples against the canonical quality checklist; `--canonical-only` filters to examples marked `maturity = "canonical"` in [`examples/catalog.toml`](../examples/catalog.toml).
+
 ## Development
 
 ```bash

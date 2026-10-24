@@ -23,6 +23,7 @@ regex = "1"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+toml = "0.8"
 # `debug-embed` keeps the templates compiled into the binary in debug builds
 # too, so `cougr new` behaves identically for contributors and end users.
 rust-embed = { version = "8.12", features = ["debug-embed"] }
