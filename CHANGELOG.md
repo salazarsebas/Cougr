@@ -8,6 +8,7 @@
 
 ### Added
 
+- **`cougr_core::standards::StandardsError::ScheduleOverflow`** - new error variant (code 80) returned when `DelayedExecutionPolicy::schedule` timestamp arithmetic or operation ID counter overflows `u64`
 - **`cougr_core::accounts::AccountError::DuplicateDeviceKey`** - new error variant (code 45) returned when attempting to register a device key that is already active, distinguishing "device already registered" from "device limit reached"
 - **`cougr_core::accounts::derive_session_key_id`** - deterministic session-key identifier derivation, so the Rust core and the TypeScript session client agree on session identity instead of re-deriving it off-chain
 - **`cougr_core::cors`** - CORS configuration validation and dynamic origin
@@ -30,6 +31,7 @@
 
 ### Fixed
 
+- **`standards::DelayedExecutionPolicy`** - `schedule` and `next_operation_id` now use checked arithmetic (`StandardsError::ScheduleOverflow`), and `cancel` rejects already-executed operations with `StandardsError::OperationAlreadyExecuted` instead of deleting the record and emitting a false cancellation event
 - **`zk::merkle::proof::verify_inclusion`** - a proof's `leaf_index` was never checked
   against the position its `path_bits` actually walk, so a proof for one leaf could be
   relabelled to claim another leaf's position and still verify. `verify_inclusion` now

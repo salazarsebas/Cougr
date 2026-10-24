@@ -25,4 +25,5 @@ pub enum StandardsError {
     OperationNotFound = 77,
     OperationAlreadyExecuted = 78,
     ExecutionNotLocked = 79,
+    ScheduleOverflow = 80,
 }
