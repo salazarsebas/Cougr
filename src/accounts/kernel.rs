@@ -63,6 +63,15 @@ impl AccountKernel {
         let signer = SessionAuthSigner;
         signer.verify(env, &self.owner, intent)?;
 
+        let expiry = IntentExpiryPolicy;
+        expiry.evaluate(
+            env,
+            &IntentContext {
+                account: &self.owner,
+                intent,
+            },
+        )?;
+
         let policy = SessionPolicy;
         policy.evaluate(
             env,

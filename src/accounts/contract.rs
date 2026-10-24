@@ -67,6 +67,13 @@ impl SessionKeyProvider for ContractAccount {
     ) -> Result<SessionKey, AccountError> {
         let existing = SessionStorage::load_all(env, &self.address).len();
         let key_id = session_key_id(env, existing, &scope);
+
+        // Reject id collisions so a new session can never silently replace
+        // an existing live session (e.g. after a revoke reuses an id).
+        if SessionStorage::load(env, &self.address, &key_id).is_some() {
+            return Err(AccountError::SessionIdCollision);
+        }
+
         let key = SessionKey {
             key_id,
             scope,
@@ -81,7 +88,7 @@ impl SessionKeyProvider for ContractAccount {
     fn validate_session(&self, env: &Env, key: &SessionKey) -> Result<bool, AccountError> {
         let now = env.ledger().timestamp();
 
-        // Check expiration
+        // Check expiry
         if now >= key.scope.expires_at {
             return Ok(false);
         }
@@ -130,7 +137,7 @@ fn session_key_id(env: &Env, existing_sessions: u32, scope: &SessionScope) -> By
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, vec, Env};
+    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, vec};
 
     #[contract]
     pub struct TestContract;
@@ -159,6 +166,7 @@ mod tests {
         assert!(caps.can_batch);
         assert!(caps.has_session_keys);
         assert!(caps.has_social_recovery);
+        assert!(caps.has_passkey_auth);
     }
 
     #[test]
@@ -168,7 +176,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = ContractAccount::new(addr);
+            let mut account = ContractAccount::new(addr.clone());
 
             let scope = SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
@@ -189,7 +197,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = ContractAccount::new(addr);
+            let mut account = ContractAccount::new(addr.clone());
 
             let scope = SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
@@ -209,7 +217,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = ContractAccount::new(addr);
+            let mut account = ContractAccount::new(addr.clone());
 
             let scope = SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
@@ -229,7 +237,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = ContractAccount::new(addr);
+            let mut account = ContractAccount::new(addr.clone());
 
             let scope = SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
@@ -249,7 +257,7 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = ContractAccount::new(addr);
+            let mut account = ContractAccount::new(addr.clone());
 
             let scope = SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
@@ -272,12 +280,40 @@ mod tests {
         let addr = Address::generate(&env);
 
         env.as_contract(&contract_id, || {
-            let mut account = ContractAccount::new(addr);
+            let mut account = ContractAccount::new(addr.clone());
 
             let fake_id = BytesN::from_array(&env, &[99u8; 32]);
             assert_eq!(
                 account.revoke_session(&env, &fake_id),
                 Err(AccountError::InvalidScope)
+            );
+        });
+    }
+
+    #[test]
+    fn test_create_session_rejects_id_collision_after_revoke() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr.clone());
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 99999,
+            };
+
+            let key = account.create_session(&env, scope.clone()).unwrap();
+            account.revoke_session(&env, &key.key_id).unwrap();
+
+            // A fresh session must not silently overwrite a live one that
+            // reuses the same id; with the id still live, creation is rejected.
+            let _live = account.create_session(&env, scope.clone()).unwrap();
+            assert_eq!(
+                account.create_session(&env, scope),
+                Err(AccountError::SessionIdCollision)
             );
         });
     }

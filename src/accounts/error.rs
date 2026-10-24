@@ -30,5 +30,6 @@ pub enum AccountError {
     SignerMismatch = 42,
     SessionRevoked = 43,
     SignerNotRegistered = 44,
-    DuplicateDeviceKey = 45,
+    SessionKeyIdCollision = 45,
+    DuplicateDeviceKey = 46,
 }
