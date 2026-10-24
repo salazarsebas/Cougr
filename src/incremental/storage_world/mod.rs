@@ -353,37 +353,18 @@ impl StorageWorld {
 
     fn flush_components(&self, env: &Env) {
         for (entity_id, component_type) in self.dirty.dirty_components() {
-            if self.dirty.despawned().contains(entity_id) {
-                continue;
-            }
-
-            if let Some(component_index) =
-                loaded_component_index(&self.loaded_components, *entity_id, component_type)
-            {
-                let key = keys::component_key(env, *entity_id, component_type);
-                env.storage()
-                    .persistent()
-                    .set(&key, &self.loaded_components[component_index].data);
+            let key = keys::component_key(env, *entity_id, component_type);
+            match self.get_component(*entity_id, component_type) {
+                Some(data) => env.storage().persistent().set(&key, &data),
+                None => env.storage().persistent().remove(&key),
             }
         }
     }
 
     fn flush_despawned_entities(&self, env: &Env) {
-        for &entity_id in self.dirty.despawned() {
-            let entity_key = keys::entity_key(env, entity_id);
-            if let Some(component_types) = env
-                .storage()
-                .persistent()
-                .get::<_, soroban_sdk::Vec<Symbol>>(&entity_key)
-            {
-                for i in 0..component_types.len() {
-                    if let Some(component_type) = component_types.get(i) {
-                        let component_key = keys::component_key(env, entity_id, &component_type);
-                        env.storage().persistent().remove(&component_key);
-                    }
-                }
-            }
-            env.storage().persistent().remove(&entity_key);
+        for &entity_id in self.dirty.despawned_entities() {
+            let key = keys::entity_key(env, entity_id);
+            env.storage().persistent().remove(&key);
         }
     }
 }
