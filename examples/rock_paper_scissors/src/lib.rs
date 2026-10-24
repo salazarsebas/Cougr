@@ -2,8 +2,20 @@
 
 use cougr_core::impl_component;
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Symbol,
+    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env,
+    Symbol,
 };
+
+/// Upper bound on `best_of` rounds to prevent unbounded match lengths.
+pub const MAX_BEST_OF: u32 = 99;
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum RpsError {
+    MatchAlreadyActive = 1,
+    InvalidBestOf = 2,
+}
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -120,7 +132,30 @@ pub struct RockPaperScissorsContract;
 
 #[contractimpl]
 impl RockPaperScissorsContract {
-    pub fn new_match(env: Env, player_a: Address, player_b: Address, best_of: u32) {
+    /// Starts a new match between `player_a` and `player_b`.
+    ///
+    /// Both players must authorize the call, any existing match must already be
+    /// in [`Phase::Resolved`], and `best_of` must be an odd integer in
+    /// `1..=MAX_BEST_OF`.
+    pub fn new_match(
+        env: Env,
+        player_a: Address,
+        player_b: Address,
+        best_of: u32,
+    ) -> Result<(), RpsError> {
+        player_a.require_auth();
+        player_b.require_auth();
+
+        if best_of == 0 || best_of.is_multiple_of(2) || best_of > MAX_BEST_OF {
+            return Err(RpsError::InvalidBestOf);
+        }
+
+        if let Some(existing) = env.storage().instance().get::<_, GameState>(&GAME_KEY) {
+            if existing.match_state.phase != Phase::Resolved {
+                return Err(RpsError::MatchAlreadyActive);
+            }
+        }
+
         let game = GameState {
             player_a,
             player_b,
@@ -146,6 +181,7 @@ impl RockPaperScissorsContract {
             has_commit_b: false,
         };
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
     pub fn commit(env: Env, player: Address, hash: BytesN<32>) {

@@ -45,7 +45,8 @@ fn make_commitment(env: &Env, board: &[u32; 100], salt: &BytesN<32>) -> BytesN<3
 
 #[test]
 fn test_new_game() {
-    let (_env, client, player_a, player_b) = setup_game();
+    let (env, client, player_a, player_b) = setup_game();
+    env.mock_all_auths();
 
     client.new_game(&player_a, &player_b);
 
@@ -463,4 +464,90 @@ fn test_attack_before_commit() {
 
     // Try to attack before boards are committed
     client.attack(&player_a, &0, &0);
+}
+
+#[test]
+fn test_new_game_requires_both_participants_auth() {
+    use soroban_sdk::{
+        testutils::{MockAuth, MockAuthInvoke},
+        IntoVal,
+    };
+
+    let (env, client, player_a, player_b) = setup_game();
+    let outsider = Address::generate(&env);
+
+    // Unauthenticated call must fail
+    assert!(client.try_new_game(&player_a, &player_b).is_err());
+
+    // Non-participant auth alone must fail
+    env.mock_auths(&[MockAuth {
+        address: &outsider,
+        invoke: &MockAuthInvoke {
+            contract: &client.address,
+            fn_name: "new_game",
+            args: (&player_a, &player_b).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_new_game(&player_a, &player_b).is_err());
+
+    // Only player_a auth without player_b must fail
+    env.mock_auths(&[MockAuth {
+        address: &player_a,
+        invoke: &MockAuthInvoke {
+            contract: &client.address,
+            fn_name: "new_game",
+            args: (&player_a, &player_b).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_new_game(&player_a, &player_b).is_err());
+}
+
+#[test]
+fn test_new_game_refuses_active_match_until_finished() {
+    let (env, client, player_a, player_b) = setup_game();
+    env.mock_all_auths();
+
+    client.new_game(&player_a, &player_b);
+
+    // Cannot overwrite while in Setup phase
+    assert_eq!(
+        client.try_new_game(&player_a, &player_b),
+        Err(Ok(BattleshipError::MatchAlreadyActive))
+    );
+
+    let board_a = [0u32; 100];
+    let mut board_b = [0u32; 100];
+    board_b[0] = 1;
+    let salt_a = BytesN::from_array(&env, &[1u8; 32]);
+    let salt_b = BytesN::from_array(&env, &[2u8; 32]);
+    let commitment_a = make_commitment(&env, &board_a, &salt_a);
+    let commitment_b = make_commitment(&env, &board_b, &salt_b);
+    let (root_a, _) = build_merkle_tree(&env, &board_a);
+    let (root_b, tree_b) = build_merkle_tree(&env, &board_b);
+
+    client.commit_board(&player_a, &commitment_a, &root_a);
+    client.commit_board(&player_b, &commitment_b, &root_b);
+    assert_eq!(client.get_state().turn_state.phase, Phase::Attack);
+
+    // Cannot overwrite while in Attack phase
+    assert_eq!(
+        client.try_new_game(&player_a, &player_b),
+        Err(Ok(BattleshipError::MatchAlreadyActive))
+    );
+
+    // Finish the game and verify starting a new match succeeds
+    let mut state = client.get_state();
+    state.ship_status.remaining_b = 1;
+    env.as_contract(&client.address, || {
+        env.storage().instance().set(&GAME_KEY, &state);
+    });
+    client.attack(&player_a, &0, &0);
+    let proof = get_merkle_proof(&env, &tree_b, 0);
+    client.reveal_cell(&player_b, &0, &0, &1, &proof);
+    assert_eq!(client.get_state().turn_state.phase, Phase::Finished);
+
+    assert_eq!(client.try_new_game(&player_a, &player_b), Ok(Ok(())));
+    assert_eq!(client.get_state().turn_state.phase, Phase::Setup);
 }

@@ -5,8 +5,16 @@ use cougr_core::privacy::stable::{
     MerkleProofVerifier, OnChainMerkleProof, Sha256MerkleProofVerifier,
 };
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env, Map, Symbol,
+    contract, contracterror, contractimpl, contracttype, symbol_short, Address, Bytes, BytesN, Env,
+    Map, Symbol,
 };
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum BattleshipError {
+    MatchAlreadyActive = 1,
+}
 
 #[contracttype]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -92,7 +100,16 @@ pub struct BattleshipContract;
 
 #[contractimpl]
 impl BattleshipContract {
-    pub fn new_game(env: Env, player_a: Address, player_b: Address) {
+    pub fn new_game(env: Env, player_a: Address, player_b: Address) -> Result<(), BattleshipError> {
+        player_a.require_auth();
+        player_b.require_auth();
+
+        if let Some(existing) = env.storage().instance().get::<_, GameState>(&GAME_KEY) {
+            if existing.turn_state.phase != Phase::Finished {
+                return Err(BattleshipError::MatchAlreadyActive);
+            }
+        }
+
         let zero_hash = BytesN::from_array(&env, &[0u8; 32]);
         let game = GameState {
             player_a: player_a.clone(),
@@ -100,7 +117,7 @@ impl BattleshipContract {
             commitment_a: zero_hash.clone(),
             merkle_root_a: zero_hash.clone(),
             commitment_b: zero_hash.clone(),
-            merkle_root_b: zero_hash.clone(),
+            merkle_root_b: zero_hash,
             has_commitment_a: false,
             has_commitment_b: false,
             attack_grid_a: AttackGrid {
@@ -123,6 +140,7 @@ impl BattleshipContract {
             winner: None,
         };
         env.storage().instance().set(&GAME_KEY, &game);
+        Ok(())
     }
 
     pub fn commit_board(

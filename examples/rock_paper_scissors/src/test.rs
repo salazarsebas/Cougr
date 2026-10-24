@@ -29,7 +29,8 @@ fn make_hash(env: &Env, choice: u32, salt: &BytesN<32>) -> BytesN<32> {
 
 #[test]
 fn test_new_match() {
-    let (_env, client, player_a, player_b) = setup_game();
+    let (env, client, player_a, player_b) = setup_game();
+    env.mock_all_auths();
 
     client.new_match(&player_a, &player_b, &3);
 
@@ -349,9 +350,6 @@ fn test_component_traits() {
 
 #[test]
 fn test_all_nine_combinations() {
-    let (env, client, player_a, player_b) = setup_game();
-    env.mock_all_auths();
-
     let combinations = [
         (0, 0, 0, 0, 1), // RR -> draw
         (0, 1, 0, 1, 0), // RP -> B wins
@@ -365,6 +363,9 @@ fn test_all_nine_combinations() {
     ];
 
     for (idx, (choice_a, choice_b, exp_a, exp_b, exp_draw)) in combinations.iter().enumerate() {
+        let (env, client, player_a, player_b) = setup_game();
+        env.mock_all_auths();
+
         client.new_match(&player_a, &player_b, &1);
 
         let salt_a = BytesN::from_array(&env, &[(idx * 2) as u8; 32]);
@@ -381,4 +382,99 @@ fn test_all_nine_combinations() {
         assert_eq!(score.wins_b, *exp_b, "Test {} failed for wins_b", idx);
         assert_eq!(score.draws, *exp_draw, "Test {} failed for draws", idx);
     }
+}
+
+#[test]
+fn test_new_match_requires_both_participants_auth() {
+    use soroban_sdk::{
+        testutils::{MockAuth, MockAuthInvoke},
+        IntoVal,
+    };
+
+    let (env, client, player_a, player_b) = setup_game();
+    let outsider = Address::generate(&env);
+
+    // Unauthenticated call must fail
+    assert!(client.try_new_match(&player_a, &player_b, &3).is_err());
+
+    // Non-participant auth alone must fail
+    env.mock_auths(&[MockAuth {
+        address: &outsider,
+        invoke: &MockAuthInvoke {
+            contract: &client.address,
+            fn_name: "new_match",
+            args: (&player_a, &player_b, 3u32).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_new_match(&player_a, &player_b, &3).is_err());
+
+    // Only player_a auth without player_b must fail
+    env.mock_auths(&[MockAuth {
+        address: &player_a,
+        invoke: &MockAuthInvoke {
+            contract: &client.address,
+            fn_name: "new_match",
+            args: (&player_a, &player_b, 3u32).into_val(&env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(client.try_new_match(&player_a, &player_b, &3).is_err());
+}
+
+#[test]
+fn test_new_match_validates_best_of() {
+    let (env, client, player_a, player_b) = setup_game();
+    env.mock_all_auths();
+
+    assert_eq!(
+        client.try_new_match(&player_a, &player_b, &0),
+        Err(Ok(RpsError::InvalidBestOf))
+    );
+    assert_eq!(
+        client.try_new_match(&player_a, &player_b, &2),
+        Err(Ok(RpsError::InvalidBestOf))
+    );
+    assert_eq!(
+        client.try_new_match(&player_a, &player_b, &4),
+        Err(Ok(RpsError::InvalidBestOf))
+    );
+    assert_eq!(
+        client.try_new_match(&player_a, &player_b, &(MAX_BEST_OF + 2)),
+        Err(Ok(RpsError::InvalidBestOf))
+    );
+}
+
+#[test]
+fn test_new_match_refuses_active_match_until_resolved() {
+    let (env, client, player_a, player_b) = setup_game();
+    env.mock_all_auths();
+
+    client.new_match(&player_a, &player_b, &1);
+
+    // Cannot overwrite while in Committing phase
+    assert_eq!(
+        client.try_new_match(&player_a, &player_b, &1),
+        Err(Ok(RpsError::MatchAlreadyActive))
+    );
+
+    let salt_a = BytesN::from_array(&env, &[1u8; 32]);
+    let salt_b = BytesN::from_array(&env, &[2u8; 32]);
+    client.commit(&player_a, &make_hash(&env, 0, &salt_a));
+    client.commit(&player_b, &make_hash(&env, 2, &salt_b));
+    assert_eq!(client.get_state().phase, Phase::Revealing);
+
+    // Cannot overwrite while in Revealing phase
+    assert_eq!(
+        client.try_new_match(&player_a, &player_b, &1),
+        Err(Ok(RpsError::MatchAlreadyActive))
+    );
+
+    client.reveal(&player_a, &0, &salt_a);
+    client.reveal(&player_b, &2, &salt_b);
+    assert_eq!(client.get_state().phase, Phase::Resolved);
+
+    // Can start a new match once Resolved
+    assert_eq!(client.try_new_match(&player_a, &player_b, &3), Ok(Ok(())));
+    assert_eq!(client.get_state().phase, Phase::Committing);
 }
