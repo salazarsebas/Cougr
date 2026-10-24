@@ -353,3 +353,209 @@ pub fn indent_lines(s: &str, prefix: &str) -> String {
         .collect::<Vec<_>>()
         .join("\n")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    fn write(path: &Path, contents: &str) {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).unwrap();
+        }
+        fs::write(path, contents).unwrap();
+    }
+
+    // -----------------------------------------------------------------
+    // indent_lines
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn indent_lines_prefixes_every_line() {
+        let out = indent_lines("a\nb\nc", "    ");
+        assert_eq!(out, "    a\n    b\n    c");
+    }
+
+    #[test]
+    fn indent_lines_handles_empty_input() {
+        assert_eq!(indent_lines("", "  "), "");
+    }
+
+    // -----------------------------------------------------------------
+    // check_readme_contract_ids
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn readme_contract_ids_passes_without_ids() {
+        let dir = tempdir().unwrap();
+        write(
+            &dir.path().join("README.md"),
+            "# Example\n\nNo contract IDs here.\n",
+        );
+        let mut failures = Vec::new();
+        check_readme_contract_ids(dir.path(), "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {failures:?}");
+    }
+
+    #[test]
+    fn readme_contract_ids_fails_with_hardcoded_id() {
+        let dir = tempdir().unwrap();
+        // C + 55 chars from [A-Z2-7]
+        let id = format!("C{}", "A".repeat(55));
+        write(
+            &dir.path().join("README.md"),
+            &format!("# Example\n\nContract: {id}\n"),
+        );
+        let mut failures = Vec::new();
+        check_readme_contract_ids(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("hardcoded contract ID"));
+        assert!(failures[0].contains("examples/demo/README.md"));
+    }
+
+    #[test]
+    fn readme_contract_ids_skips_missing_readme() {
+        let dir = tempdir().unwrap();
+        let mut failures = Vec::new();
+        check_readme_contract_ids(dir.path(), "demo", &mut failures);
+        assert!(failures.is_empty());
+    }
+
+    // -----------------------------------------------------------------
+    // check_example_gitignore
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn example_gitignore_passes_with_target() {
+        let dir = tempdir().unwrap();
+        write(&dir.path().join(".gitignore"), "target/\n");
+        let mut failures = Vec::new();
+        check_example_gitignore(dir.path(), "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {failures:?}");
+    }
+
+    #[test]
+    fn example_gitignore_fails_when_missing() {
+        let dir = tempdir().unwrap();
+        let mut failures = Vec::new();
+        check_example_gitignore(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("missing .gitignore"));
+    }
+
+    #[test]
+    fn example_gitignore_fails_without_target() {
+        let dir = tempdir().unwrap();
+        write(&dir.path().join(".gitignore"), "*.log\n");
+        let mut failures = Vec::new();
+        check_example_gitignore(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("does not ignore target/"));
+    }
+
+    // -----------------------------------------------------------------
+    // check_example_gitignore_cargo_lock (private but exercised via
+    // check_example_gitignore's sibling - call directly in-module)
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn example_gitignore_cargo_lock_passes_when_absent() {
+        let dir = tempdir().unwrap();
+        write(&dir.path().join(".gitignore"), "target/\n");
+        let mut failures = Vec::new();
+        check_example_gitignore_cargo_lock(dir.path(), "demo", &mut failures);
+        assert!(failures.is_empty());
+    }
+
+    #[test]
+    fn example_gitignore_cargo_lock_fails_when_present() {
+        let dir = tempdir().unwrap();
+        write(&dir.path().join(".gitignore"), "target/\nCargo.lock\n");
+        let mut failures = Vec::new();
+        check_example_gitignore_cargo_lock(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("must not ignore Cargo.lock"));
+    }
+
+    // -----------------------------------------------------------------
+    // check_cargo_toml_description
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn cargo_toml_description_passes_with_value() {
+        let dir = tempdir().unwrap();
+        write(
+            &dir.path().join("Cargo.toml"),
+            "[package]\nname = \"demo\"\ndescription = \"A demo example\"\n",
+        );
+        let mut failures = Vec::new();
+        check_cargo_toml_description(dir.path(), "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {failures:?}");
+    }
+
+    #[test]
+    fn cargo_toml_description_fails_when_missing_field() {
+        let dir = tempdir().unwrap();
+        write(
+            &dir.path().join("Cargo.toml"),
+            "[package]\nname = \"demo\"\n",
+        );
+        let mut failures = Vec::new();
+        check_cargo_toml_description(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("missing a description field"));
+    }
+
+    #[test]
+    fn cargo_toml_description_fails_when_empty() {
+        let dir = tempdir().unwrap();
+        write(
+            &dir.path().join("Cargo.toml"),
+            "[package]\nname = \"demo\"\ndescription = \"\"\n",
+        );
+        let mut failures = Vec::new();
+        check_cargo_toml_description(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("description field is empty"));
+    }
+
+    #[test]
+    fn cargo_toml_description_fails_when_manifest_missing() {
+        let dir = tempdir().unwrap();
+        let mut failures = Vec::new();
+        check_cargo_toml_description(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("missing Cargo.toml"));
+    }
+
+    // -----------------------------------------------------------------
+    // check_cargo_metadata
+    //
+    // NOTE: this test shells out to `cargo metadata`. Kept to a single
+    // case per the issue direction. Requires a valid Cargo.toml.
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn cargo_metadata_passes_for_valid_manifest() {
+        let dir = tempdir().unwrap();
+        write(
+            &dir.path().join("Cargo.toml"),
+            "[package]\nname = \"demo\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        );
+        write(&dir.path().join("src/lib.rs"), "");
+        let mut failures = Vec::new();
+        check_cargo_metadata(dir.path(), "demo", &mut failures);
+        assert!(failures.is_empty(), "unexpected failures: {failures:?}");
+    }
+
+    #[test]
+    fn cargo_metadata_fails_for_invalid_manifest() {
+        let dir = tempdir().unwrap();
+        write(&dir.path().join("Cargo.toml"), "this is not toml\n");
+        let mut failures = Vec::new();
+        check_cargo_metadata(dir.path(), "demo", &mut failures);
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("cargo metadata --no-deps FAILED"));
+    }
+}

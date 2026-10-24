@@ -144,3 +144,105 @@ impl std::error::Error for CliError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Table-driven test asserting `hint()` for every `CliError` variant,
+    /// including the ones that intentionally return `None`.
+    #[test]
+    fn hint_covers_every_variant() {
+        let cases: Vec<(CliError, Option<&str>)> = vec![
+            (
+                CliError::InvalidName {
+                    name: "1bad".to_string(),
+                    reason: "must start with a letter".to_string(),
+                },
+                Some(
+                    "crate names start with a letter and use letters, digits, `_` or `-` \
+                     (for example: `my-game` or `dungeon_crawl`)",
+                ),
+            ),
+            (
+                CliError::InvalidConfig {
+                    reason: "board_width out of range".to_string(),
+                },
+                Some(
+                    "use board_width and board_height in 3..=8, and win_length in 3..=min(width, height)",
+                ),
+            ),
+            (
+                CliError::TargetExists {
+                    path: PathBuf::from("/tmp/foo"),
+                    is_file: false,
+                },
+                Some("pick a different name, or remove the directory `/tmp/foo` first"),
+            ),
+            (
+                CliError::TargetExists {
+                    path: PathBuf::from("/tmp/foo.txt"),
+                    is_file: true,
+                },
+                Some("pick a different name, or remove the file `/tmp/foo.txt` first"),
+            ),
+            (
+                CliError::io(
+                    "write",
+                    PathBuf::from("/tmp/foo"),
+                    std::io::Error::new(std::io::ErrorKind::Other, "boom"),
+                ),
+                None,
+            ),
+            (
+                CliError::MissingTemplateAsset {
+                    template: "turn_based",
+                    file: "src/lib.rs".to_string(),
+                },
+                Some(
+                    "this is a bug in cougr-cli - please report it at \
+                     https://github.com/salazarsebas/Cougr/issues",
+                ),
+            ),
+            (
+                CliError::UnknownPiece {
+                    name: "foo".to_string(),
+                    available: "bar, baz".to_string(),
+                },
+                Some("run `cougr add --list` to see available pieces"),
+            ),
+            (
+                CliError::InvalidProject {
+                    path: PathBuf::from("/tmp/foo"),
+                },
+                Some("run `cougr add` from inside a project created with `cougr new`"),
+            ),
+            (
+                CliError::PieceConflict {
+                    piece: "foo".to_string(),
+                    files: vec![PathBuf::from("/tmp/foo/src/lib.rs")],
+                },
+                None,
+            ),
+            (
+                CliError::MissingPieceAsset {
+                    piece: "foo".to_string(),
+                    file: "src/lib.rs".to_string(),
+                },
+                Some(
+                    "this is a bug in cougr-cli - please report it at https://github.com/salazarsebas/Cougr/issues",
+                ),
+            ),
+        ];
+
+        for (err, expected) in cases {
+            let actual = err.hint();
+            match expected {
+                Some(want) => {
+                    assert_eq!(actual.as_deref(), Some(want), "unexpected hint for {err:?}")
+                }
+                None => assert_eq!(actual, None, "expected no hint for {err:?}"),
+            }
+        }
+    }
+}

@@ -17,6 +17,60 @@ fn export(config: &str) -> (tempfile::TempDir, Output) {
     (dir, output)
 }
 
+#[derive(Debug)]
+struct FakeRepo {
+    _dir: tempfile::TempDir,
+    root: std::path::PathBuf,
+}
+
+fn fake_repo() -> FakeRepo {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().to_path_buf();
+    fs::write(
+        root.join("Cargo.toml"),
+        r#"[package]
+name = "fake-repo"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = []
+"#,
+    )
+    .unwrap();
+    fs::create_dir_all(root.join("examples")).unwrap();
+    FakeRepo { _dir: dir, root }
+}
+
+// A valid example that passes every hygiene rule.
+fn write_valid_example(repo: &FakeRepo, name: &str) {
+    let example = repo.root.join("examples").join(name);
+    fs::create_dir_all(example.join("src")).unwrap();
+    fs::write(
+        example.join("Cargo.toml"),
+        format!(
+            r#"[package]
+name = "{name}"
+version = "0.1.0"
+edition = "2021"
+description = "A Cougr example for {}"
+
+[dependencies]
+cougr = {{ path = "../.." }}
+"#,
+            name
+        ),
+    )
+    .unwrap();
+    fs::write(example.join("src/lib.rs"), "").unwrap();
+    fs::write(
+        example.join("README.md"),
+        format!("# Cougr Example: {}", name),
+    )
+    .unwrap();
+    fs::write(example.join(".gitignore"), "/target\n").unwrap();
+}
+
 #[test]
 fn default_export_matches_new_template() {
     let (dir, output) = export(r#"{"board_width":3,"board_height":3,"win_length":3}"#);
@@ -134,5 +188,67 @@ fn export_never_overwrites_existing_directory() {
     assert_eq!(
         fs::read_to_string(project.join("keep.txt")).unwrap(),
         "mine"
+    );
+}
+
+#[test]
+fn export_missing_config_file_fails() {
+    let dir = tempfile::tempdir().unwrap();
+    let missing = dir.path().join("no-such-config.json");
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["export", "demo", "--config"])
+        .arg(&missing)
+        .arg("--path")
+        .arg(dir.path())
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert!(!dir.path().join("demo").exists());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("no-such-config.json"),
+        "unexpected stderr: {stderr}"
+    );
+}
+
+#[test]
+fn export_malformed_json_fails() {
+    let (dir, output) = export("{\"board_width\": 3,");
+    assert!(!output.status.success());
+    assert!(!dir.path().join("demo").exists());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.to_lowercase().contains("json"),
+        "unexpected stderr: {stderr}"
+    );
+}
+
+#[test]
+fn export_rejects_out_of_bounds_config() {
+    let (dir, output) = export(r#"{"board_width":9,"board_height":3,"win_length":3}"#);
+    assert!(!output.status.success());
+    assert!(!dir.path().join("demo").exists());
+}
+
+#[test]
+fn add_unknown_piece_fails() {
+    let repo = fake_repo();
+    write_valid_example(&repo, "demo");
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .arg("add")
+        .arg("not-a-real-piece")
+        .arg("--path")
+        .arg(repo.root.join("examples").join("demo"))
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("not-a-real-piece"),
+        "unexpected stderr: {stderr}"
+    );
+    assert!(
+        !stderr.contains("package not found"),
+        "unknown piece should not report a missing package: {stderr}"
     );
 }

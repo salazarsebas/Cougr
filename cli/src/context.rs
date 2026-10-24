@@ -154,3 +154,130 @@ fn discover_examples(repo_root: &Path) -> Result<Vec<Example>> {
 
     Ok(examples)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::TempDir;
+
+    /// Build a fake repo with a Cargo.toml and the given example names.
+    fn fake_repo(examples: &[&str]) -> TempDir {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(dir.path().join("Cargo.toml"), "[workspace]\n").unwrap();
+        let examples_dir = dir.path().join("examples");
+        fs::create_dir_all(&examples_dir).unwrap();
+        for name in examples {
+            let ex = examples_dir.join(name);
+            fs::create_dir_all(&ex).unwrap();
+            fs::write(ex.join("Cargo.toml"), "[package]\nname = \"x\"\n").unwrap();
+        }
+        dir
+    }
+
+    #[test]
+    fn resolve_explicit_root_discovers_examples() {
+        let repo = fake_repo(&["alpha", "beta"]);
+        let ctx = resolve(
+            repo.path(),
+            Some(repo.path().to_str().unwrap()),
+            None,
+        )
+        .unwrap();
+        let mut names: Vec<_> = ctx.examples.iter().map(|e| e.name.clone()).collect();
+        names.sort();
+        assert_eq!(names, vec!["alpha".to_string(), "beta".to_string()]);
+    }
+
+    #[test]
+    fn resolve_explicit_root_missing_bails() {
+        let repo = fake_repo(&["alpha"]);
+        let missing = repo.path().join("does-not-exist");
+        let err = resolve(repo.path(), Some(missing.to_str().unwrap()), None).unwrap_err();
+        let msg = format!("{:#}", err);
+        assert!(
+            msg.contains("explicit --path does not exist"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
+    fn resolve_single_example_found() {
+        let repo = fake_repo(&["alpha", "beta"]);
+        let ctx = resolve(
+            repo.path(),
+            Some(repo.path().to_str().unwrap()),
+            Some("beta"),
+        )
+        .unwrap();
+        assert_eq!(ctx.examples.len(), 1);
+        assert_eq!(ctx.examples[0].name, "beta");
+    }
+
+    #[test]
+    fn resolve_single_example_not_found_bails() {
+        let repo = fake_repo(&["alpha"]);
+        let err = resolve(
+            repo.path(),
+            Some(repo.path().to_str().unwrap()),
+            Some("nope"),
+        )
+        .unwrap_err();
+        let msg = format!("{:#}", err);
+        assert!(
+            msg.contains("example 'nope' not found"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
+    fn resolve_finds_repo_root_from_subdir() {
+        let repo = fake_repo(&["alpha"]);
+        let sub = repo.path().join("examples").join("alpha");
+        let ctx = resolve(&sub, None, None).unwrap();
+        // Auto-detect: cwd is inside examples/alpha, so only that one.
+        assert_eq!(ctx.examples.len(), 1);
+        assert_eq!(ctx.examples[0].name, "alpha");
+        assert_eq!(ctx.repo_root, repo.path().canonicalize().unwrap());
+    }
+
+    #[test]
+    fn resolve_no_repo_root_bails() {
+        let dir = tempfile::tempdir().unwrap();
+        // No Cargo.toml, no examples/ anywhere above.
+        let err = resolve(dir.path(), None, None).unwrap_err();
+        let msg = format!("{:#}", err);
+        assert!(
+            msg.contains("could not find repo root"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
+    fn resolve_no_examples_found_bails() {
+        let repo = fake_repo(&[]);
+        let err = resolve(repo.path(), Some(repo.path().to_str().unwrap()), None).unwrap_err();
+        let msg = format!("{:#}", err);
+        assert!(
+            msg.contains("no examples found under"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
+    fn example_dir_joins_components() {
+        let root = Path::new("/tmp/repo");
+        assert_eq!(
+            example_dir(root, "alpha"),
+            PathBuf::from("/tmp/repo/examples/alpha")
+        );
+    }
+
+    #[test]
+    fn canonical_example_names_has_ten_entries() {
+        let names = canonical_example_names();
+        assert_eq!(names.len(), 10);
+        assert!(names.contains(&"spawn_and_move"));
+        assert!(names.contains(&"guild_arena"));
+    }
+}
