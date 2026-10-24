@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Bytes, BytesN, Symbol, Vec};
+use soroban_sdk::{contracttype, Address, Bytes, BytesN, Symbol, Vec};
 
 /// A game action that can be authorized by an account.
 #[contracttype]
@@ -18,10 +18,15 @@ pub struct SessionScope {
 }
 
 /// A session key with its scope and usage tracking.
+///
+/// Every session is bound to a `delegate` chosen by the owner at approval
+/// time. Session intents are only accepted when the delegate has authorized
+/// the exact intent via Soroban's auth framework.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct SessionKey {
     pub key_id: BytesN<32>,
+    pub delegate: Address,
     pub scope: SessionScope,
     pub created_at: u64,
     pub operations_used: u32,
@@ -82,6 +87,7 @@ mod tests {
         let env = Env::default();
         let key = SessionKey {
             key_id: BytesN::from_array(&env, &[1u8; 32]),
+            delegate: Address::generate(&env),
             scope: SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
                 max_operations: 50,

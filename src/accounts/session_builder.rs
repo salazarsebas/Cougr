@@ -15,7 +15,7 @@
 //! assert_eq!(scope.allowed_actions.len(), 2);
 //! ```
 
-use soroban_sdk::{Env, Symbol, Vec};
+use soroban_sdk::{Address, Env, Symbol, Vec};
 
 use super::error::AccountError;
 use super::traits::SessionKeyProvider;
@@ -27,6 +27,7 @@ pub struct SessionBuilder<'a> {
     allowed_actions: Vec<Symbol>,
     max_operations: u32,
     expires_at: u64,
+    delegate: Option<Address>,
 }
 
 impl<'a> SessionBuilder<'a> {
@@ -37,7 +38,16 @@ impl<'a> SessionBuilder<'a> {
             allowed_actions: Vec::new(env),
             max_operations: 0,
             expires_at: 0,
+            delegate: None,
         }
+    }
+
+    /// Set the delegate signer that must authorize every intent on this session.
+    ///
+    /// Creating a session without a delegate is an error.
+    pub fn delegate(mut self, delegate: Address) -> Self {
+        self.delegate = Some(delegate);
+        self
     }
 
     /// Allow a specific game action (e.g., `symbol_short!("move")`).
@@ -74,13 +84,16 @@ impl<'a> SessionBuilder<'a> {
     }
 
     /// Build and create the session key on a provider.
+    ///
+    /// Returns an error if no delegate was set.
     pub fn create<P: SessionKeyProvider>(
         self,
         provider: &mut P,
     ) -> Result<SessionKey, AccountError> {
         let env = self.env;
+        let delegate = self.delegate.clone().ok_or(AccountError::InvalidSignature)?;
         let scope = self.build_scope();
-        provider.create_session(env, scope)
+        provider.create_session(env, scope, delegate)
     }
 }
 

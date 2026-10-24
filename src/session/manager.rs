@@ -11,21 +11,24 @@ use super::SessionStatus;
 pub struct SessionManager;
 
 impl SessionManager {
-    /// Create a scoped session key for `owner`.
+    /// Create a scoped session key for `owner`, bound to `delegate`.
     ///
     /// Contract entrypoints must call `owner.require_auth()` before invoking this.
+    /// The delegate is the only address that may authorize intents for this session.
     pub fn approve(
         env: &Env,
         owner: &Address,
+        delegate: &Address,
         scope: SessionScope,
     ) -> Result<SessionKey, AccountError> {
         let mut account = ContractAccount::new(owner.clone());
-        account.create_session(env, scope)
+        account.create_session(env, delegate.clone(), scope)
     }
 
     /// Create a session from a [`SessionBuilder`] chain.
     ///
     /// Contract entrypoints must call `owner.require_auth()` before invoking this.
+    /// The builder must have a delegate set, otherwise creation fails.
     pub fn approve_with_builder(
         _env: &Env,
         owner: &Address,
@@ -44,6 +47,8 @@ impl SessionManager {
     }
 
     /// Build and authorize a session-scoped game action.
+    ///
+    /// The session's delegate must authorize the intent; the owner's auth alone is insufficient.
     pub fn execute_action(
         env: &Env,
         owner: &Address,
@@ -93,6 +98,9 @@ impl SessionManager {
     }
 
     /// Try session authorization first, then fall back to a direct owner intent.
+    ///
+    /// Session authorization requires the bound delegate's signature. An auth failure
+    /// on the session path is not a documented fallback condition and is returned as-is.
     pub fn fallback_execute(
         env: &Env,
         session_intent: &SignedIntent,

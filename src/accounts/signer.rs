@@ -33,18 +33,48 @@ impl AccountSigner for DirectAuthSigner {
 }
 
 /// Session signer used for explicit session intents.
-pub struct SessionAuthSigner;
+///
+/// The session's delegate (stored on the `SessionKey`, set at approval time)
+/// must authorize the exact intent fields before any session budget or nonce
+/// is consumed. Owner authorization alone is not sufficient.
+pub struct SessionAuthSigner {
+    delegate: Address,
+}
+
+impl SessionAuthSigner {
+    /// Build a session signer bound to the delegate loaded for this session.
+    pub fn new(delegate: Address) -> Self {
+        Self { delegate }
+    }
+
+    /// The delegate this signer will require authorization from.
+    pub fn delegate(&self) -> &Address {
+        &self.delegate
+    }
+}
 
 impl AccountSigner for SessionAuthSigner {
     fn verify(
         &self,
-        _env: &Env,
-        _account: &Address,
+        env: &Env,
+        account: &Address,
         intent: &SignedIntent,
     ) -> Result<(), AccountError> {
         if intent.signer.kind != IntentSigner::Session {
             return Err(AccountError::SignerMismatch);
         }
+        // Bind the delegate's signature to the exact intent: account, session
+        // key id, nonce and action hash. The action hash carries the domain
+        // separation provided by `hash_intent`.
+        self.delegate.require_auth_for_args(
+            (
+                account.clone(),
+                intent.signer.label.clone(),
+                intent.nonce,
+                intent.action_hash.clone(),
+            )
+                .into_val(env),
+        );
         Ok(())
     }
 }

@@ -8,20 +8,24 @@ use crate::session::{SessionManager, SessionStatus};
 /// Pre-built session fixture for sandbox and integration tests.
 pub struct MockSession {
     pub owner: Address,
+    pub delegate: Address,
     pub key: SessionKey,
 }
 
 impl MockSession {
-    /// Approve a scoped session for `owner` (mocks auth on the env).
+    /// Approve a scoped session for `owner` bound to `delegate` (mocks owner auth on the env).
     pub fn approve(
         env: &Env,
         owner: &Address,
+        delegate: &Address,
         actions: &[&str],
         max_operations: u32,
         expires_in: u64,
     ) -> Self {
         env.mock_all_auths();
-        let mut builder = crate::accounts::SessionBuilder::new(env).max_operations(max_operations);
+        let mut builder = crate::accounts::SessionBuilder::new(env)
+            .max_operations(max_operations)
+            .delegate(delegate.clone());
         for action in actions {
             builder = builder.allow_action(Symbol::new(env, action));
         }
@@ -29,6 +33,7 @@ impl MockSession {
             .expect("mock session approval");
         Self {
             owner: owner.clone(),
+            delegate: delegate.clone(),
             key,
         }
     }

@@ -14,8 +14,20 @@ use super::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
 /// Execute an action using a session key if available and valid,
 /// falling back to direct authorization.
 ///
-/// Session validity is checked locally (expiry, operation count, allowed actions)
-/// without requiring `SessionKeyProvider` trait.
+/// # Deprecated
+///
+/// This helper only checks session fields locally (expiry, operation count,
+/// allowed actions). It never verifies that the session exists in storage and
+/// never verifies the session's delegate, so it must not be used to authorize
+/// session-key actions. Use `SessionManager::fallback_execute` instead, which
+/// loads the stored session and requires the delegate's authorization before
+/// consuming any budget.
+///
+/// Direct authorization via `account.authorize` is still performed when the
+/// session path does not apply, so callers without sessions are unaffected.
+#[deprecated(
+    note = "session fields are not verified against storage or the delegate; use SessionManager::fallback_execute"
+)]
 pub fn authorize_with_fallback<A: CougrAccount>(
     env: &Env,
     account: &A,
@@ -29,7 +41,8 @@ pub fn authorize_with_fallback<A: CougrAccount>(
                 && key.operations_used < key.scope.max_operations
                 && is_action_allowed(&key.scope, &action.system_name)
             {
-                return Ok(());
+                // Unverified session: refuse to treat it as authorization.
+                return Err(AccountError::Unauthorized);
             }
         }
     }
@@ -97,6 +110,7 @@ fn is_action_allowed(scope: &SessionScope, action: &Symbol) -> bool {
 }
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::*;
     use crate::accounts::testing::MockAccount;
@@ -125,14 +139,15 @@ mod tests {
     }
 
     #[test]
-    fn test_authorize_with_session_valid() {
+    fn test_authorize_with_session_valid_is_refused() {
         let env = Env::default();
         let account = MockAccount::new(&env);
         let session = make_session(&env, 5000, 100);
         let action = make_action(&env, "move");
 
+        // An unverified session must never be treated as authorization.
         let result = authorize_with_fallback(&env, &account, &action, Some(&session));
-        assert!(result.is_ok());
+        assert_eq!(result.unwrap_err(), AccountError::Unauthorized);
     }
 
     #[test]
