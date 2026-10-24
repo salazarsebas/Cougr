@@ -173,7 +173,7 @@ pub mod runtime {
         archetype_world::{ArchetypeQueryCache, ArchetypeQueryState},
         change_tracker::{ChangeTracker, TrackedWorld},
         hooks::{HookRegistry, HookedWorld},
-        incremental::{StorageWorld, WorldMetadata},
+        incremental::{StorageConfig, StorageWorld, TtlPolicy, WorldMetadata},
         observers::{ObservedWorld, ObserverRegistry},
         query::{SimpleQueryCache, SimpleQueryState},
         resource::Resource,

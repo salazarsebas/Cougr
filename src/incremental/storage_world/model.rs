@@ -2,6 +2,10 @@ use crate::simple_world::EntityId;
 use soroban_sdk::{contracttype, Bytes, Symbol};
 
 /// Metadata stored as a single persistent entry.
+///
+/// The live entity index is no longer stored here; it lives in bounded
+/// buckets (see `keys::entity_index_key`) so spawn and despawn never rewrite
+/// a list proportional to the world size.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct WorldMetadata {
@@ -11,8 +15,6 @@ pub struct WorldMetadata {
     pub version: u64,
     /// Total number of live entities.
     pub entity_count: u32,
-    /// List of all live entity IDs.
-    pub entity_ids: soroban_sdk::Vec<u32>,
 }
 
 /// Cached entity data loaded from persistent storage.
