@@ -13,15 +13,37 @@ use systems::{apply_move, check_endgame, compute_state_hash, init_board};
 use zk::{build_move_circuit, decode_proof};
 
 use cougr_core::privacy::VerificationKey;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, Env};
+
+/// Storage key for the admin address fixed at deploy time.
+const ADMIN_KEY: soroban_sdk::Symbol = soroban_sdk::symbol_short!("ADMIN");
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum ChessError {
+    AdminNotSet = 1,
+    GameInProgress = 2,
+}
 
 #[contract]
 pub struct ChessContract;
 
 #[contractimpl]
 impl ChessContract {
+    /// Fix the admin address at deploy time. This runs exactly once.
+    pub fn __constructor(env: Env, admin: Address) {
+        env.storage().instance().set(&ADMIN_KEY, &admin);
+    }
+
     /// Initialize a new chess game
-    pub fn new_game(env: Env, white: Address, black: Address) {
+    pub fn new_game(env: Env, white: Address, black: Address) -> Result<(), ChessError> {
+        if let Some(existing) = env.storage().instance().get::<_, GameState>(&GAME_KEY) {
+            if existing.turn.status == GameStatus::Playing {
+                return Err(ChessError::GameInProgress);
+            }
+        }
+
         let board = init_board(&env);
         let state_hash = compute_state_hash(&env, &board);
 
@@ -44,6 +66,7 @@ impl ChessContract {
         };
 
         env.storage().instance().set(&GAME_KEY, &game_state);
+        Ok(())
     }
 
     /// Submit a move with ZK proof
@@ -140,8 +163,17 @@ impl ChessContract {
             .unwrap_or_else(|| panic!("Game not initialized"))
     }
 
-    /// Set the verification key (admin function)
-    pub fn set_vk(env: Env, vk: VerificationKey) {
+    /// Set the verification key (admin function). Requires the deploy-time admin's auth.
+    pub fn set_vk(env: Env, vk: VerificationKey) -> Result<(), ChessError> {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .ok_or(ChessError::AdminNotSet)?;
+
+        admin.require_auth();
+
         env.storage().instance().set(&VK_KEY, &vk);
+        Ok(())
     }
 }
