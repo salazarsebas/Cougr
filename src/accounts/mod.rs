@@ -72,7 +72,8 @@ pub use types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
 // Lower-level support exports for advanced integrations.
 pub use device_storage::DeviceStorage;
 pub use intent::{
-    AuthMethod, AuthResult, IntentProof, IntentProofKind, IntentSigner, SignedIntent, SignerRef,
+    hash_intent, AuthMethod, AuthResult, IntentProof, IntentProofKind, IntentSigner, SignedIntent,
+    SignerRef, INTENT_DOMAIN_TAG,
 };
 pub use policy::{
     ActiveDevicePolicy, GuardianPolicy, IntentContext, IntentExpiryPolicy, Policy, RecoveryContext,

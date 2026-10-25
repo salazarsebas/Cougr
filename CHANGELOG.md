@@ -4,6 +4,7 @@
 
 ### Changed
 
+- **Breaking (`cougr_core::accounts` Beta)**: `hash_intent` and `SignedIntent::recompute_hash` now prefix the hashed preimage with `b"COUGR_ACCOUNT_INTENT_V1"`, `account.to_xdr(env)`, and `env.current_contract_address().to_xdr(env)`, and serialize `signer.label` and `action.system_name` via `Symbol::to_xdr(env)` rather than hashing `Val` payloads. This binds `action_hash` to the target account and contract and ensures symbols longer than 9 characters hash deterministically across `Env` instances.
 - Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
 
 ### Added

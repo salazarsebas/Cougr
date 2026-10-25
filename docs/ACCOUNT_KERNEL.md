@@ -33,13 +33,18 @@ The account subsystem is now organized around:
 - deterministic `action_hash`
 - proof material
 
-The deterministic hash is derived from:
+The deterministic hash is derived from the SHA-256 digest of the following concatenated byte layout:
 
-- nonce
-- expiry
-- signer identity fields
-- action system name
-- action bytes
+1. domain tag (`b"COUGR_ACCOUNT_INTENT_V1"`, 23 ASCII bytes)
+2. target account address (`account.to_xdr(env)`, Soroban `ScVal::Address` XDR bytes)
+3. current contract address (`env.current_contract_address().to_xdr(env)`, Soroban `ScVal::Address` XDR bytes)
+4. nonce (`u64` big-endian, 8 bytes)
+5. expiry (`expires_at`, `u64` big-endian, 8 bytes)
+6. signer kind discriminant (`signer.kind as u32` big-endian, 4 bytes: `0` = Direct, `1` = Session, `2` = Passkey)
+7. signer session key ID (`signer.session_key_id`, 32 raw bytes)
+8. signer label (`signer.label.to_xdr(env)`, Soroban `ScVal::Symbol` XDR bytes)
+9. action system name (`action.system_name.to_xdr(env)`, Soroban `ScVal::Symbol` XDR bytes)
+10. action bytes (`action.data`, raw `Bytes`)
 
 ## Replay Protection
 
