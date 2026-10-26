@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, Env, IntoVal};
 
 use super::error::AccountError;
 use super::intent::{IntentProofKind, IntentSigner, SignedIntent};

@@ -91,9 +91,12 @@ impl<'a> SessionBuilder<'a> {
         provider: &mut P,
     ) -> Result<SessionKey, AccountError> {
         let env = self.env;
-        let delegate = self.delegate.clone().ok_or(AccountError::InvalidSignature)?;
+        let delegate = self
+            .delegate
+            .clone()
+            .ok_or(AccountError::InvalidSignature)?;
         let scope = self.build_scope();
-        provider.create_session(env, scope, delegate)
+        provider.create_session(env, scope)
     }
 }
 
