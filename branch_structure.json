@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feat/issue-451-feat-accounts-bind-each-session-key-to-a",
+    "fix/issue-421-chore-ci-add-ci-for-battleship-rock-paper",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "feat/issue-451-feat-accounts-bind-each-session-key-to-a": "main",
+    "fix/issue-421-chore-ci-add-ci-for-battleship-rock-paper": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "feat/issue-451-feat-accounts-bind-each-session-key-to-a",
+    "fix/issue-421-chore-ci-add-ci-for-battleship-rock-paper",
+    "origin"
+  ]
+}

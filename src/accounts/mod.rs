@@ -55,7 +55,6 @@ pub mod passkey {
 pub use batch::BatchBuilder;
 pub use classic::ClassicAccount;
 pub use contract::ContractAccount;
-pub use degradation::{authorize_with_fallback, batch_or_sequential, require_capability};
 pub use error::AccountError;
 pub use kernel::AccountKernel;
 pub use multi_device::{DeviceKey, DeviceManager, DevicePolicy, MultiDeviceProvider};

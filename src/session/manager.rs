@@ -22,7 +22,7 @@ impl SessionManager {
         scope: SessionScope,
     ) -> Result<SessionKey, AccountError> {
         let mut account = ContractAccount::new(owner.clone());
-        account.create_session(env, delegate.clone(), scope)
+        account.create_session(env, scope, delegate.clone())
     }
 
     /// Create a session from a [`SessionBuilder`] chain.

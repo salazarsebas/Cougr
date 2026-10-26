@@ -17,7 +17,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "node build.js",
+    "build": "node init && node build.js",
     "check": "node build.js --check",
     "prepare": "node build.js"
   },

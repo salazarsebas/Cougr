@@ -64,14 +64,12 @@ impl SessionKeyProvider for ContractAccount {
         &mut self,
         env: &Env,
         scope: SessionScope,
-        delegate: Address,
     ) -> Result<SessionKey, AccountError> {
         let existing = SessionStorage::load_all(env, &self.address).len();
         let key_id = session_key_id(env, existing, &scope);
         let key = SessionKey {
             key_id,
             scope,
-            delegate,
             created_at: env.ledger().timestamp(),
             operations_used: 0,
             next_nonce: 0,
