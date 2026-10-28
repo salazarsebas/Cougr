@@ -6,8 +6,14 @@
 
 - Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
 
+
+### Fixed
+
+- **DelayedExecutionPolicy::cancel** - refuses to cancel executed operations, returning StandardsError::OperationAlreadyExecuted (code 78) without modifying storage or emitting cancellation events
+
 ### Added
 
+- **cougr_core::standards::StandardsError::ScheduleOverflow** - new error variant (code 80) returned by DelayedExecutionPolicy when timestamp arithmetic or operation id counters overflow
 - **`cougr_core::accounts::AccountError::DuplicateDeviceKey`** - new error variant (code 45) returned when attempting to register a device key that is already active, distinguishing "device already registered" from "device limit reached"
 - **`cougr_core::accounts::derive_session_key_id`** - deterministic session-key identifier derivation, so the Rust core and the TypeScript session client agree on session identity instead of re-deriving it off-chain
 - **`cougr_core::cors`** - CORS configuration validation and dynamic origin
@@ -49,8 +55,14 @@
 
 ## 1.1.0
 
+
+### Fixed
+
+- **DelayedExecutionPolicy::cancel** - refuses to cancel executed operations, returning StandardsError::OperationAlreadyExecuted (code 78) without modifying storage or emitting cancellation events
+
 ### Added
 
+- **cougr_core::standards::StandardsError::ScheduleOverflow** - new error variant (code 80) returned by DelayedExecutionPolicy when timestamp arithmetic or operation id counters overflow
 - **`game::SorobanGame` trait** - standard `load_world` / `save_world` contract pattern;
   implement once with `impl_soroban_game!(Contract, "key")`, use in every entrypoint
 - **`impl_soroban_game!` macro** - wires `SorobanGame` to any `#[contract]` struct
@@ -101,8 +113,14 @@
 
 ## 1.0.0
 
+
+### Fixed
+
+- **DelayedExecutionPolicy::cancel** - refuses to cancel executed operations, returning StandardsError::OperationAlreadyExecuted (code 78) without modifying storage or emitting cancellation events
+
 ### Added
 
+- **cougr_core::standards::StandardsError::ScheduleOverflow** - new error variant (code 80) returned by DelayedExecutionPolicy when timestamp arithmetic or operation id counters overflow
 - `app` as the default gameplay runtime surface
 - `auth`, `privacy`, and `ops` as product-level domain namespaces
 - `RuntimeWorld` and `RuntimeWorldMut` as shared Soroban-first backend contracts
