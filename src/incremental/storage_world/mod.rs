@@ -40,7 +40,6 @@ impl StorageWorld {
                     next_entity_id: 1,
                     version: 0,
                     entity_count: 0,
-                    entity_ids: soroban_sdk::Vec::new(env),
                 });
 
         Self {
@@ -98,7 +97,6 @@ impl StorageWorld {
         let entity_id = self.metadata.next_entity_id;
         self.metadata.next_entity_id += 1;
         self.metadata.entity_count += 1;
-        self.metadata.entity_ids.push_back(entity_id);
 
         self.loaded_entities.push(LoadedEntity {
             entity_id,
@@ -170,7 +168,6 @@ impl StorageWorld {
         self.loaded_entities
             .retain(|entity| entity.entity_id != entity_id);
 
-        self.metadata.entity_ids = entity_ids_without(&self.metadata.entity_ids, entity_id);
         self.metadata.entity_count = self.metadata.entity_count.saturating_sub(1);
         self.metadata.version += 1;
 
@@ -209,8 +206,8 @@ impl StorageWorld {
     }
 
     /// Returns all known entity IDs from metadata.
-    pub fn entity_ids(&self) -> &soroban_sdk::Vec<EntityId> {
-        &self.metadata.entity_ids
+    pub fn entity_ids(&self) -> Vec<EntityId> {
+        self.loaded_entities.iter().map(|e| e.entity_id).collect()
     }
 
     /// Convert loaded state to a `SimpleWorld`.
@@ -284,7 +281,6 @@ impl StorageWorld {
                 next_entity_id: world.next_entity_id,
                 version: world.version,
                 entity_count,
-                entity_ids,
             },
             loaded_entities,
             loaded_components,
@@ -362,7 +358,7 @@ impl StorageWorld {
     }
 
     fn flush_despawned_entities(&self, env: &Env) {
-        for &entity_id in self.dirty.despawned_entities() {
+        for &entity_id in self.dirty.despawned() {
             let key = keys::entity_key(env, entity_id);
             env.storage().persistent().remove(&key);
         }
