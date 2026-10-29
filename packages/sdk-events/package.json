@@ -20,7 +20,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node init && tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test test/*.test.ts",
     "fixtures": "cargo run --quiet --manifest-path fixtures/Cargo.toml | node fixtures/build.mjs > fixtures/events.json"

@@ -31,10 +31,9 @@ pub struct ChessContract;
 
 #[contractimpl]
 impl ChessContract {
-    /// Fix the admin address at deploy time. This runs exactly once.
-    pub fn __constructor(env: Env, admin: Address) {
-        env.storage().instance().set(&ADMIN_KEY, &admin);
-    }
+    /// Constructor runs exactly once at deploy time. The admin is fixed on first
+    /// `set_vk` call only if no admin has been recorded yet.
+    pub fn __constructor(_env: Env) {}
 
     /// Initialize a new chess game
     pub fn new_game(env: Env, white: Address, black: Address) -> Result<(), ChessError> {

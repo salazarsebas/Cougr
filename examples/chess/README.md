@@ -39,7 +39,7 @@ the admin fails authorization and the key is not modified.
 
 ## Public contract API
 
-The contract is deployed with a constructor that records the admin:
+The contract is deployed with a constructor that records the admin. The constructor takes exactly one argument (`admin: Address`); registering the contract without it fails with `invalid number of input arguments: 1 expected, got 0`, so test harnesses and deploy scripts must always pass the admin address when registering the contract:
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
