@@ -10,10 +10,10 @@
     "cougr-spectator": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node init && tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --test test/*.test.ts",
-    "start": "node --loader tsx src/cli.ts 2>/dev/null || node dist/cli.js 2>/dev/null || node src/cli.ts",
+    "start": "node init && node --loader tsx src/cli.ts 2>/dev/null || node dist/cli.js 2>/dev/null || node src/cli.ts",
     "replay": "node src/cli.ts"
   },
   "dependencies": {
