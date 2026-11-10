@@ -40,7 +40,6 @@ impl StorageWorld {
                     next_entity_id: 1,
                     version: 0,
                     entity_count: 0,
-                    entity_ids: soroban_sdk::Vec::new(env),
                 });
 
         Self {
@@ -98,7 +97,6 @@ impl StorageWorld {
         let entity_id = self.metadata.next_entity_id;
         self.metadata.next_entity_id += 1;
         self.metadata.entity_count += 1;
-        self.metadata.entity_ids.push_back(entity_id);
 
         self.loaded_entities.push(LoadedEntity {
             entity_id,
@@ -170,7 +168,6 @@ impl StorageWorld {
         self.loaded_entities
             .retain(|entity| entity.entity_id != entity_id);
 
-        self.metadata.entity_ids = entity_ids_without(&self.metadata.entity_ids, entity_id);
         self.metadata.entity_count = self.metadata.entity_count.saturating_sub(1);
         self.metadata.version += 1;
 
@@ -209,8 +206,8 @@ impl StorageWorld {
     }
 
     /// Returns all known entity IDs from metadata.
-    pub fn entity_ids(&self) -> &soroban_sdk::Vec<EntityId> {
-        &self.metadata.entity_ids
+    pub fn entity_ids(&self) -> Vec<EntityId> {
+        self.loaded_entities.iter().map(|e| e.entity_id).collect()
     }
 
     /// Convert loaded state to a `SimpleWorld`.
@@ -284,7 +281,6 @@ impl StorageWorld {
                 next_entity_id: world.next_entity_id,
                 version: world.version,
                 entity_count,
-                entity_ids,
             },
             loaded_entities,
             loaded_components,
@@ -353,37 +349,18 @@ impl StorageWorld {
 
     fn flush_components(&self, env: &Env) {
         for (entity_id, component_type) in self.dirty.dirty_components() {
-            if self.dirty.despawned().contains(entity_id) {
-                continue;
-            }
-
-            if let Some(component_index) =
-                loaded_component_index(&self.loaded_components, *entity_id, component_type)
-            {
-                let key = keys::component_key(env, *entity_id, component_type);
-                env.storage()
-                    .persistent()
-                    .set(&key, &self.loaded_components[component_index].data);
+            let key = keys::component_key(env, *entity_id, component_type);
+            match self.get_component(*entity_id, component_type) {
+                Some(data) => env.storage().persistent().set(&key, &data),
+                None => env.storage().persistent().remove(&key),
             }
         }
     }
 
     fn flush_despawned_entities(&self, env: &Env) {
         for &entity_id in self.dirty.despawned() {
-            let entity_key = keys::entity_key(env, entity_id);
-            if let Some(component_types) = env
-                .storage()
-                .persistent()
-                .get::<_, soroban_sdk::Vec<Symbol>>(&entity_key)
-            {
-                for i in 0..component_types.len() {
-                    if let Some(component_type) = component_types.get(i) {
-                        let component_key = keys::component_key(env, entity_id, &component_type);
-                        env.storage().persistent().remove(&component_key);
-                    }
-                }
-            }
-            env.storage().persistent().remove(&entity_key);
+            let key = keys::entity_key(env, entity_id);
+            env.storage().persistent().remove(&key);
         }
     }
 }

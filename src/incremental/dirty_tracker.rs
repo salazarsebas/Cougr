@@ -89,6 +89,11 @@ impl DirtyTracker {
         &self.despawned
     }
 
+    /// Get despawned entities (alias used by storage_world flush).
+    pub fn despawned_entities(&self) -> &[EntityId] {
+        &self.despawned
+    }
+
     /// Get newly spawned entities.
     #[cfg(test)]
     pub fn new_entities(&self) -> &[EntityId] {
