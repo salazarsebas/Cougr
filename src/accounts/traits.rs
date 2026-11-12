@@ -36,11 +36,12 @@ pub trait IntentAccount: CougrAccount {
 /// This trait provides session key functionality for gasless gameplay.
 /// Only contract accounts (C-addresses) support this capability.
 pub trait SessionKeyProvider: CougrAccount {
-    /// Create a new session key with the given scope.
+    /// Create a new session key with the given scope and delegate signer.
     fn create_session(
         &mut self,
         env: &Env,
         scope: SessionScope,
+        delegate: Address,
     ) -> Result<SessionKey, AccountError>;
 
     /// Validate that a session key is still active and within scope.

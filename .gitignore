@@ -6,7 +6,6 @@ target/
 *.pdb
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -35,3 +34,5 @@ Thumbs.db
 # Claude plans
 .claude/plans/
 .claude/settings.json
+config.bat
+node_modules

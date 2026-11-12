@@ -60,6 +60,9 @@ impl AccountKernel {
         self.ensure_target(intent)?;
         self.ensure_hash(env, intent)?;
 
+        // Signer verification runs first: the delegate must authorize this exact
+        // intent (account, key id, nonce, action hash) before any policy check
+        // or budget consumption touches session state.
         let signer = SessionAuthSigner;
         signer.verify(env, &self.owner, intent)?;
 
