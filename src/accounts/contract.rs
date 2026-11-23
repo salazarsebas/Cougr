@@ -67,6 +67,9 @@ impl SessionKeyProvider for ContractAccount {
     ) -> Result<SessionKey, AccountError> {
         let existing = SessionStorage::load_all(env, &self.address).len();
         let key_id = session_key_id(env, existing, &scope);
+        if SessionStorage::load(env, &self.address, &key_id).is_some() {
+            return Err(AccountError::SessionKeyIdCollision);
+        }
         let key = SessionKey {
             key_id,
             scope,
@@ -279,6 +282,33 @@ mod tests {
                 account.revoke_session(&env, &fake_id),
                 Err(AccountError::InvalidScope)
             );
+        });
+    }
+
+    #[test]
+    fn test_create_session_rejects_id_collision_after_revoke() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr);
+
+            let scope = SessionScope {
+                allowed_actions: vec![&env, symbol_short!("move")],
+                max_operations: 100,
+                expires_at: 99999,
+            };
+
+            let a = account.create_session(&env, scope.clone()).unwrap();
+            let b = account.create_session(&env, scope.clone()).unwrap();
+            account.revoke_session(&env, &a.key_id).unwrap();
+            assert_eq!(
+                account.create_session(&env, scope.clone()),
+                Err(AccountError::SessionKeyIdCollision)
+            );
+            let stored = SessionStorage::load(&env, account.address(), &b.key_id).unwrap();
+            assert_eq!(stored, b);
         });
     }
 }

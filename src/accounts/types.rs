@@ -10,7 +10,7 @@ pub struct GameAction {
 
 /// Defines the scope of a session key's permissions.
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionScope {
     pub allowed_actions: Vec<Symbol>,
     pub max_operations: u32,
@@ -19,7 +19,7 @@ pub struct SessionScope {
 
 /// A session key with its scope and usage tracking.
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionKey {
     pub key_id: BytesN<32>,
     pub scope: SessionScope,

@@ -63,6 +63,15 @@ impl AccountKernel {
         let signer = SessionAuthSigner;
         signer.verify(env, &self.owner, intent)?;
 
+        let intent_policy = IntentExpiryPolicy;
+        intent_policy.evaluate(
+            env,
+            &IntentContext {
+                account: &self.owner,
+                intent,
+            },
+        )?;
+
         let policy = SessionPolicy;
         policy.evaluate(
             env,
@@ -280,6 +289,37 @@ mod tests {
             assert_eq!(
                 kernel.authorize(&env, &wrong_nonce),
                 Err(AccountError::NonceMismatch)
+            );
+        });
+    }
+
+    #[test]
+    fn test_session_intent_rejects_expired_intent() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let owner = Address::generate(&env);
+        let key_id = BytesN::from_array(&env, &[8u8; 32]);
+
+        env.as_contract(&contract_id, || {
+            let kernel = AccountKernel::new(owner.clone());
+            let session = SessionKey {
+                key_id: key_id.clone(),
+                scope: SessionScope {
+                    allowed_actions: vec![&env, symbol_short!("move")],
+                    max_operations: 3,
+                    expires_at: 99999,
+                },
+                created_at: 0,
+                operations_used: 0,
+                next_nonce: 0,
+            };
+            SessionStorage::store(&env, &owner, &session);
+
+            let expired_intent =
+                SignedIntent::session(&env, owner, &key_id, make_action(&env, "move"), 0, 0);
+            assert_eq!(
+                kernel.authorize(&env, &expired_intent),
+                Err(AccountError::IntentExpired)
             );
         });
     }

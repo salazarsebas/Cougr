@@ -116,13 +116,13 @@ impl MerkleTree {
         let mut path_indices = Vec::new();
         let mut idx = leaf_index as usize;
 
-        for layer_idx in 0..self.depth as usize {
+        for layer in self.layers.iter().take(self.depth as usize) {
             let sibling_idx = if idx.is_multiple_of(2) {
                 idx + 1
             } else {
                 idx - 1
             };
-            siblings.push(self.layers[layer_idx][sibling_idx]);
+            siblings.push(layer[sibling_idx]);
             path_indices.push(!idx.is_multiple_of(2));
             idx /= 2;
         }
@@ -301,13 +301,13 @@ impl PoseidonMerkleTree {
         let mut path_indices = alloc::vec::Vec::new();
         let mut idx = leaf_index as usize;
 
-        for layer_idx in 0..self.depth as usize {
+        for layer in self.layers.iter().take(self.depth as usize) {
             let sibling_idx = if idx.is_multiple_of(2) {
                 idx + 1
             } else {
                 idx - 1
             };
-            siblings.push(self.layers[layer_idx][sibling_idx].clone());
+            siblings.push(layer[sibling_idx].clone());
             path_indices.push(!idx.is_multiple_of(2));
             idx /= 2;
         }

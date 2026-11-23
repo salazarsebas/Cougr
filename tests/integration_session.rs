@@ -270,6 +270,28 @@ fn session_execute_fails_when_expired() {
 }
 
 #[test]
+fn session_execute_fails_when_intent_expired() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let contract_id = env.register(SessionArena, ());
+    let owner = Address::generate(&env);
+
+    env.as_contract(&contract_id, || {
+        let mock = MockSession::approve(&env, &owner, &["tap"], 5, 10_000);
+        let action = make_action(&env, "tap");
+        let err = SessionManager::execute_action(
+            &env,
+            &owner,
+            &mock.key,
+            action,
+            env.ledger().timestamp().saturating_sub(1),
+        )
+        .unwrap_err();
+        assert_eq!(err, AccountError::IntentExpired);
+    });
+}
+
+#[test]
 fn session_builder_expires_in_sets_relative_deadline() {
     let env = Env::default();
     env.ledger().with_mut(|li| {
