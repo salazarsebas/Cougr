@@ -78,7 +78,6 @@ soroban-sdk = "25.1.0"
 ```rust
 #![no_std]
 
-use cougr_core::component::ComponentTrait;
 use cougr_core::game::SorobanGame;
 use cougr_core::{impl_component_observed, impl_soroban_game};
 use soroban_sdk::{contract, contractimpl, contracttype, Env};
@@ -86,7 +85,10 @@ use soroban_sdk::{contract, contractimpl, contracttype, Env};
 // 1. Define a component - one macro call, no boilerplate
 #[contracttype]
 #[derive(Clone, Debug)]
-pub struct Position { pub x: i32, pub y: i32 }
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}
 impl_component_observed!(Position, "position", Table, { x: i32, y: i32 });
 //  ↑ Emits a (COUGR, set, position) Soroban event on every change
 //    so off-chain clients track state without polling.
@@ -125,7 +127,7 @@ impl MyGame {
 # Build, test, deploy
 cargo test
 stellar contract build
-stellar contract deploy --wasm target/wasm32-unknown-unknown/release/my_game.wasm \
+stellar contract deploy --wasm target/wasm32v1-none/release/my_game.wasm \
   --source alice --network testnet
 ```
 
