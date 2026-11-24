@@ -285,8 +285,8 @@ impl SimpleScheduler {
     fn execution_plan_for_stage(&self, stage: ScheduleStage) -> Result<Vec<usize>, ScheduleError> {
         self.validate_unique_names()?;
         let mut stage_indexes = Vec::new();
-        for index in 0..self.systems.len() {
-            if self.systems[index].config.stage() == stage {
+        for (index, system) in self.systems.iter().enumerate() {
+            if system.config.stage() == stage {
                 stage_indexes.push(index);
             }
         }
