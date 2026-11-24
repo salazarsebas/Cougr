@@ -6,6 +6,10 @@ This guide is designed for developers who already know **Rust** but have no prio
 
 We are going to build a simple 2D grid game where a player can spawn into the world and walk in four directions.
 
+> [!TIP]
+> Prefer a template? Run `cougr new my-game --template starter` to generate a
+> working project with tests. This tutorial walks through the pieces manually.
+
 ---
 
 ## 1. Project Setup
@@ -29,11 +33,28 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-soroban-sdk = "25.3.2"
-cougr-core = "1.1.0" # or the latest version from crates.io
+soroban-sdk = "25.1.0"
+cougr-core = "1.1.0"
 
-[features]
-testutils = ["soroban-sdk/testutils", "cougr-core/testutils"]
+[dev-dependencies]
+soroban-sdk = { version = "25.1.0", features = ["testutils"] }
+cougr-core = { version = "1.1.0", features = ["testutils"] }
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
+
+[workspace]
 ```
 
 ---
@@ -228,23 +249,30 @@ If it passes, you are ready to deploy!
 To deploy, we need to compile our game to a WebAssembly (WASM) binary and use the Stellar CLI.
 
 > [!TIP]
-> If you haven't installed the Stellar CLI yet, check out the [Stellar Quickstart](https://developers.stellar.org/docs/build/smart-contracts/getting-started/deploy-to-testnet).
+> If Rust is not installed yet, start with the [Stellar Quickstart](https://developers.stellar.org/docs/build/smart-contracts/getting-started/deploy-to-testnet).
+
+Install the Soroban WASM target and Stellar CLI if they are not already installed:
+
+```bash
+rustup target add wasm32v1-none
+cargo install --locked stellar-cli
+```
 
 **1. Build the WASM file:**
 ```bash
-cargo build --target wasm32-unknown-unknown --release
+stellar contract build
 ```
-Your compiled game is now located at `target/wasm32-unknown-unknown/release/my_first_game.wasm`.
+Your compiled game is now located at `target/wasm32v1-none/release/my_first_game.wasm`.
 
 **2. Configure your testnet identity:**
 ```bash
-stellar keys generate alice --network testnet
+stellar keys generate alice --network testnet --fund
 ```
 
 **3. Deploy the contract:**
 ```bash
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/my_first_game.wasm \
+  --wasm target/wasm32v1-none/release/my_first_game.wasm \
   --source alice \
   --network testnet
 ```
