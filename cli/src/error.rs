@@ -144,3 +144,88 @@ impl std::error::Error for CliError {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_error_variant_returns_its_expected_hint() {
+        let errors = [
+                (
+                    CliError::InvalidName {
+                        name: "bad name".to_string(),
+                        reason: "invalid characters".to_string(),
+                    },
+                    Some(
+                        "crate names start with a letter and use letters, digits, `_` or `-` (for example: `my-game` or `dungeon_crawl`)",
+                    ),
+                ),
+                (
+                    CliError::InvalidConfig {
+                        reason: "invalid values".to_string(),
+                    },
+                    Some(
+                        "use board_width and board_height in 3..=8, and win_length in 3..=min(width, height)",
+                    ),
+                ),
+                (
+                    CliError::TargetExists {
+                        path: PathBuf::from("demo"),
+                        is_file: false,
+                    },
+                    Some("pick a different name, or remove the directory `demo` first"),
+                ),
+                (
+                    CliError::io(
+                        "read the config",
+                        "config.json",
+                        std::io::Error::other("unavailable"),
+                    ),
+                    None,
+                ),
+                (
+                    CliError::MissingTemplateAsset {
+                        template: "starter",
+                        file: "src/lib.rs".to_string(),
+                    },
+                    Some(
+                        "this is a bug in cougr-cli - please report it at https://github.com/salazarsebas/Cougr/issues",
+                    ),
+                ),
+                (
+                    CliError::UnknownPiece {
+                        name: "unknown".to_string(),
+                        available: "session-auth".to_string(),
+                    },
+                    Some("run `cougr add --list` to see available pieces"),
+                ),
+                (
+                    CliError::InvalidProject {
+                        path: PathBuf::from("demo"),
+                    },
+                    Some("run `cougr add` from inside a project created with `cougr new`"),
+                ),
+                (
+                    CliError::PieceConflict {
+                        piece: "session-auth".to_string(),
+                        files: vec![PathBuf::from("src/session_auth.rs")],
+                    },
+                    None,
+                ),
+                (
+                    CliError::MissingPieceAsset {
+                        piece: "session-auth".to_string(),
+                        file: "src/session_auth.rs".to_string(),
+                    },
+                    Some(
+                        "this is a bug in cougr-cli - please report it at https://github.com/salazarsebas/Cougr/issues",
+                    ),
+                ),
+        ];
+
+        for (error, expected) in errors {
+            assert_eq!(error.hint().as_deref(), expected, "{error:?}");
+        }
+    }
+}

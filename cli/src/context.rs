@@ -154,3 +154,73 @@ fn discover_examples(repo_root: &Path) -> Result<Vec<Example>> {
 
     Ok(examples)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fake_root() -> tempfile::TempDir {
+        let root = tempfile::tempdir().expect("create fake repository");
+        fs::write(root.path().join("Cargo.toml"), "[workspace]\n").expect("write root manifest");
+        root
+    }
+
+    #[test]
+    fn resolve_reports_an_unknown_example() {
+        let root = fake_root();
+        fs::create_dir(root.path().join("examples")).expect("create examples directory");
+        let root_arg = root.path().to_str().expect("UTF-8 temp path");
+
+        let error = resolve(root.path(), Some(root_arg), Some("missing"))
+            .err()
+            .expect("unknown example should fail");
+
+        assert!(
+            error.to_string().contains("example 'missing' not found"),
+            "{error:#}"
+        );
+    }
+
+    #[test]
+    fn resolve_reports_when_the_repo_root_walk_finds_nothing() {
+        let cwd = tempfile::tempdir().expect("create directory outside a repository");
+
+        let error = resolve(cwd.path(), None, None)
+            .err()
+            .expect("repo root walk should fail");
+
+        assert!(
+            error.to_string().contains("could not find repo root"),
+            "{error:#}"
+        );
+    }
+
+    #[test]
+    fn resolve_reports_a_missing_examples_directory() {
+        let root = fake_root();
+        let root_arg = root.path().to_str().expect("UTF-8 temp path");
+
+        let error = resolve(root.path(), Some(root_arg), None)
+            .err()
+            .expect("missing examples directory should fail");
+
+        assert!(
+            error.to_string().contains("examples/ directory not found"),
+            "{error:#}"
+        );
+    }
+
+    #[test]
+    fn resolve_reports_when_no_example_has_a_cargo_manifest() {
+        let root = fake_root();
+        fs::create_dir_all(root.path().join("examples").join("not-a-package"))
+            .expect("create non-package example directory");
+        let root_arg = root.path().to_str().expect("UTF-8 temp path");
+
+        let error = resolve(root.path(), Some(root_arg), None)
+            .err()
+            .expect("empty examples directory should fail");
+
+        assert!(error.to_string().contains("no examples found"), "{error:#}");
+    }
+}

@@ -238,6 +238,21 @@ fn add_outside_a_project_reports_the_error_and_a_hint() {
 }
 
 #[test]
+fn add_reports_an_unknown_piece_and_a_hint() {
+    let dir = tempfile::tempdir().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["add", "unknown-piece"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("unknown piece `unknown-piece`"), "{stderr}");
+    assert!(stderr.contains("help: run `cougr add --list`"), "{stderr}");
+}
+
+#[test]
 fn add_with_path_from_outside_the_project() {
     let dir = tempfile::tempdir().unwrap();
     let generated = generate("demo", "starter", dir.path());
