@@ -352,7 +352,8 @@ mod tests {
                     max_guardians: 2,
                 },
                 &env,
-            );
+            )
+            .unwrap();
             let guardian = Address::generate(&env);
             recovery.add_guardian(&env, guardian.clone()).unwrap();
 
