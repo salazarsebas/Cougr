@@ -5,6 +5,9 @@
 ### Changed
 
 - Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
+- **`cougr_core::accounts::RecoverableAccount::new`** now returns
+  `Result<Self, AccountError>` and rejects recovery thresholds outside
+  `1..=max_guardians` before persisting account configuration.
 
 ### Added
 
@@ -33,6 +36,9 @@
 
 - **`cougr_core::accounts::AccountKernel::authorize_session`** - evaluate `IntentExpiryPolicy` on session authorizations so expired session intents are rejected with `AccountError::IntentExpired` before session budget is consumed
 - **`cougr_core::accounts::ContractAccount::create_session`** - reject session key id collisions with `AccountError::SessionKeyIdCollision` to prevent replacing existing sessions and resetting operation counts
+- **`cougr_core::accounts::RecoverableAccount`** - remove completed requests under
+  the original account address and prevent guardian removal from reducing the
+  guardian count below the configured recovery threshold
 - **`zk::merkle::proof::verify_inclusion`** - a proof's `leaf_index` was never checked
   against the position its `path_bits` actually walk, so a proof for one leaf could be
   relabelled to claim another leaf's position and still verify. `verify_inclusion` now

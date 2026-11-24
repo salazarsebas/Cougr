@@ -145,7 +145,7 @@ fn test_recovery_full_flow() {
     let owner = Address::generate(&env);
 
     env.as_contract(&contract_id, || {
-        let mut account = RecoverableAccount::new(owner, config, &env);
+        let mut account = RecoverableAccount::new(owner.clone(), config, &env).unwrap();
 
         // Add guardians
         let g1 = Address::generate(&env);
@@ -174,6 +174,13 @@ fn test_recovery_full_flow() {
         // Execute recovery
         let recovered_owner = account.execute_recovery(&env).unwrap();
         assert_eq!(recovered_owner, new_owner);
+
+        let mut old_account = RecoverableAccount::load(owner);
+        assert!(old_account.active_request(&env).is_none());
+        assert_eq!(
+            old_account.execute_recovery(&env),
+            Err(AccountError::RecoveryNotInitiated)
+        );
     });
 }
 
@@ -189,7 +196,7 @@ fn test_recovery_cancel() {
     let owner = Address::generate(&env);
 
     env.as_contract(&contract_id, || {
-        let mut account = RecoverableAccount::new(owner, config, &env);
+        let mut account = RecoverableAccount::new(owner, config, &env).unwrap();
 
         let g1 = Address::generate(&env);
         account.add_guardian(&env, g1.clone()).unwrap();
@@ -203,6 +210,60 @@ fn test_recovery_cancel() {
         // Can't execute cancelled recovery
         let result = account.execute_recovery(&env);
         assert!(result.is_err());
+    });
+}
+
+#[test]
+fn test_recovery_rejects_invalid_threshold_configs() {
+    let env = Env::default();
+    let contract_id = env.register(TestContract, ());
+
+    env.as_contract(&contract_id, || {
+        let zero_threshold = RecoveryConfig {
+            threshold: 0,
+            timelock_period: 0,
+            max_guardians: 3,
+        };
+        assert!(matches!(
+            RecoverableAccount::new(Address::generate(&env), zero_threshold, &env),
+            Err(AccountError::InvalidRecoveryConfig)
+        ));
+
+        let threshold_over_max = RecoveryConfig {
+            threshold: 4,
+            timelock_period: 0,
+            max_guardians: 3,
+        };
+        assert!(matches!(
+            RecoverableAccount::new(Address::generate(&env), threshold_over_max, &env),
+            Err(AccountError::InvalidRecoveryConfig)
+        ));
+    });
+}
+
+#[test]
+fn test_remove_guardian_cannot_violate_threshold() {
+    let env = Env::default();
+    let contract_id = env.register(TestContract, ());
+    let owner = Address::generate(&env);
+    let config = RecoveryConfig {
+        threshold: 2,
+        timelock_period: 0,
+        max_guardians: 3,
+    };
+
+    env.as_contract(&contract_id, || {
+        let mut account = RecoverableAccount::new(owner, config, &env).unwrap();
+        let g1 = Address::generate(&env);
+        let g2 = Address::generate(&env);
+        account.add_guardian(&env, g1.clone()).unwrap();
+        account.add_guardian(&env, g2.clone()).unwrap();
+
+        assert_eq!(
+            account.remove_guardian(&env, &g1),
+            Err(AccountError::GuardianThresholdWouldBeViolated)
+        );
+        assert_eq!(account.guardian_count(&env), 2);
     });
 }
 

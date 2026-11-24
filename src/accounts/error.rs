@@ -32,4 +32,6 @@ pub enum AccountError {
     SignerNotRegistered = 44,
     DuplicateDeviceKey = 45,
     SessionKeyIdCollision = 46,
+    InvalidRecoveryConfig = 47,
+    GuardianThresholdWouldBeViolated = 48,
 }
