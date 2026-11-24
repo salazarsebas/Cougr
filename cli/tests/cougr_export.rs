@@ -136,3 +136,36 @@ fn export_never_overwrites_existing_directory() {
         "mine"
     );
 }
+
+#[test]
+fn export_reports_a_missing_config_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let missing_config = dir.path().join("missing.json");
+    let output = Command::new(env!("CARGO_BIN_EXE_cougr"))
+        .args(["export", "demo", "--config"])
+        .arg(&missing_config)
+        .arg("--path")
+        .arg(dir.path())
+        .output()
+        .unwrap();
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("failed to read the config"), "{stderr}");
+    assert!(stderr.contains("missing.json"), "{stderr}");
+    assert!(!dir.path().join("demo").exists());
+}
+
+#[test]
+fn export_reports_malformed_json_config() {
+    let (dir, output) = export("{");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("invalid turn-based config"), "{stderr}");
+    assert!(
+        stderr.contains("help: use board_width and board_height"),
+        "{stderr}"
+    );
+    assert!(!dir.path().join("demo").exists());
+}

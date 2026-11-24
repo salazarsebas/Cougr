@@ -353,3 +353,131 @@ pub fn indent_lines(s: &str, prefix: &str) -> String {
         .collect::<Vec<_>>()
         .join("\n")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn example_fixture() -> (tempfile::TempDir, PathBuf) {
+        let root = tempfile::tempdir().expect("create fake repository");
+        fs::write(
+            root.path().join("Cargo.toml"),
+            "[workspace]\nmembers = [\"examples/demo\"]\nresolver = \"2\"\n",
+        )
+        .expect("write workspace manifest");
+        let example = root.path().join("examples").join("demo");
+        fs::create_dir_all(&example).expect("create example directory");
+        (root, example)
+    }
+
+    #[test]
+    fn readme_contract_id_check_accepts_placeholder_text() {
+        let (_root, example) = example_fixture();
+        fs::write(
+            example.join("README.md"),
+            "Deploy the contract and add its ID here.",
+        )
+        .expect("write README");
+
+        let mut failures = Vec::new();
+        check_readme_contract_ids(&example, "demo", &mut failures);
+
+        assert!(failures.is_empty());
+    }
+
+    #[test]
+    fn readme_contract_id_check_rejects_a_hardcoded_id() {
+        let (_root, example) = example_fixture();
+        let contract_id = format!("C{}\n", "A".repeat(55));
+        fs::write(example.join("README.md"), contract_id).expect("write README");
+
+        let mut failures = Vec::new();
+        check_readme_contract_ids(&example, "demo", &mut failures);
+
+        assert_eq!(
+            failures,
+            ["hardcoded contract ID(s) in examples/demo/README.md"]
+        );
+    }
+
+    #[test]
+    fn example_gitignore_check_accepts_target_rule() {
+        let (_root, example) = example_fixture();
+        fs::write(example.join(".gitignore"), "target/\n").expect("write .gitignore");
+
+        let mut failures = Vec::new();
+        check_example_gitignore(&example, "demo", &mut failures);
+
+        assert!(failures.is_empty());
+    }
+
+    #[test]
+    fn example_gitignore_check_rejects_missing_target_rule() {
+        let (_root, example) = example_fixture();
+        fs::write(example.join(".gitignore"), "Cargo.lock\n").expect("write .gitignore");
+
+        let mut failures = Vec::new();
+        check_example_gitignore(&example, "demo", &mut failures);
+
+        assert_eq!(
+            failures,
+            ["examples/demo: .gitignore does not ignore target/"]
+        );
+    }
+
+    #[test]
+    fn cargo_toml_description_check_accepts_non_empty_description() {
+        let (_root, example) = example_fixture();
+        fs::write(
+            example.join("Cargo.toml"),
+            "[package]\nname = \"demo\"\nversion = \"0.1.0\"\ndescription = \"A demo\"\n",
+        )
+        .expect("write package manifest");
+
+        let mut failures = Vec::new();
+        check_cargo_toml_description(&example, "demo", &mut failures);
+
+        assert!(failures.is_empty());
+    }
+
+    #[test]
+    fn cargo_toml_description_check_rejects_missing_and_empty_descriptions() {
+        for manifest in [
+            "[package]\nname = \"demo\"\n",
+            "[package]\nname = \"demo\"\ndescription = \"  \"\n",
+        ] {
+            let (_root, example) = example_fixture();
+            fs::write(example.join("Cargo.toml"), manifest).expect("write package manifest");
+
+            let mut failures = Vec::new();
+            check_cargo_toml_description(&example, "demo", &mut failures);
+
+            assert_eq!(failures.len(), 1);
+            assert!(failures[0].starts_with("examples/demo: Cargo.toml"));
+        }
+    }
+
+    #[test]
+    fn cargo_metadata_accepts_a_minimal_valid_example_fixture() {
+        let (_root, example) = example_fixture();
+        fs::write(
+            example.join("Cargo.toml"),
+            "[package]\nname = \"demo\"\nversion = \"0.1.0\"\nedition = \"2021\"\ndescription = \"A demo\"\n",
+        )
+        .expect("write package manifest");
+        fs::create_dir(example.join("src")).expect("create source directory");
+        fs::write(example.join("src").join("lib.rs"), "").expect("write library source");
+
+        let mut failures = Vec::new();
+        check_cargo_metadata(&example, "demo", &mut failures);
+
+        assert!(failures.is_empty(), "{failures:?}");
+    }
+
+    #[test]
+    fn indent_lines_prefixes_each_line_and_handles_empty_input() {
+        assert_eq!(indent_lines("first\nsecond\n", "  "), "  first\n  second");
+        assert_eq!(indent_lines("", "  "), "");
+    }
+}
