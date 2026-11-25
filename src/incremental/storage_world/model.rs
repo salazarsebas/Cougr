@@ -1,7 +1,8 @@
+use crate::component::ComponentStorage;
 use crate::simple_world::EntityId;
 use soroban_sdk::{contracttype, Bytes, Symbol};
 
-/// Metadata stored as a single persistent entry.
+/// Metadata stored as a single persistent entry per world namespace.
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct WorldMetadata {
@@ -11,14 +12,69 @@ pub struct WorldMetadata {
     pub version: u64,
     /// Total number of live entities.
     pub entity_count: u32,
-    /// List of all live entity IDs.
-    pub entity_ids: soroban_sdk::Vec<u32>,
+}
+
+/// Stored reference to a component on an entity, preserving its storage kind.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StoredComponentRef {
+    pub component_type: Symbol,
+    pub storage: ComponentStorage,
+}
+
+/// Policy controlling persistent storage TTL extension on reads and writes.
+///
+/// Use [`TtlPolicy::disabled()`] (or set `extend_to` to `0`) to opt out of
+/// automatic TTL extension.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TtlPolicy {
+    /// Minimum remaining ledgers before extending TTL.
+    pub threshold: u32,
+    /// Target TTL in ledgers when extending.
+    pub extend_to: u32,
+}
+
+impl TtlPolicy {
+    /// Default minimum remaining ledgers before extending TTL.
+    pub const DEFAULT_THRESHOLD: u32 = 1_000;
+    /// Default target TTL in ledgers when extending.
+    pub const DEFAULT_EXTEND_TO: u32 = 10_000;
+
+    /// Create a custom TTL extension policy.
+    pub const fn new(threshold: u32, extend_to: u32) -> Self {
+        Self {
+            threshold,
+            extend_to,
+        }
+    }
+
+    /// Opt out of automatic TTL extension.
+    pub const fn disabled() -> Self {
+        Self {
+            threshold: 0,
+            extend_to: 0,
+        }
+    }
+
+    /// Returns `true` if automatic TTL extension is enabled.
+    pub const fn is_enabled(&self) -> bool {
+        self.extend_to > 0
+    }
+}
+
+impl Default for TtlPolicy {
+    fn default() -> Self {
+        Self {
+            threshold: Self::DEFAULT_THRESHOLD,
+            extend_to: Self::DEFAULT_EXTEND_TO,
+        }
+    }
 }
 
 /// Cached entity data loaded from persistent storage.
 pub(super) struct LoadedEntity {
     pub(super) entity_id: EntityId,
-    pub(super) component_types: soroban_sdk::Vec<Symbol>,
+    pub(super) components: soroban_sdk::Vec<StoredComponentRef>,
 }
 
 /// Cached component data loaded from persistent storage.
@@ -26,15 +82,16 @@ pub(super) struct LoadedComponent {
     pub(super) entity_id: EntityId,
     pub(super) component_type: Symbol,
     pub(super) data: Bytes,
+    pub(super) storage: ComponentStorage,
 }
 
-pub(super) fn component_types_contains(
-    component_types: &soroban_sdk::Vec<Symbol>,
+pub(super) fn component_refs_contains(
+    components: &soroban_sdk::Vec<StoredComponentRef>,
     component_type: &Symbol,
 ) -> bool {
-    for i in 0..component_types.len() {
-        if let Some(existing) = component_types.get(i) {
-            if &existing == component_type {
+    for i in 0..components.len() {
+        if let Some(existing) = components.get(i) {
+            if &existing.component_type == component_type {
                 return true;
             }
         }
@@ -42,31 +99,44 @@ pub(super) fn component_types_contains(
     false
 }
 
-pub(super) fn component_types_without(
-    component_types: &soroban_sdk::Vec<Symbol>,
+pub(super) fn component_refs_upsert(
+    components: &mut soroban_sdk::Vec<StoredComponentRef>,
     component_type: &Symbol,
-) -> soroban_sdk::Vec<Symbol> {
-    let env = component_types.env().clone();
-    let mut filtered = soroban_sdk::Vec::new(&env);
-    for i in 0..component_types.len() {
-        if let Some(existing) = component_types.get(i) {
-            if &existing != component_type {
-                filtered.push_back(existing);
+    storage: ComponentStorage,
+) -> bool {
+    for i in 0..components.len() {
+        if let Some(existing) = components.get(i) {
+            if &existing.component_type == component_type {
+                if existing.storage != storage {
+                    components.set(
+                        i,
+                        StoredComponentRef {
+                            component_type: component_type.clone(),
+                            storage,
+                        },
+                    );
+                    return true;
+                }
+                return false;
             }
         }
     }
-    filtered
+    components.push_back(StoredComponentRef {
+        component_type: component_type.clone(),
+        storage,
+    });
+    true
 }
 
-pub(super) fn entity_ids_without(
-    entity_ids: &soroban_sdk::Vec<EntityId>,
-    entity_id: EntityId,
-) -> soroban_sdk::Vec<EntityId> {
-    let env = entity_ids.env().clone();
+pub(super) fn component_refs_without(
+    components: &soroban_sdk::Vec<StoredComponentRef>,
+    component_type: &Symbol,
+) -> soroban_sdk::Vec<StoredComponentRef> {
+    let env = components.env().clone();
     let mut filtered = soroban_sdk::Vec::new(&env);
-    for i in 0..entity_ids.len() {
-        if let Some(existing) = entity_ids.get(i) {
-            if existing != entity_id {
+    for i in 0..components.len() {
+        if let Some(existing) = components.get(i) {
+            if &existing.component_type != component_type {
                 filtered.push_back(existing);
             }
         }
