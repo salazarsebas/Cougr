@@ -97,11 +97,15 @@ fn test_board_initialization() {
 
 #[test]
 fn test_state_hash_consistency() {
-    let (_env, client, white, black) = setup_game();
+    let (env, client, white, black) = setup_game();
+    env.mock_all_auths();
 
     client.new_game(&white, &black);
     let board1 = client.get_board();
     let hash1 = board1.state_hash;
+
+    // Finish the first game so a second one may be started on the same contract
+    client.resign(&white);
 
     // Create another game with same setup
     let white2 = Address::generate(&client.env);
@@ -138,6 +142,27 @@ fn test_wrong_turn() {
     // Black tries to move first (should be white's turn)
     let result = client.submit_move(&black, &48, &40, &proof);
     assert_eq!(result, MoveResult::WrongTurn);
+}
+
+#[test]
+fn test_new_game_rejects_overwrite_of_live_game() {
+    let (_env, client, white, black) = setup_game();
+
+    client.new_game(&white, &black);
+
+    let result = client.try_new_game(&white, &black);
+    assert_eq!(result, Err(Ok(ChessError::GameInProgress)));
+}
+
+#[test]
+fn test_new_game_allowed_after_game_finished() {
+    let (env, client, white, black) = setup_game();
+    env.mock_all_auths();
+
+    client.new_game(&white, &black);
+    client.resign(&white);
+
+    assert!(client.try_new_game(&white, &black).is_ok());
 }
 
 #[test]

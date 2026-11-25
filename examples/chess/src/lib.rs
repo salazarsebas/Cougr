@@ -14,7 +14,13 @@ use systems::{apply_move, check_endgame, compute_state_hash, init_board};
 use zk::{build_move_circuit, decode_proof};
 
 use cougr_core::privacy::VerificationKey;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, Env};
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ChessError {
+    GameInProgress = 1,
+}
 
 #[contract]
 pub struct ChessContract;
@@ -26,8 +32,15 @@ impl ChessContract {
         env.storage().instance().set(&ADMIN_KEY, &admin);
     }
 
-    /// Initialize a new chess game
-    pub fn new_game(env: Env, white: Address, black: Address) {
+    /// Initialize a new chess game. Refused while the stored game is still `Playing`,
+    /// so an in-progress game cannot be silently overwritten.
+    pub fn new_game(env: Env, white: Address, black: Address) -> Result<(), ChessError> {
+        if let Some(existing) = env.storage().instance().get::<_, GameState>(&GAME_KEY) {
+            if existing.turn.status == GameStatus::Playing {
+                return Err(ChessError::GameInProgress);
+            }
+        }
+
         let board = init_board(&env);
         let state_hash = compute_state_hash(&env, &board);
 
@@ -50,6 +63,7 @@ impl ChessContract {
         };
 
         env.storage().instance().set(&GAME_KEY, &game_state);
+        Ok(())
     }
 
     /// Submit a move with ZK proof
