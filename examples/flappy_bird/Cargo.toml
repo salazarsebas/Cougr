@@ -3,6 +3,7 @@ name = "flappy_bird"
 version = "0.0.1"
 edition = "2021"
 publish = false
+license = "MIT OR Apache-2.0"
 authors = ["Cougr Contributors"]
 description = "Flappy Bird on-chain game example using cougr-core ECS framework"
 

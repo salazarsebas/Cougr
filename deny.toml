@@ -15,6 +15,20 @@ ignore = [
     { crate = "spin@0.9.8", reason = "transitive via soroban-wasmi, upgrade tracks soroban-sdk releases" },
     # Transitive through soroban-env-host's arkworks (BLS12-381 / BN254) dependency chain.
     { id = "RUSTSEC-2024-0388", reason = "unmaintained `derivative`, pulled in transitively by soroban-env-host via ark-ec/ark-ff" },
+    # Every example resolves the published `cougr-core` 1.1.0, which depends on
+    # the unmaintained `wee_alloc` 0.4.5 (`cargo tree -i wee_alloc` in an
+    # example: wee_alloc <- cougr-core). The workspace source itself no longer
+    # references wee_alloc, so this cannot be dropped here; it disappears once
+    # the examples move to a cougr-core release without it.
+    { id = "RUSTSEC-2022-0054", reason = "unmaintained `wee_alloc`, pulled in transitively by the published cougr-core 1.1.0 used by every example" },
+    # `rand` 0.8.5 is unsound only when a custom logger is installed. It reaches
+    # every graph through soroban-sdk -> soroban-env-host -> ark-std, so there
+    # is no safe upgrade until soroban-sdk updates its arkworks stack.
+    { id = "RUSTSEC-2026-0097", reason = "`rand` 0.8.5 unsound with a custom logger, pulled in transitively by soroban-env-host via ark-std" },
+    # `crypto-bigint` 0.5.5 timing variability. The fix (0.7.6) is precluded by
+    # `elliptic-curve` 0.13, which requires `crypto-bigint = "0.5"`; the whole
+    # chain is transitive through soroban-env-host's k256/p256 signers.
+    { id = "RUSTSEC-2026-0387", reason = "`crypto-bigint` 0.5.5 timing variability, pulled in transitively by soroban-env-host via elliptic-curve 0.13 (which requires ^0.5)" },
 ]
 
 [licenses]
