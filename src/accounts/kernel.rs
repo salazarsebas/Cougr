@@ -380,4 +380,119 @@ mod tests {
                 .unwrap();
         });
     }
+
+    #[test]
+    fn test_cross_contract_intent_is_rejected_with_invalid_intent() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_a = env.register(TestContract, ());
+        let contract_b = env.register(TestContract, ());
+        let owner = Address::generate(&env);
+        let key_id = BytesN::from_array(&env, &[9u8; 32]);
+
+        let (direct_on_a, session_on_a) = env.as_contract(&contract_a, || {
+            let direct =
+                SignedIntent::direct(&env, owner.clone(), make_action(&env, "move"), 0, 99999);
+            let session = SignedIntent::session(
+                &env,
+                owner.clone(),
+                &key_id,
+                make_action(&env, "move"),
+                0,
+                99999,
+            );
+            (direct, session)
+        });
+
+        env.as_contract(&contract_b, || {
+            let kernel = AccountKernel::new(owner.clone());
+            let session = SessionKey {
+                key_id: key_id.clone(),
+                scope: SessionScope {
+                    allowed_actions: vec![&env, symbol_short!("move")],
+                    max_operations: 3,
+                    expires_at: 99999,
+                },
+                created_at: 0,
+                operations_used: 0,
+                next_nonce: 0,
+            };
+            SessionStorage::store(&env, &owner, &session);
+
+            assert_eq!(
+                kernel.authorize(&env, &direct_on_a),
+                Err(AccountError::InvalidIntent)
+            );
+            assert_eq!(
+                kernel.authorize(&env, &session_on_a),
+                Err(AccountError::InvalidIntent)
+            );
+            assert_eq!(ReplayProtection::next_account_nonce(&env, &owner), 0);
+            assert_eq!(
+                SessionStorage::load(&env, &owner, &key_id)
+                    .unwrap()
+                    .operations_used,
+                0
+            );
+        });
+    }
+
+    #[test]
+    fn test_retargeted_account_intent_is_rejected_with_invalid_intent() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(TestContract, ());
+        let owner_a = Address::generate(&env);
+        let owner_b = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut intent =
+                SignedIntent::direct(&env, owner_a, make_action(&env, "move"), 0, 99999);
+            intent.account = owner_b.clone();
+
+            let kernel_b = AccountKernel::new(owner_b);
+            assert_eq!(
+                kernel_b.authorize(&env, &intent),
+                Err(AccountError::InvalidIntent)
+            );
+        });
+    }
+
+    #[test]
+    fn test_session_intent_authorizes_long_action_symbol() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let owner = Address::generate(&env);
+        let key_id = BytesN::from_array(&env, &[10u8; 32]);
+        let long_action = "execute_battle_round";
+        assert_eq!(long_action.len(), 20);
+
+        env.as_contract(&contract_id, || {
+            let kernel = AccountKernel::new(owner.clone());
+            let session = SessionKey {
+                key_id: key_id.clone(),
+                scope: SessionScope {
+                    allowed_actions: vec![&env, soroban_sdk::Symbol::new(&env, long_action)],
+                    max_operations: 2,
+                    expires_at: 99999,
+                },
+                created_at: 0,
+                operations_used: 0,
+                next_nonce: 0,
+            };
+            SessionStorage::store(&env, &owner, &session);
+
+            let intent = SignedIntent::session(
+                &env,
+                owner,
+                &key_id,
+                make_action(&env, long_action),
+                0,
+                99999,
+            );
+            let result = kernel.authorize(&env, &intent).unwrap();
+            assert_eq!(result.method, AuthMethod::Session);
+            assert_eq!(result.remaining_operations, 1);
+        });
+    }
 }

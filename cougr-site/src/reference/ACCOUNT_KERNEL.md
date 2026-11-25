@@ -33,13 +33,28 @@ The account subsystem is now organized around:
 - deterministic `action_hash`
 - proof material
 
-The deterministic hash is derived from:
+The deterministic hash is derived as `SHA-256(preimage)`, where `preimage` concatenates the following fields in exact order:
 
-- nonce
-- expiry
-- signer identity fields
-- action system name
-- action bytes
+| Order | Field | Encoding | Length |
+|---|---|---|---|
+| 1 | Domain tag | ASCII bytes `"cougr:account:intent:v1"` | 23 bytes |
+| 2 | Target account (`intent.account`) | Soroban XDR `ScVal::Address` (`account.to_xdr(env)`) | variable (44 bytes for classic `G…` account, 40 bytes for `C…` contract) |
+| 3 | Verifying contract (`env.current_contract_address()`) | Soroban XDR `ScVal::Address` (`contract.to_xdr(env)`) | variable (40 bytes for `C…` contract) |
+| 4 | Nonce (`intent.nonce`) | `u64` big-endian | 8 bytes |
+| 5 | Expiry (`intent.expires_at`) | `u64` big-endian | 8 bytes |
+| 6 | Signer kind (`intent.signer.kind`) | `u32` big-endian (`0` = `Direct`, `1` = `Session`, `2` = `Passkey`) | 4 bytes |
+| 7 | Session key id (`intent.signer.session_key_id`) | raw bytes (`[0u8; 32]` for non-session signers) | 32 bytes |
+| 8 | Signer label (`intent.signer.label`) | Soroban XDR `ScVal::Symbol` (`label.to_xdr(env)`) | variable (`8 + ceil(len / 4) * 4` bytes) |
+| 9 | Action system name (`intent.action.system_name`) | Soroban XDR `ScVal::Symbol` (`system_name.to_xdr(env)`) | variable (`8 + ceil(len / 4) * 4` bytes) |
+| 10 | Action bytes (`intent.action.data`) | raw bytes | `data.len()` bytes |
+
+Encoding notes for off-chain implementers:
+
+- `Address::to_xdr(env)` encodes `ScVal::Address(ScAddress)`: a 4-byte big-endian `ScValType::Address` discriminant (`0x00000012`) followed by the XDR `ScAddress` union (`ScAddressType::Account = 0` + `PublicKeyTypeEd25519 = 0` + 32-byte Ed25519 key, or `ScAddressType::Contract = 1` + 32-byte contract hash).
+- `Symbol::to_xdr(env)` encodes `ScVal::Symbol(ScSymbol)` uniformly for every valid Soroban `Symbol` (0–32 ASCII characters, including symbols longer than 9 characters): a 4-byte big-endian `ScValType::Symbol` discriminant (`0x0000000f`), a 4-byte big-endian byte length, the symbol ASCII bytes, and 0–3 zero padding bytes to a 4-byte boundary.
+- Every field before `action.data` is either fixed-width or self-delimiting XDR, preventing concatenation ambiguity between variable-length fields.
+- Because `action_hash` commits to `env.current_contract_address()`, `SignedIntent` constructors (`direct`, `session`, `passkey`) and `SignedIntent::recompute_hash` must be called inside a contract invocation context.
+- `env.ledger().network_id()` is intentionally not part of the preimage; on Soroban, deployed contract addresses (`C…`) already incorporate the network ID at deployment time.
 
 ## Replay Protection
 

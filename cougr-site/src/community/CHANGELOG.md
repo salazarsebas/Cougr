@@ -4,6 +4,7 @@
 
 ### Changed
 
+- **Breaking (Beta `accounts`) — `SignedIntent` / `hash_intent` domain separation and full `Symbol` hashing**: `action_hash` now prefixes the SHA-256 preimage with the domain tag `"cougr:account:intent:v1"`, the target `account` address (`to_xdr`), and the verifying contract address (`env.current_contract_address().to_xdr()`), and hashes `signer.label` and `action.system_name` via their XDR `ScVal::Symbol` bytes instead of host `Val` payloads. Previously signed `action_hash` values are no longer valid, `SignedIntent` constructors and `recompute_hash` require a contract context, and symbols longer than 9 characters now hash deterministically across invocations. See `docs/ACCOUNT_KERNEL.md` for the exact byte layout.
 - Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
 - **`cougr_core::accounts::RecoverableAccount::new`** now returns
   `Result<Self, AccountError>` and rejects recovery thresholds outside
