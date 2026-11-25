@@ -11,6 +11,7 @@
 
 ### Added
 
+- **cougr_core::standards::StandardsError::ScheduleOverflow** - new error variant (code 80) returned by DelayedExecutionPolicy when timestamp arithmetic or operation id counters overflow
 - **`cougr_core::accounts::AccountError::DuplicateDeviceKey`** - new error variant (code 45) returned when attempting to register a device key that is already active, distinguishing "device already registered" from "device limit reached"
 - **`cougr_core::accounts::AccountError::SessionKeyIdCollision`** - new error variant (code 46) returned when attempting to create a session key whose derived identifier matches an existing session
 - **`cougr_core::accounts::derive_session_key_id`** - deterministic session-key identifier derivation, so the Rust core and the TypeScript session client agree on session identity instead of re-deriving it off-chain
@@ -34,6 +35,7 @@
 
 ### Fixed
 
+- **DelayedExecutionPolicy::cancel** - refuses to cancel executed operations, returning StandardsError::OperationAlreadyExecuted (code 78) without modifying storage or emitting cancellation events
 - **`cougr_core::accounts::AccountKernel::authorize_session`** - evaluate `IntentExpiryPolicy` on session authorizations so expired session intents are rejected with `AccountError::IntentExpired` before session budget is consumed
 - **`cougr_core::accounts::ContractAccount::create_session`** - reject session key id collisions with `AccountError::SessionKeyIdCollision` to prevent replacing existing sessions and resetting operation counts
 - **`cougr_core::accounts::RecoverableAccount`** - remove completed requests under
