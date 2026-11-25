@@ -63,6 +63,7 @@ impl SessionKeyProvider for ContractAccount {
     fn create_session(
         &mut self,
         env: &Env,
+        delegate: Address,
         scope: SessionScope,
     ) -> Result<SessionKey, AccountError> {
         let existing = SessionStorage::load_all(env, &self.address).len();
@@ -72,6 +73,7 @@ impl SessionKeyProvider for ContractAccount {
         }
         let key = SessionKey {
             key_id,
+            delegate,
             scope,
             created_at: env.ledger().timestamp(),
             operations_used: 0,
@@ -179,9 +181,29 @@ mod tests {
                 expires_at: 99999,
             };
 
-            let key = account.create_session(&env, scope).unwrap();
+            let key = account
+                .create_session(&env, Address::generate(&env), scope)
+                .unwrap();
             assert_eq!(key.operations_used, 0);
             assert_eq!(account.session_count(&env), 1);
+        });
+    }
+
+    #[test]
+    fn test_create_session_requires_delegate() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let mut account = ContractAccount::new(addr);
+            let result = super::super::session_builder::SessionBuilder::new(&env)
+                .max_operations(1)
+                .expires_at(99999)
+                .create(&mut account);
+
+            assert_eq!(result, Err(AccountError::SessionDelegateRequired));
+            assert_eq!(account.session_count(&env), 0);
         });
     }
 
@@ -200,7 +222,9 @@ mod tests {
                 expires_at: 99999,
             };
 
-            let key = account.create_session(&env, scope).unwrap();
+            let key = account
+                .create_session(&env, Address::generate(&env), scope)
+                .unwrap();
             assert_eq!(account.validate_session(&env, &key), Ok(true));
         });
     }
@@ -220,7 +244,9 @@ mod tests {
                 expires_at: 0, // Already expired
             };
 
-            let key = account.create_session(&env, scope).unwrap();
+            let key = account
+                .create_session(&env, Address::generate(&env), scope)
+                .unwrap();
             assert_eq!(account.validate_session(&env, &key), Ok(false));
         });
     }
@@ -240,7 +266,9 @@ mod tests {
                 expires_at: 99999,
             };
 
-            let key = account.create_session(&env, scope).unwrap();
+            let key = account
+                .create_session(&env, Address::generate(&env), scope)
+                .unwrap();
             assert_eq!(account.validate_session(&env, &key), Ok(false));
         });
     }
@@ -260,7 +288,9 @@ mod tests {
                 expires_at: 99999,
             };
 
-            let key = account.create_session(&env, scope).unwrap();
+            let key = account
+                .create_session(&env, Address::generate(&env), scope)
+                .unwrap();
             assert_eq!(account.session_count(&env), 1);
 
             account.revoke_session(&env, &key.key_id).unwrap();
@@ -300,11 +330,16 @@ mod tests {
                 expires_at: 99999,
             };
 
-            let a = account.create_session(&env, scope.clone()).unwrap();
-            let b = account.create_session(&env, scope.clone()).unwrap();
+            let delegate = Address::generate(&env);
+            let a = account
+                .create_session(&env, delegate.clone(), scope.clone())
+                .unwrap();
+            let b = account
+                .create_session(&env, delegate.clone(), scope.clone())
+                .unwrap();
             account.revoke_session(&env, &a.key_id).unwrap();
             assert_eq!(
-                account.create_session(&env, scope.clone()),
+                account.create_session(&env, delegate, scope.clone()),
                 Err(AccountError::SessionKeyIdCollision)
             );
             let stored = SessionStorage::load(&env, account.address(), &b.key_id).unwrap();

@@ -31,6 +31,8 @@ export interface SessionScope {
 export interface SessionKey {
   /** 32-byte session key id (`BytesN<32>` on chain). */
   readonly keyId: Uint8Array;
+  /** Address authorized to sign each intent using this session. */
+  readonly delegate: string;
   readonly scope: SessionScope;
   /** Ledger timestamp (seconds) when the session was created. */
   readonly createdAt: bigint;

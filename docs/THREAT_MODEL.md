@@ -67,7 +67,13 @@ Primary risks:
 Current posture:
 
 - accounts remain Beta
-- session semantics, replay domains, and typed intents are implemented, but the broader auth contract remains intentionally unfrozen inside the Beta `accounts` namespace
+- each stored session is bound to an owner-approved delegate, and the session
+  signer requires that delegate's authorization over the account, session id,
+  nonce, and action hash before policy checks or state consumption
+- `key_id` is public and grants no authority by itself; direct session fallback
+  helpers must not treat a caller-supplied `SessionKey` as proof
+- the `SessionKey` XDR shape changed, so stored sessions created by earlier
+  versions are not decodable; integrations must recreate them
 
 ### Replay and Intent Reuse
 

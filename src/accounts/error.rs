@@ -34,4 +34,5 @@ pub enum AccountError {
     SessionKeyIdCollision = 46,
     InvalidRecoveryConfig = 47,
     GuardianThresholdWouldBeViolated = 48,
+    SessionDelegateRequired = 49,
 }

@@ -1,8 +1,9 @@
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, Env, IntoVal};
 
 use super::error::AccountError;
 use super::intent::{IntentProofKind, IntentSigner, SignedIntent};
 use super::secp256r1_auth::{verify_secp256r1, Secp256r1Storage};
+use super::storage::SessionStorage;
 
 /// Base signer verification interface for the account kernel.
 pub trait AccountSigner {
@@ -38,13 +39,24 @@ pub struct SessionAuthSigner;
 impl AccountSigner for SessionAuthSigner {
     fn verify(
         &self,
-        _env: &Env,
-        _account: &Address,
+        env: &Env,
+        account: &Address,
         intent: &SignedIntent,
     ) -> Result<(), AccountError> {
         if intent.signer.kind != IntentSigner::Session {
             return Err(AccountError::SignerMismatch);
         }
+        let session = SessionStorage::load(env, account, &intent.signer.session_key_id)
+            .ok_or(AccountError::SessionRevoked)?;
+        session.delegate.require_auth_for_args(
+            (
+                account.clone(),
+                intent.signer.session_key_id.clone(),
+                intent.nonce,
+                intent.action_hash.clone(),
+            )
+                .into_val(env),
+        );
         Ok(())
     }
 }

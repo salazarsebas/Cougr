@@ -4,18 +4,19 @@
 //! automatically fall back to simpler alternatives when the account doesn't
 //! support them.
 
-use soroban_sdk::{Env, Symbol};
+use soroban_sdk::Env;
 
 use super::batch::BatchBuilder;
 use super::error::AccountError;
+use super::intent::SignedIntent;
+use super::kernel::AccountKernel;
 use super::traits::CougrAccount;
 use super::types::{AccountCapabilities, GameAction, SessionKey, SessionScope};
 
-/// Execute an action using a session key if available and valid,
-/// falling back to direct authorization.
+/// Execute an action through a valid session, falling back to direct authorization.
 ///
-/// Session validity is checked locally (expiry, operation count, allowed actions)
-/// without requiring `SessionKeyProvider` trait.
+/// Session intents are checked by `AccountKernel`, which loads the stored key
+/// and requires authorization from its delegate before consuming the session.
 pub fn authorize_with_fallback<A: CougrAccount>(
     env: &Env,
     account: &A,
@@ -23,18 +24,46 @@ pub fn authorize_with_fallback<A: CougrAccount>(
     session: Option<&SessionKey>,
 ) -> Result<(), AccountError> {
     if let Some(key) = session {
-        if account.capabilities().has_session_keys {
-            let now = env.ledger().timestamp();
-            if now < key.scope.expires_at
-                && key.operations_used < key.scope.max_operations
-                && is_action_allowed(&key.scope, &action.system_name)
-            {
-                return Ok(());
+        let now = env.ledger().timestamp();
+        if account.capabilities().has_session_keys
+            && now < key.scope.expires_at
+            && key.operations_used < key.scope.max_operations
+            && is_action_allowed(&key.scope, &action.system_name)
+        {
+            let intent = SignedIntent::session(
+                env,
+                account.address().clone(),
+                &key.key_id,
+                action.clone(),
+                key.next_nonce,
+                key.scope.expires_at,
+            );
+            match AccountKernel::new(account.address().clone()).authorize_session(env, &intent) {
+                Ok(_) => return Ok(()),
+                Err(
+                    AccountError::SessionExpired
+                    | AccountError::SessionBudgetExceeded
+                    | AccountError::SessionRevoked
+                    | AccountError::NonceMismatch
+                    | AccountError::ActionNotAllowed,
+                ) => {}
+                Err(error) => return Err(error),
             }
         }
     }
-    // Fallback: direct authorization
     account.authorize(env, action)
+}
+
+fn is_action_allowed(scope: &SessionScope, action: &soroban_sdk::Symbol) -> bool {
+    if scope.allowed_actions.is_empty() {
+        return true;
+    }
+    for i in 0..scope.allowed_actions.len() {
+        if scope.allowed_actions.get(i).unwrap() == *action {
+            return true;
+        }
+    }
+    false
 }
 
 /// Batch-execute actions if the account supports batching,
@@ -83,29 +112,25 @@ pub fn require_capability(
     }
 }
 
-/// Check if an action is allowed by a session scope.
-fn is_action_allowed(scope: &SessionScope, action: &Symbol) -> bool {
-    if scope.allowed_actions.is_empty() {
-        return true; // Empty allowed list = all actions permitted
-    }
-    for i in 0..scope.allowed_actions.len() {
-        if scope.allowed_actions.get(i).unwrap() == *action {
-            return true;
-        }
-    }
-    false
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::accounts::testing::MockAccount;
-    use soroban_sdk::testutils::Ledger as _;
-    use soroban_sdk::{symbol_short, vec, Bytes, BytesN, Env};
+    use soroban_sdk::{
+        contract, contractimpl, symbol_short, testutils::Address as _, vec, Address, Bytes, BytesN,
+        Env, Symbol,
+    };
+
+    #[contract]
+    pub struct TestContract;
+
+    #[contractimpl]
+    impl TestContract {}
 
     fn make_session(env: &Env, expires_at: u64, max_ops: u32) -> SessionKey {
         SessionKey {
             key_id: BytesN::from_array(env, &[1u8; 32]),
+            delegate: Address::generate(env),
             scope: SessionScope {
                 allowed_actions: vec![env, symbol_short!("move"), symbol_short!("attack")],
                 max_operations: max_ops,
@@ -125,55 +150,6 @@ mod tests {
     }
 
     #[test]
-    fn test_authorize_with_session_valid() {
-        let env = Env::default();
-        let account = MockAccount::new(&env);
-        let session = make_session(&env, 5000, 100);
-        let action = make_action(&env, "move");
-
-        let result = authorize_with_fallback(&env, &account, &action, Some(&session));
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_authorize_with_session_expired_falls_back() {
-        let env = Env::default();
-        env.ledger().with_mut(|li| {
-            li.timestamp = 6000;
-        });
-        let account = MockAccount::new(&env);
-        let session = make_session(&env, 5000, 100); // expired
-        let action = make_action(&env, "move");
-
-        // Falls back to direct auth (MockAccount always succeeds)
-        let result = authorize_with_fallback(&env, &account, &action, Some(&session));
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_authorize_with_session_ops_exhausted_falls_back() {
-        let env = Env::default();
-        let account = MockAccount::new(&env);
-        let mut session = make_session(&env, 5000, 10);
-        session.operations_used = 10; // exhausted
-
-        let action = make_action(&env, "move");
-        let result = authorize_with_fallback(&env, &account, &action, Some(&session));
-        assert!(result.is_ok()); // falls back to direct auth
-    }
-
-    #[test]
-    fn test_authorize_with_session_action_not_allowed_falls_back() {
-        let env = Env::default();
-        let account = MockAccount::new(&env);
-        let session = make_session(&env, 5000, 100);
-
-        let action = make_action(&env, "trade"); // not in allowed actions
-        let result = authorize_with_fallback(&env, &account, &action, Some(&session));
-        assert!(result.is_ok()); // falls back to direct auth
-    }
-
-    #[test]
     fn test_authorize_no_session_falls_back() {
         let env = Env::default();
         let account = MockAccount::new(&env);
@@ -184,21 +160,39 @@ mod tests {
     }
 
     #[test]
-    fn test_authorize_no_session_keys_capability_falls_back() {
+    fn test_authorize_with_unstored_session_falls_back_directly() {
         let env = Env::default();
-        let caps = AccountCapabilities {
-            can_batch: false,
-            has_session_keys: false,
-            has_social_recovery: false,
-            has_passkey_auth: false,
-        };
-        let account = MockAccount::with_capabilities(&env, caps);
-        let session = make_session(&env, 5000, 100);
+        let account = MockAccount::new(&env);
+        let session = make_session(&env, 5_000, 10);
         let action = make_action(&env, "move");
+        let contract_id = env.register(TestContract, ());
 
-        // Has session but account doesn't support them -> falls back
-        let result = authorize_with_fallback(&env, &account, &action, Some(&session));
-        assert!(result.is_ok());
+        env.as_contract(&contract_id, || {
+            assert!(authorize_with_fallback(&env, &account, &action, Some(&session)).is_ok());
+        });
+    }
+
+    #[test]
+    fn test_is_action_allowed_empty_scope() {
+        let env = Env::default();
+        let scope = SessionScope {
+            allowed_actions: vec![&env],
+            max_operations: 100,
+            expires_at: 5_000,
+        };
+        assert!(is_action_allowed(&scope, &symbol_short!("anything")));
+    }
+
+    #[test]
+    fn test_is_action_allowed_matches_and_rejects_other_actions() {
+        let env = Env::default();
+        let scope = SessionScope {
+            allowed_actions: vec![&env, symbol_short!("move")],
+            max_operations: 100,
+            expires_at: 5_000,
+        };
+        assert!(is_action_allowed(&scope, &symbol_short!("move")));
+        assert!(!is_action_allowed(&scope, &symbol_short!("trade")));
     }
 
     #[test]
@@ -281,38 +275,5 @@ mod tests {
             has_passkey_auth: false,
         };
         assert!(require_capability(&caps, "unknown").is_ok());
-    }
-
-    #[test]
-    fn test_is_action_allowed_empty_scope() {
-        let env = Env::default();
-        let scope = SessionScope {
-            allowed_actions: vec![&env],
-            max_operations: 100,
-            expires_at: 5000,
-        };
-        assert!(is_action_allowed(&scope, &symbol_short!("anything")));
-    }
-
-    #[test]
-    fn test_is_action_allowed_matches() {
-        let env = Env::default();
-        let scope = SessionScope {
-            allowed_actions: vec![&env, symbol_short!("move")],
-            max_operations: 100,
-            expires_at: 5000,
-        };
-        assert!(is_action_allowed(&scope, &symbol_short!("move")));
-    }
-
-    #[test]
-    fn test_is_action_allowed_not_in_list() {
-        let env = Env::default();
-        let scope = SessionScope {
-            allowed_actions: vec![&env, symbol_short!("move")],
-            max_operations: 100,
-            expires_at: 5000,
-        };
-        assert!(!is_action_allowed(&scope, &symbol_short!("trade")));
     }
 }

@@ -3,7 +3,7 @@
 #![cfg(feature = "testutils")]
 
 use cougr_core::accounts::{
-    AccountError, AuthMethod, GameAction, ReplayProtection, SessionStorage, SignedIntent,
+    AccountError, GameAction, ReplayProtection, SessionStorage, SignedIntent,
 };
 use cougr_core::session::{SessionManager, RENEWAL_HINT_SECONDS};
 use cougr_core::test::MockSession;
@@ -171,6 +171,49 @@ impl SessionArena {
             .expect("MUST_NOT_REACH");
         99
     }
+
+    pub fn run_action(
+        env: Env,
+        owner: Address,
+        session_key_id: BytesN<32>,
+        action_name: Symbol,
+        expires_at: u64,
+    ) -> u32 {
+        let session =
+            SessionStorage::load(&env, &owner, &session_key_id).expect("session must exist");
+        let action = GameAction {
+            system_name: action_name,
+            data: Bytes::new(&env),
+        };
+        SessionManager::execute_action(&env, &owner, &session, action, expires_at)
+            .expect("delegate must authorize")
+            .method as u32
+    }
+
+    pub fn run_intent(
+        env: Env,
+        owner: Address,
+        session_key_id: BytesN<32>,
+        action_name: Symbol,
+        expires_at: u64,
+    ) -> u32 {
+        let session =
+            SessionStorage::load(&env, &owner, &session_key_id).expect("session must exist");
+        let intent = SignedIntent::session(
+            &env,
+            owner,
+            &session_key_id,
+            GameAction {
+                system_name: action_name,
+                data: Bytes::new(&env),
+            },
+            session.next_nonce,
+            expires_at,
+        );
+        SessionManager::execute_intent(&env, &intent)
+            .expect("delegate must authorize")
+            .method as u32
+    }
 }
 
 fn make_action(env: &Env, name: &str) -> GameAction {
@@ -178,6 +221,53 @@ fn make_action(env: &Env, name: &str) -> GameAction {
         system_name: Symbol::new(env, name),
         data: Bytes::new(env),
     }
+}
+
+fn store_session(
+    env: &Env,
+    contract_id: &Address,
+    owner: &Address,
+    delegate: &Address,
+) -> BytesN<32> {
+    let key_id = BytesN::from_array(env, &[0xA5; 32]);
+    let session = cougr_core::accounts::SessionKey {
+        key_id: key_id.clone(),
+        delegate: delegate.clone(),
+        scope: cougr_core::accounts::SessionScope {
+            allowed_actions: soroban_sdk::vec![env, symbol_short!("tap")],
+            max_operations: 3,
+            expires_at: 10_000,
+        },
+        created_at: 0,
+        operations_used: 0,
+        next_nonce: 0,
+    };
+    env.as_contract(contract_id, || SessionStorage::store(env, owner, &session));
+    key_id
+}
+
+fn session_auth_args(
+    env: &Env,
+    owner: &Address,
+    key_id: &BytesN<32>,
+) -> soroban_sdk::Vec<soroban_sdk::Val> {
+    let intent = SignedIntent::session(
+        env,
+        owner.clone(),
+        key_id,
+        make_action(env, "tap"),
+        0,
+        1_000,
+    );
+    use soroban_sdk::IntoVal;
+    let args: soroban_sdk::Vec<soroban_sdk::Val> = (
+        owner.clone(),
+        key_id.clone(),
+        intent.nonce,
+        intent.action_hash,
+    )
+        .into_val(env);
+    args
 }
 
 #[test]
@@ -202,23 +292,185 @@ fn session_manager_execute_action_consumes_budget() {
     let contract_id = env.register(SessionArena, ());
     let owner = Address::generate(&env);
 
-    env.as_contract(&contract_id, || {
-        let mock = MockSession::approve(&env, &owner, &["tap"], 2, 10_000);
-        let action = make_action(&env, "tap");
-        let result = SessionManager::execute_action(
-            &env,
-            &owner,
-            &mock.key,
-            action.clone(),
-            env.ledger().timestamp() + 1000,
-        )
-        .unwrap();
-        assert_eq!(result.method, AuthMethod::Session);
-        assert_eq!(result.remaining_operations, 1);
-
-        let status = SessionManager::status(&env, &owner, mock.key_id()).unwrap();
-        assert_eq!(status.remaining_operations, 1);
+    let mock = env.as_contract(&contract_id, || {
+        MockSession::approve(&env, &owner, &["tap"], 2, 10_000)
     });
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert_eq!(
+        client.run_action(
+            &owner,
+            mock.key_id(),
+            &symbol_short!("tap"),
+            &(env.ledger().timestamp() + 1_000),
+        ),
+        AUTH_SESSION
+    );
+
+    let status = env.as_contract(&contract_id, || {
+        SessionManager::status(&env, &owner, mock.key_id()).unwrap()
+    });
+    assert_eq!(status.remaining_operations, 1);
+}
+
+#[test]
+fn session_delegate_authorization_consumes_once_and_commits_exact_intent() {
+    use soroban_sdk::testutils::{AuthorizedFunction, MockAuth, MockAuthInvoke};
+
+    let env = Env::default();
+    let contract_id = env.register(SessionArena, ());
+    let owner = Address::generate(&env);
+    let delegate = Address::generate(&env);
+    let key_id = store_session(&env, &contract_id, &owner, &delegate);
+    let args = session_auth_args(&env, &owner, &key_id);
+
+    env.mock_auths(&[MockAuth {
+        address: &delegate,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "run_action",
+            args: args.clone(),
+            sub_invokes: &[],
+        },
+    }]);
+
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert_eq!(
+        client.run_action(
+            &owner,
+            &key_id,
+            &symbol_short!("tap"),
+            &(env.ledger().timestamp() + 1_000),
+        ),
+        AUTH_SESSION
+    );
+
+    let auths = env.auths();
+    assert_eq!(auths.len(), 1);
+    assert_eq!(auths.first().unwrap().0, delegate);
+    assert_eq!(
+        auths.first().unwrap().1.function,
+        AuthorizedFunction::Contract((contract_id.clone(), Symbol::new(&env, "run_action"), args,))
+    );
+
+    let stored = env.as_contract(&contract_id, || {
+        SessionStorage::load(&env, &owner, &key_id).unwrap()
+    });
+    assert_eq!(stored.operations_used, 1);
+    assert_eq!(stored.next_nonce, 1);
+}
+
+#[test]
+fn session_intent_rejects_unrelated_authorization_without_consuming_state() {
+    use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
+
+    let env = Env::default();
+    let contract_id = env.register(SessionArena, ());
+    let owner = Address::generate(&env);
+    let delegate = Address::generate(&env);
+    let unrelated = Address::generate(&env);
+    let key_id = store_session(&env, &contract_id, &owner, &delegate);
+    let args = session_auth_args(&env, &owner, &key_id);
+
+    env.mock_auths(&[MockAuth {
+        address: &unrelated,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "run_action",
+            args,
+            sub_invokes: &[],
+        },
+    }]);
+
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert!(client
+        .try_run_action(
+            &owner,
+            &key_id,
+            &symbol_short!("tap"),
+            &(env.ledger().timestamp() + 1_000),
+        )
+        .is_err());
+
+    let stored = env.as_contract(&contract_id, || {
+        SessionStorage::load(&env, &owner, &key_id).unwrap()
+    });
+    assert_eq!(stored.operations_used, 0);
+    assert_eq!(stored.next_nonce, 0);
+}
+
+#[test]
+fn session_intent_rejects_owner_authorization_without_consuming_state() {
+    use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
+
+    let env = Env::default();
+    let contract_id = env.register(SessionArena, ());
+    let owner = Address::generate(&env);
+    let delegate = Address::generate(&env);
+    let key_id = store_session(&env, &contract_id, &owner, &delegate);
+    let args = session_auth_args(&env, &owner, &key_id);
+
+    env.mock_auths(&[MockAuth {
+        address: &owner,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "run_action",
+            args,
+            sub_invokes: &[],
+        },
+    }]);
+
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert!(client
+        .try_run_action(
+            &owner,
+            &key_id,
+            &symbol_short!("tap"),
+            &(env.ledger().timestamp() + 1_000),
+        )
+        .is_err());
+
+    let stored = env.as_contract(&contract_id, || {
+        SessionStorage::load(&env, &owner, &key_id).unwrap()
+    });
+    assert_eq!(stored.operations_used, 0);
+    assert_eq!(stored.next_nonce, 0);
+}
+
+#[test]
+fn fallback_does_not_convert_delegate_auth_failure_to_direct_auth() {
+    use soroban_sdk::{
+        testutils::{MockAuth, MockAuthInvoke},
+        IntoVal,
+    };
+
+    let env = Env::default();
+    let contract_id = env.register(SessionArena, ());
+    let owner = Address::generate(&env);
+    let delegate = Address::generate(&env);
+    let key_id = store_session(&env, &contract_id, &owner, &delegate);
+    let action_name = symbol_short!("tap");
+    let root_args = (&owner, &key_id, &action_name).into_val(&env);
+
+    env.mock_auths(&[MockAuth {
+        address: &owner,
+        invoke: &MockAuthInvoke {
+            contract: &contract_id,
+            fn_name: "run_fallback",
+            args: root_args,
+            sub_invokes: &[],
+        },
+    }]);
+
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert!(client
+        .try_run_fallback(&owner, &key_id, &action_name)
+        .is_err());
+
+    let stored = env.as_contract(&contract_id, || {
+        SessionStorage::load(&env, &owner, &key_id).unwrap()
+    });
+    assert_eq!(stored.operations_used, 0);
+    assert_eq!(stored.next_nonce, 0);
 }
 
 #[test]
@@ -256,17 +508,22 @@ fn session_execute_fails_when_expired() {
     let contract_id = env.register(SessionArena, ());
     let owner = Address::generate(&env);
 
-    env.as_contract(&contract_id, || {
-        let mock = MockSession::approve(&env, &owner, &["tap"], 5, 50);
-        env.ledger().with_mut(|li| {
-            li.timestamp = 10_000;
-        });
-
-        let action = make_action(&env, "tap");
-        let err =
-            SessionManager::execute_action(&env, &owner, &mock.key, action, 20_000).unwrap_err();
-        assert_eq!(err, AccountError::SessionExpired);
+    let mock = env.as_contract(&contract_id, || {
+        MockSession::approve(&env, &owner, &["tap"], 5, 50)
     });
+    env.ledger().with_mut(|li| {
+        li.timestamp = 10_000;
+    });
+
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert!(client
+        .try_run_action(&owner, mock.key_id(), &symbol_short!("tap"), &20_000)
+        .is_err());
+    let stored = env.as_contract(&contract_id, || {
+        SessionStorage::load(&env, &owner, mock.key_id()).unwrap()
+    });
+    assert_eq!(stored.operations_used, 0);
+    assert_eq!(stored.next_nonce, 0);
 }
 
 #[test]
@@ -276,19 +533,23 @@ fn session_execute_fails_when_intent_expired() {
     let contract_id = env.register(SessionArena, ());
     let owner = Address::generate(&env);
 
-    env.as_contract(&contract_id, || {
-        let mock = MockSession::approve(&env, &owner, &["tap"], 5, 10_000);
-        let action = make_action(&env, "tap");
-        let err = SessionManager::execute_action(
-            &env,
-            &owner,
-            &mock.key,
-            action,
-            env.ledger().timestamp().saturating_sub(1),
-        )
-        .unwrap_err();
-        assert_eq!(err, AccountError::IntentExpired);
+    let mock = env.as_contract(&contract_id, || {
+        MockSession::approve(&env, &owner, &["tap"], 5, 10_000)
     });
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert!(client
+        .try_run_action(
+            &owner,
+            mock.key_id(),
+            &symbol_short!("tap"),
+            &env.ledger().timestamp().saturating_sub(1),
+        )
+        .is_err());
+    let stored = env.as_contract(&contract_id, || {
+        SessionStorage::load(&env, &owner, mock.key_id()).unwrap()
+    });
+    assert_eq!(stored.operations_used, 0);
+    assert_eq!(stored.next_nonce, 0);
 }
 
 #[test]
@@ -342,6 +603,7 @@ fn approve_with_builder_creates_active_session() {
         // approve_with_builder is what MockSession::approve delegates to, so we
         // call it directly here to give it its own named test.
         let builder = cougr_core::accounts::SessionBuilder::new(&env)
+            .delegate(Address::generate(&env))
             .allow_action(symbol_short!("tap"))
             .max_operations(3)
             .expires_in(5_000);
@@ -371,24 +633,23 @@ fn execute_intent_routes_session_through_kernel() {
     let contract_id = env.register(SessionArena, ());
     let owner = Address::generate(&env);
 
-    env.as_contract(&contract_id, || {
-        let mock = MockSession::approve(&env, &owner, &["tap"], 5, 10_000);
-        let action = make_action(&env, "tap");
-
-        // Build the intent manually the same way execute_action does internally.
-        let intent = SignedIntent::session(
-            &env,
-            owner.clone(),
-            mock.key_id(),
-            action,
-            mock.key.next_nonce,
-            env.ledger().timestamp() + 1_000,
-        );
-
-        let result = SessionManager::execute_intent(&env, &intent).unwrap();
-        assert_eq!(result.method, AuthMethod::Session);
-        assert_eq!(result.remaining_operations, 4);
+    let mock = env.as_contract(&contract_id, || {
+        MockSession::approve(&env, &owner, &["tap"], 5, 10_000)
     });
+    let client = SessionArenaClient::new(&env, &contract_id);
+    assert_eq!(
+        client.run_intent(
+            &owner,
+            mock.key_id(),
+            &symbol_short!("tap"),
+            &(env.ledger().timestamp() + 1_000),
+        ),
+        AUTH_SESSION
+    );
+    let status = env.as_contract(&contract_id, || {
+        SessionManager::status(&env, &owner, mock.key_id()).unwrap()
+    });
+    assert_eq!(status.remaining_operations, 4);
 }
 
 #[test]
@@ -618,24 +879,19 @@ fn fallback_execute_falls_back_on_session_budget_exceeded() {
     let owner = Address::generate(&env);
     let client = SessionArenaClient::new(&env, &contract_id);
 
-    let key_id = env.as_contract(&contract_id, || {
+    let mock = env.as_contract(&contract_id, || {
         // Budget of exactly 1.
-        let mock = MockSession::approve(&env, &owner, &["tap"], 1, 10_000);
-        // Exhaust the single operation.
-        let action = make_action(&env, "tap");
-        SessionManager::execute_action(
-            &env,
-            &owner,
-            &mock.key,
-            action,
-            env.ledger().timestamp() + 1_000,
-        )
-        .unwrap();
-        mock.key.key_id
+        MockSession::approve(&env, &owner, &["tap"], 1, 10_000)
     });
+    client.run_action(
+        &owner,
+        mock.key_id(),
+        &symbol_short!("tap"),
+        &(env.ledger().timestamp() + 1_000),
+    );
 
     // Budget is now 0; the next call via the contract must fall back to direct.
-    let method = client.run_fallback(&owner, &key_id, &Symbol::new(&env, "tap"));
+    let method = client.run_fallback(&owner, mock.key_id(), &Symbol::new(&env, "tap"));
     assert_eq!(
         method, AUTH_DIRECT,
         "SessionBudgetExceeded must trigger direct-auth fallback"

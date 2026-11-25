@@ -173,11 +173,33 @@ mod tests {
     pub struct TestContract;
 
     #[contractimpl]
-    impl TestContract {}
+    impl TestContract {
+        pub fn authorize_session(
+            env: Env,
+            owner: Address,
+            key_id: BytesN<32>,
+            action_name: soroban_sdk::Symbol,
+            nonce: u64,
+            expires_at: u64,
+        ) -> u32 {
+            let intent = SignedIntent::session(
+                &env,
+                owner.clone(),
+                &key_id,
+                make_action(&env, action_name),
+                nonce,
+                expires_at,
+            );
+            match AccountKernel::new(owner).authorize_session(&env, &intent) {
+                Ok(result) => result.remaining_operations,
+                Err(error) => error as u32,
+            }
+        }
+    }
 
-    fn make_action(env: &Env, name: &str) -> GameAction {
+    fn make_action(env: &Env, name: soroban_sdk::Symbol) -> GameAction {
         GameAction {
-            system_name: soroban_sdk::Symbol::new(env, name),
+            system_name: name,
             data: Bytes::new(env),
         }
     }
@@ -191,7 +213,7 @@ mod tests {
 
         env.as_contract(&contract_id, || {
             let kernel = AccountKernel::new(owner.clone());
-            let action = make_action(&env, "move");
+            let action = make_action(&env, symbol_short!("move"));
             let intent = SignedIntent::direct(&env, owner, action, 0, 99999);
 
             let result = kernel.authorize(&env, &intent).unwrap();
@@ -209,11 +231,12 @@ mod tests {
         let contract_id = env.register(TestContract, ());
         let owner = Address::generate(&env);
         let key_id = BytesN::from_array(&env, &[7u8; 32]);
+        env.mock_all_auths();
 
         env.as_contract(&contract_id, || {
-            let kernel = AccountKernel::new(owner.clone());
             let session = SessionKey {
                 key_id: key_id.clone(),
+                delegate: Address::generate(&env),
                 scope: SessionScope {
                     allowed_actions: vec![&env, symbol_short!("move")],
                     max_operations: 2,
@@ -224,42 +247,21 @@ mod tests {
                 next_nonce: 0,
             };
             SessionStorage::store(&env, &owner, &session);
-
-            let move_1 = SignedIntent::session(
-                &env,
-                owner.clone(),
-                &key_id,
-                make_action(&env, "move"),
-                0,
-                99999,
-            );
-            let result_1 = kernel.authorize(&env, &move_1).unwrap();
-            assert_eq!(result_1.remaining_operations, 1);
-
-            let move_2 = SignedIntent::session(
-                &env,
-                owner.clone(),
-                &key_id,
-                make_action(&env, "move"),
-                1,
-                99999,
-            );
-            let result_2 = kernel.authorize(&env, &move_2).unwrap();
-            assert_eq!(result_2.remaining_operations, 0);
-
-            let replay = SignedIntent::session(
-                &env,
-                owner.clone(),
-                &key_id,
-                make_action(&env, "move"),
-                1,
-                99999,
-            );
-            assert_eq!(
-                kernel.authorize(&env, &replay),
-                Err(AccountError::SessionBudgetExceeded)
-            );
         });
+
+        let client = TestContractClient::new(&env, &contract_id);
+        assert_eq!(
+            client.authorize_session(&owner, &key_id, &symbol_short!("move"), &0, &99999),
+            1
+        );
+        assert_eq!(
+            client.authorize_session(&owner, &key_id, &symbol_short!("move"), &1, &99999),
+            0
+        );
+        assert_eq!(
+            client.authorize_session(&owner, &key_id, &symbol_short!("move"), &1, &99999),
+            AccountError::SessionBudgetExceeded as u32
+        );
     }
 
     #[test]
@@ -268,11 +270,12 @@ mod tests {
         let contract_id = env.register(TestContract, ());
         let owner = Address::generate(&env);
         let key_id = BytesN::from_array(&env, &[8u8; 32]);
+        env.mock_all_auths();
 
         env.as_contract(&contract_id, || {
-            let kernel = AccountKernel::new(owner.clone());
             let session = SessionKey {
                 key_id: key_id.clone(),
+                delegate: Address::generate(&env),
                 scope: SessionScope {
                     allowed_actions: vec![&env, symbol_short!("move")],
                     max_operations: 3,
@@ -283,14 +286,12 @@ mod tests {
                 next_nonce: 2,
             };
             SessionStorage::store(&env, &owner, &session);
-
-            let wrong_nonce =
-                SignedIntent::session(&env, owner, &key_id, make_action(&env, "move"), 1, 99999);
-            assert_eq!(
-                kernel.authorize(&env, &wrong_nonce),
-                Err(AccountError::NonceMismatch)
-            );
         });
+        let client = TestContractClient::new(&env, &contract_id);
+        assert_eq!(
+            client.authorize_session(&owner, &key_id, &symbol_short!("move"), &1, &99999),
+            AccountError::NonceMismatch as u32
+        );
     }
 
     #[test]
@@ -299,11 +300,12 @@ mod tests {
         let contract_id = env.register(TestContract, ());
         let owner = Address::generate(&env);
         let key_id = BytesN::from_array(&env, &[8u8; 32]);
+        env.mock_all_auths();
 
         env.as_contract(&contract_id, || {
-            let kernel = AccountKernel::new(owner.clone());
             let session = SessionKey {
                 key_id: key_id.clone(),
+                delegate: Address::generate(&env),
                 scope: SessionScope {
                     allowed_actions: vec![&env, symbol_short!("move")],
                     max_operations: 3,
@@ -314,14 +316,12 @@ mod tests {
                 next_nonce: 0,
             };
             SessionStorage::store(&env, &owner, &session);
-
-            let expired_intent =
-                SignedIntent::session(&env, owner, &key_id, make_action(&env, "move"), 0, 0);
-            assert_eq!(
-                kernel.authorize(&env, &expired_intent),
-                Err(AccountError::IntentExpired)
-            );
         });
+        let client = TestContractClient::new(&env, &contract_id);
+        assert_eq!(
+            client.authorize_session(&owner, &key_id, &symbol_short!("move"), &0, &0),
+            AccountError::IntentExpired as u32
+        );
     }
 
     #[test]

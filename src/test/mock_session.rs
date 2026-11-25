@@ -1,6 +1,6 @@
 //! Test helpers for session flows.
 
-use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, Symbol, Vec};
 
 use crate::accounts::{SessionKey, SessionScope};
 use crate::session::{SessionManager, SessionStatus};
@@ -8,6 +8,7 @@ use crate::session::{SessionManager, SessionStatus};
 /// Pre-built session fixture for sandbox and integration tests.
 pub struct MockSession {
     pub owner: Address,
+    pub delegate: Address,
     pub key: SessionKey,
 }
 
@@ -21,7 +22,10 @@ impl MockSession {
         expires_in: u64,
     ) -> Self {
         env.mock_all_auths();
-        let mut builder = crate::accounts::SessionBuilder::new(env).max_operations(max_operations);
+        let delegate = Address::generate(env);
+        let mut builder = crate::accounts::SessionBuilder::new(env)
+            .delegate(delegate.clone())
+            .max_operations(max_operations);
         for action in actions {
             builder = builder.allow_action(Symbol::new(env, action));
         }
@@ -29,6 +33,7 @@ impl MockSession {
             .expect("mock session approval");
         Self {
             owner: owner.clone(),
+            delegate,
             key,
         }
     }

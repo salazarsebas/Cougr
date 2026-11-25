@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Bytes, BytesN, Symbol, Vec};
+use soroban_sdk::{contracttype, Address, Bytes, BytesN, Symbol, Vec};
 
 /// A game action that can be authorized by an account.
 #[contracttype]
@@ -22,6 +22,7 @@ pub struct SessionScope {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SessionKey {
     pub key_id: BytesN<32>,
+    pub delegate: Address,
     pub scope: SessionScope,
     pub created_at: u64,
     pub operations_used: u32,
@@ -41,7 +42,7 @@ pub struct AccountCapabilities {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{symbol_short, vec, Env};
+    use soroban_sdk::{symbol_short, testutils::Address as _, vec, Env};
 
     #[test]
     fn test_game_action_creation() {
@@ -82,6 +83,7 @@ mod tests {
         let env = Env::default();
         let key = SessionKey {
             key_id: BytesN::from_array(&env, &[1u8; 32]),
+            delegate: Address::generate(&env),
             scope: SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
                 max_operations: 50,

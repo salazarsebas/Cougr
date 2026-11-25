@@ -32,6 +32,7 @@ fn test_session_key_lifecycle() {
         // 1. Create session key
         let key = SessionKey {
             key_id: BytesN::from_array(&env, &[1u8; 32]),
+            delegate: Address::generate(&env),
             scope: SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move"), symbol_short!("attack")],
                 max_operations: 100,
@@ -57,6 +58,7 @@ fn test_session_key_lifecycle() {
         // 4. Store a second key
         let key2 = SessionKey {
             key_id: BytesN::from_array(&env, &[2u8; 32]),
+            delegate: Address::generate(&env),
             scope: SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
                 max_operations: 10,
@@ -96,6 +98,7 @@ fn test_session_storage_multiple_accounts() {
     env.as_contract(&contract_id, || {
         let key1 = SessionKey {
             key_id: BytesN::from_array(&env, &[1u8; 32]),
+            delegate: Address::generate(&env),
             scope: SessionScope {
                 allowed_actions: vec![&env, symbol_short!("move")],
                 max_operations: 50,
@@ -107,6 +110,7 @@ fn test_session_storage_multiple_accounts() {
         };
         let key2 = SessionKey {
             key_id: BytesN::from_array(&env, &[2u8; 32]),
+            delegate: Address::generate(&env),
             scope: SessionScope {
                 allowed_actions: vec![&env, symbol_short!("attack")],
                 max_operations: 25,

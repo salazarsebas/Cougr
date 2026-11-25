@@ -3,10 +3,12 @@
 //! # Example
 //! ```no_run
 //! use cougr_core::accounts::SessionBuilder;
-//! use soroban_sdk::{symbol_short, Env};
+//! use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env};
 //!
 //! let env = Env::default();
+//! let delegate = Address::generate(&env);
 //! let scope = SessionBuilder::new(&env)
+//!     .delegate(delegate)
 //!     .allow_action(symbol_short!("move"))
 //!     .allow_action(symbol_short!("attack"))
 //!     .max_operations(100_u32)
@@ -15,7 +17,7 @@
 //! assert_eq!(scope.allowed_actions.len(), 2);
 //! ```
 
-use soroban_sdk::{Env, Symbol, Vec};
+use soroban_sdk::{Address, Env, Symbol, Vec};
 
 use super::error::AccountError;
 use super::traits::SessionKeyProvider;
@@ -24,6 +26,7 @@ use super::types::{SessionKey, SessionScope};
 /// Builder for creating sessions with scoped permissions.
 pub struct SessionBuilder<'a> {
     env: &'a Env,
+    delegate: Option<Address>,
     allowed_actions: Vec<Symbol>,
     max_operations: u32,
     expires_at: u64,
@@ -34,10 +37,17 @@ impl<'a> SessionBuilder<'a> {
     pub fn new(env: &'a Env) -> Self {
         Self {
             env,
+            delegate: None,
             allowed_actions: Vec::new(env),
             max_operations: 0,
             expires_at: 0,
         }
+    }
+
+    /// Set the address that must authorize every intent made with this session.
+    pub fn delegate(mut self, address: Address) -> Self {
+        self.delegate = Some(address);
+        self
     }
 
     /// Allow a specific game action (e.g., `symbol_short!("move")`).
@@ -79,8 +89,12 @@ impl<'a> SessionBuilder<'a> {
         provider: &mut P,
     ) -> Result<SessionKey, AccountError> {
         let env = self.env;
+        let delegate = self
+            .delegate
+            .clone()
+            .ok_or(AccountError::SessionDelegateRequired)?;
         let scope = self.build_scope();
-        provider.create_session(env, scope)
+        provider.create_session(env, delegate, scope)
     }
 }
 
