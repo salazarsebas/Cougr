@@ -7,7 +7,8 @@ mod test;
 mod zk;
 
 use components::{
-    BoardState, GameState, GameStatus, MoveResult, ProofRecord, TurnState, GAME_KEY, VK_KEY,
+    BoardState, GameState, GameStatus, MoveResult, ProofRecord, TurnState, ADMIN_KEY, GAME_KEY,
+    VK_KEY,
 };
 use systems::{apply_move, check_endgame, compute_state_hash, init_board};
 use zk::{build_move_circuit, decode_proof};
@@ -20,6 +21,11 @@ pub struct ChessContract;
 
 #[contractimpl]
 impl ChessContract {
+    /// Fix the admin at deploy time. The admin is the only address allowed to set the VK.
+    pub fn __constructor(env: Env, admin: Address) {
+        env.storage().instance().set(&ADMIN_KEY, &admin);
+    }
+
     /// Initialize a new chess game
     pub fn new_game(env: Env, white: Address, black: Address) {
         let board = init_board(&env);
@@ -140,8 +146,15 @@ impl ChessContract {
             .unwrap_or_else(|| panic!("Game not initialized"))
     }
 
-    /// Set the verification key (admin function)
+    /// Set the verification key (admin only)
     pub fn set_vk(env: Env, vk: VerificationKey) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .unwrap_or_else(|| panic!("Admin not set"));
+        admin.require_auth();
+
         env.storage().instance().set(&VK_KEY, &vk);
     }
 }

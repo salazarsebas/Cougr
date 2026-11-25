@@ -1,17 +1,23 @@
 use super::*;
-use crate::components::{Color, Piece, PieceKind};
+use crate::components::{Color, Piece, PieceKind, VK_KEY};
 use cougr_core::component::ComponentTrait;
 use cougr_core::zk::{G1Point, G2Point};
 use soroban_sdk::{symbol_short, testutils::Address as _, Address, BytesN, Env, Map, Vec};
 
-fn setup_game() -> (Env, ChessContractClient<'static>, Address, Address) {
+fn setup_game_with_admin() -> (Env, ChessContractClient<'static>, Address, Address, Address) {
     let env = Env::default();
-    let contract_id = env.register(ChessContract, ());
+    let admin = Address::generate(&env);
+    let contract_id = env.register(ChessContract, (admin.clone(),));
     let client = ChessContractClient::new(&env, &contract_id);
 
     let white = Address::generate(&env);
     let black = Address::generate(&env);
 
+    (env, client, admin, white, black)
+}
+
+fn setup_game() -> (Env, ChessContractClient<'static>, Address, Address) {
+    let (env, client, _admin, white, black) = setup_game_with_admin();
     (env, client, white, black)
 }
 
@@ -132,6 +138,30 @@ fn test_wrong_turn() {
     // Black tries to move first (should be white's turn)
     let result = client.submit_move(&black, &48, &40, &proof);
     assert_eq!(result, MoveResult::WrongTurn);
+}
+
+#[test]
+#[should_panic]
+fn test_set_vk_rejects_non_admin() {
+    let (env, client, _admin, _white, _black) = setup_game_with_admin();
+
+    // No auth is mocked, so the admin's require_auth() fails; the call must not succeed.
+    let vk = make_mock_vk(&env);
+    client.set_vk(&vk);
+}
+
+#[test]
+fn test_set_vk_admin_succeeds() {
+    let (env, client, _admin, _white, _black) = setup_game_with_admin();
+    env.mock_all_auths();
+
+    let vk = make_mock_vk(&env);
+    client.set_vk(&vk);
+
+    env.as_contract(&client.address, || {
+        let stored: Option<VerificationKey> = env.storage().instance().get(&VK_KEY);
+        assert!(stored.is_some());
+    });
 }
 
 #[test]
