@@ -5,7 +5,9 @@ on:
     branches: [main, develop]
     paths:
       - '**/Cargo.toml'
-      - 'Cargo.lock'
+      # Example crates are standalone (each has an empty `[workspace]`), so a
+      # change confined to an example lockfile must still trigger the gate.
+      - '**/Cargo.lock'
       - 'deny.toml'
       - '.github/workflows/cargo-deny.yml'
 
@@ -15,13 +17,50 @@ concurrency:
 
 jobs:
   deny:
-    name: Advisories, Licenses, Bans, Sources
+    name: Workspace advisories, licenses, bans, sources
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
-      - name: cargo-deny check
+      - name: cargo-deny check (workspace)
         uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
+
+  # Example crates do not belong to the root workspace, so the root lockfile
+  # never describes their dependency trees. Discover every example manifest once
+  # and audit each one with the shared root `deny.toml` policy.
+  example-manifests:
+    name: Discover example manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      manifests: ${{ steps.list.outputs.manifests }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: list
+        name: List example Cargo.toml files
+        run: |
+          manifests=$(git ls-files 'examples/*/Cargo.toml' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "manifests=${manifests}" >> "$GITHUB_OUTPUT"
+
+  deny-examples:
+    name: Example ${{ matrix.manifest }}
+    needs: example-manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        manifest: ${{ fromJson(needs.example-manifests.outputs.manifests) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cargo-deny check (${{ matrix.manifest }})
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+          manifest-path: ${{ matrix.manifest }}
+          arguments: --all-features --config deny.toml
