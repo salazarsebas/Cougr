@@ -4,6 +4,11 @@
 
 ### Changed
 
+- **`cougr_core::incremental::StorageWorld`** (not on the stable surface):
+  - `add_component` (and new `add_component_with_storage`) now return `Result<(), CougrError>`, loading unloaded existing entities before mutating and returning `CougrError::EntityNotFound` for unknown or despawned entities.
+  - Storage keys are now namespaced (`("cougr_meta", ns)`, `("cougr_ent", ns, entity_id)`, `("cougr_cmp", ns, entity_id, component_type)`, `("cougr_eix", ns, bucket)`, `("cougr_eloc", ns, entity_id)`) via `StorageWorld::open(env, namespace)` and `StorageWorld::open_with_ttl(env, namespace, ttl_policy)`.
+  - `WorldMetadata` no longer embeds `entity_ids: Vec<u32>`; live entity IDs are stored in a 64-ID bucketed index queried via `entity_ids_page(env, bucket)`.
+  - `StorageWorld` now extends persistent entry TTLs on read and write per `TtlPolicy`, deletes persistent entries for removed components on `flush()`, preserves `ComponentStorage` in `to_simple_world()`, and supports minimal diff write-back via `apply_simple_world()`.
 - Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
 - **`cougr_core::accounts::RecoverableAccount::new`** now returns
   `Result<Self, AccountError>` and rejects recovery thresholds outside
