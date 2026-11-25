@@ -19,6 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check example CI coverage
+        run: python3 scripts/check_example_ci.py
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:

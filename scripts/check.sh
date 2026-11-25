@@ -126,6 +126,7 @@ fi
 # PR Sanity Check (pr-check.yml): runs on every pull request.
 
 run . "PR sanity: cargo fmt --check" cargo fmt --check
+run . "PR sanity: example CI coverage" python3 scripts/check_example_ci.py
 run . "PR sanity: no committed build artifacts" bash -c '
   if git ls-files | grep -E "(^|/)target/|\.wasm$"; then
     echo "Remove target/ directories and *.wasm files from the commit."

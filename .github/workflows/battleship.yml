@@ -1,0 +1,28 @@
+name: Battleship Example CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'examples/battleship/**'
+      - '!examples/battleship/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/battleship.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'examples/battleship/**'
+      - '!examples/battleship/**/*.md'
+      - '.github/workflows/example_reusable.yml'
+      - '.github/workflows/battleship.yml'
+
+concurrency:
+  group: battleship-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/example_reusable.yml
+    with:
+      job_name: Battleship Example CI
+      working_directory: examples/battleship
