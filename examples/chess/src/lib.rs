@@ -7,21 +7,40 @@ mod test;
 mod zk;
 
 use components::{
-    BoardState, GameState, GameStatus, MoveResult, ProofRecord, TurnState, GAME_KEY, VK_KEY,
+    BoardState, GameState, GameStatus, MoveResult, ProofRecord, TurnState, ADMIN_KEY, GAME_KEY,
+    VK_KEY,
 };
 use systems::{apply_move, check_endgame, compute_state_hash, init_board};
 use zk::{build_move_circuit, decode_proof};
 
 use cougr_core::privacy::VerificationKey;
-use soroban_sdk::{contract, contractimpl, Address, Bytes, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, Address, Bytes, Env};
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ChessError {
+    GameInProgress = 1,
+}
 
 #[contract]
 pub struct ChessContract;
 
 #[contractimpl]
 impl ChessContract {
-    /// Initialize a new chess game
-    pub fn new_game(env: Env, white: Address, black: Address) {
+    /// Fix the admin at deploy time. The admin is the only address allowed to set the VK.
+    pub fn __constructor(env: Env, admin: Address) {
+        env.storage().instance().set(&ADMIN_KEY, &admin);
+    }
+
+    /// Initialize a new chess game. Refused while the stored game is still `Playing`,
+    /// so an in-progress game cannot be silently overwritten.
+    pub fn new_game(env: Env, white: Address, black: Address) -> Result<(), ChessError> {
+        if let Some(existing) = env.storage().instance().get::<_, GameState>(&GAME_KEY) {
+            if existing.turn.status == GameStatus::Playing {
+                return Err(ChessError::GameInProgress);
+            }
+        }
+
         let board = init_board(&env);
         let state_hash = compute_state_hash(&env, &board);
 
@@ -44,6 +63,7 @@ impl ChessContract {
         };
 
         env.storage().instance().set(&GAME_KEY, &game_state);
+        Ok(())
     }
 
     /// Submit a move with ZK proof
@@ -140,8 +160,15 @@ impl ChessContract {
             .unwrap_or_else(|| panic!("Game not initialized"))
     }
 
-    /// Set the verification key (admin function)
+    /// Set the verification key (admin only)
     pub fn set_vk(env: Env, vk: VerificationKey) {
+        let admin: Address = env
+            .storage()
+            .instance()
+            .get(&ADMIN_KEY)
+            .unwrap_or_else(|| panic!("Admin not set"));
+        admin.require_auth();
+
         env.storage().instance().set(&VK_KEY, &vk);
     }
 }

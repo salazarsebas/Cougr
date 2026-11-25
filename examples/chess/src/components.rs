@@ -112,3 +112,4 @@ pub enum MoveResult {
 
 pub(crate) const GAME_KEY: Symbol = symbol_short!("GAME");
 pub(crate) const VK_KEY: Symbol = symbol_short!("VK");
+pub(crate) const ADMIN_KEY: Symbol = symbol_short!("ADMIN");
