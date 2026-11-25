@@ -25,12 +25,13 @@ ECS-lite examples for typed, byte-serializable game state.
 
 | Function | Parameters | Returns | Description |
 |---|---|---|---|
-| `new_game` | `white: Address`, `black: Address` | - | Initializes the standard 8x8 opening position, computes the initial `state_hash`, and sets White to move first. |
+| `__constructor` | `admin: Address` | - | Runs once at deploy. Stores the admin that is the only address allowed to call `set_vk`. The admin cannot be changed afterwards. |
+| `new_game` | `white: Address`, `black: Address` | `Result<(), ChessError>` | Initializes the standard 8x8 opening position, computes the initial `state_hash`, and sets White to move first. Returns `ChessError::GameInProgress` while the stored game is still `Playing`; a resigned or checkmated game may be replaced. |
 | `submit_move` | `player: Address`, `from: u32`, `to: u32`, `proof: Bytes` | `MoveResult` | Requires `player.require_auth()`. Checks turn order and game status, verifies the supplied proof against the stored verification key and current `state_hash`, then applies the move, recomputes the hash, and switches turns. |
 | `resign` | `player: Address` | - | Marks the game `Resigned` if called by either registered player. |
 | `get_board` | - | `BoardState` | Current piece map and `state_hash`. |
 | `get_state` | - | `GameState` | Full game state: both players, board, turn state, and last proof record. |
-| `set_vk` | `vk: VerificationKey` | - | Admin function to set/replace the Groth16 verification key used for move proofs. |
+| `set_vk` | `vk: VerificationKey` | - | Requires the admin's auth (`admin.require_auth()`), then sets or replaces the Groth16 verification key used for move proofs. Any other caller is rejected. |
 
 ## Architecture overview
 
@@ -66,10 +67,12 @@ instance, with no per-entry TTL management needed.
 
 ## Main gameplay flow
 
-1. Deployer calls `set_vk(vk)` once to register the Groth16 verification key matching the
-   off-chain move-validation circuit.
+1. Deployer passes the admin address to the constructor at deploy time. The admin then calls
+   `set_vk(vk)` to register the Groth16 verification key matching the off-chain
+   move-validation circuit.
 2. Deployer (or either player) calls `new_game(white, black)`; the board is seeded with the
-   standard opening position, White to move, and the initial `state_hash` is computed.
+   standard opening position, White to move, and the initial `state_hash` is computed. This
+   fails while a previous game is still in progress.
 3. Off-chain, White picks a move (`from`, `to`), runs the move-validation circuit against the
    current `state_hash`, and produces a Groth16 proof that the move is legal.
 4. White calls `submit_move(white, from, to, proof)`. The contract checks turn order, verifies
