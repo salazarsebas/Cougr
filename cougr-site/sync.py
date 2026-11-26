@@ -43,14 +43,14 @@ def sync():
             print(f"Warning: {repo_rel} not found in source repo.")
             continue
 
-        with open(src_file, "r") as f:
+        with open(src_file, "r", encoding="utf-8") as f:
             content = f.read()
 
         content = rewrite_links(content, repo_rel)
 
         dest_file = os.path.join(SITE_DIR, "src", mdbook_rel)
         os.makedirs(os.path.dirname(dest_file), exist_ok=True)
-        with open(dest_file, "w") as f:
+        with open(dest_file, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"Synced {repo_rel} -> src/{mdbook_rel}")
 

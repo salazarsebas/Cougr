@@ -13,6 +13,7 @@ use soroban_sdk::Symbol;
 pub struct DirtyTracker {
     dirty_entities: Vec<EntityId>,
     dirty_components: Vec<(EntityId, Symbol)>,
+    removed_components: Vec<(EntityId, Symbol)>,
     despawned: Vec<EntityId>,
     new_entities: Vec<EntityId>,
     meta_dirty: bool,
@@ -24,6 +25,7 @@ impl DirtyTracker {
         Self {
             dirty_entities: Vec::new(),
             dirty_components: Vec::new(),
+            removed_components: Vec::new(),
             despawned: Vec::new(),
             new_entities: Vec::new(),
             meta_dirty: false,
@@ -38,15 +40,33 @@ impl DirtyTracker {
     }
 
     /// Mark a specific component on an entity as needing a flush.
+    ///
+    /// Clears any pending removal for the same `(entity_id, component_type)`
+    /// so remove-then-re-add in the same session writes the new value.
     pub fn mark_component_dirty(&mut self, entity_id: EntityId, component_type: Symbol) {
         let entry = (entity_id, component_type);
+        self.removed_components.retain(|item| item != &entry);
         if !self.dirty_components.contains(&entry) {
             self.dirty_components.push(entry);
         }
     }
 
+    /// Mark a specific component on an entity as removed (needs persistent entry deleted).
+    ///
+    /// Clears any pending dirty write for the same `(entity_id, component_type)`.
+    pub fn mark_component_removed(&mut self, entity_id: EntityId, component_type: Symbol) {
+        let entry = (entity_id, component_type);
+        self.dirty_components.retain(|item| item != &entry);
+        if !self.removed_components.contains(&entry) {
+            self.removed_components.push(entry);
+        }
+    }
+
     /// Mark an entity as despawned (needs all storage entries removed).
     pub fn mark_despawned(&mut self, entity_id: EntityId) {
+        self.dirty_entities.retain(|&id| id != entity_id);
+        self.dirty_components.retain(|(id, _)| *id != entity_id);
+        self.removed_components.retain(|(id, _)| *id != entity_id);
         if !self.despawned.contains(&entity_id) {
             self.despawned.push(entity_id);
         }
@@ -70,6 +90,7 @@ impl DirtyTracker {
         self.meta_dirty
             || !self.dirty_entities.is_empty()
             || !self.dirty_components.is_empty()
+            || !self.removed_components.is_empty()
             || !self.despawned.is_empty()
             || !self.new_entities.is_empty()
     }
@@ -84,13 +105,17 @@ impl DirtyTracker {
         &self.dirty_components
     }
 
+    /// Get specific components that need deleting from storage.
+    pub fn removed_components(&self) -> &[(EntityId, Symbol)] {
+        &self.removed_components
+    }
+
     /// Get despawned entities.
     pub fn despawned(&self) -> &[EntityId] {
         &self.despawned
     }
 
     /// Get newly spawned entities.
-    #[cfg(test)]
     pub fn new_entities(&self) -> &[EntityId] {
         &self.new_entities
     }
@@ -104,6 +129,7 @@ impl DirtyTracker {
     pub fn clear(&mut self) {
         self.dirty_entities.clear();
         self.dirty_components.clear();
+        self.removed_components.clear();
         self.despawned.clear();
         self.new_entities.clear();
         self.meta_dirty = false;
@@ -127,6 +153,7 @@ mod tests {
         assert!(!tracker.is_dirty());
         assert!(tracker.dirty_entities().is_empty());
         assert!(tracker.dirty_components().is_empty());
+        assert!(tracker.removed_components().is_empty());
         assert!(tracker.despawned().is_empty());
     }
 
@@ -142,11 +169,21 @@ mod tests {
     }
 
     #[test]
-    fn test_mark_component_dirty() {
+    fn test_mark_component_dirty_and_removed() {
         let _env = Env::default();
         let mut tracker = DirtyTracker::new();
-        tracker.mark_component_dirty(1, symbol_short!("pos"));
+        let sym = symbol_short!("pos");
+        tracker.mark_component_dirty(1, sym.clone());
         assert!(tracker.is_dirty());
+        assert_eq!(tracker.dirty_components().len(), 1);
+
+        tracker.mark_component_removed(1, sym.clone());
+        assert!(tracker.dirty_components().is_empty());
+        assert_eq!(tracker.removed_components().len(), 1);
+
+        // Re-adding in the same session clears the removal
+        tracker.mark_component_dirty(1, sym);
+        assert!(tracker.removed_components().is_empty());
         assert_eq!(tracker.dirty_components().len(), 1);
     }
 
@@ -173,6 +210,7 @@ mod tests {
         let mut tracker = DirtyTracker::new();
         tracker.mark_entity_dirty(1);
         tracker.mark_component_dirty(1, symbol_short!("pos"));
+        tracker.mark_component_removed(1, symbol_short!("vel"));
         tracker.mark_despawned(2);
         tracker.mark_new_entity(3);
         assert!(tracker.is_dirty());
@@ -181,6 +219,7 @@ mod tests {
         assert!(!tracker.is_dirty());
         assert!(tracker.dirty_entities().is_empty());
         assert!(tracker.dirty_components().is_empty());
+        assert!(tracker.removed_components().is_empty());
         assert!(tracker.despawned().is_empty());
         assert!(tracker.new_entities().is_empty());
         assert!(!tracker.is_meta_dirty());
