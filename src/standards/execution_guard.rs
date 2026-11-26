@@ -41,6 +41,9 @@ impl ExecutionGuard {
         Ok(())
     }
 
+    /// Acquires the execution lock if currently unlocked.
+    ///
+    /// Note: The integrating contract is responsible for authenticating any `caller` at the entrypoint.
     pub fn enter(&self, env: &Env) -> Result<ExecutionGuardEnteredEvent, StandardsError> {
         self.require_unlocked(env)?;
         env.storage().persistent().set(&self.lock_key(env), &true);
@@ -49,6 +52,9 @@ impl ExecutionGuard {
         })
     }
 
+    /// Releases the execution lock if currently locked.
+    ///
+    /// Note: The integrating contract is responsible for authenticating any `caller` at the entrypoint.
     pub fn exit(&self, env: &Env) -> Result<ExecutionGuardExitedEvent, StandardsError> {
         if !self.is_locked(env) {
             return Err(StandardsError::ExecutionNotLocked);
@@ -59,6 +65,9 @@ impl ExecutionGuard {
         })
     }
 
+    /// Executes `f` while holding the execution lock, releasing it afterward.
+    ///
+    /// Note: The integrating contract is responsible for authenticating any `caller` at the entrypoint.
     pub fn execute<T>(&self, env: &Env, f: impl FnOnce() -> T) -> Result<T, StandardsError> {
         self.enter(env)?;
         let result = f();
@@ -68,5 +77,64 @@ impl ExecutionGuard {
 
     fn lock_key(&self, env: &Env) -> (Symbol, Symbol) {
         (Symbol::new(env, EXECUTION_LOCK_PREFIX), self.id.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use soroban_sdk::{contract, contractimpl, symbol_short, Env};
+
+    use super::*;
+
+    #[contract]
+    pub struct TestContract;
+
+    #[contractimpl]
+    impl TestContract {}
+
+    #[test]
+    fn execution_guard_covers_enter_exit_execute_and_errors() {
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let guard_id = symbol_short!("exec");
+        let module = ExecutionGuard::new(guard_id.clone());
+
+        env.as_contract(&contract_id, || {
+            assert!(!module.is_locked(&env));
+            assert!(module.require_unlocked(&env).is_ok());
+            assert_eq!(module.exit(&env), Err(StandardsError::ExecutionNotLocked));
+
+            let entered = module.enter(&env).unwrap();
+            assert_eq!(
+                entered,
+                ExecutionGuardEnteredEvent {
+                    guard_id: guard_id.clone()
+                }
+            );
+            assert!(module.is_locked(&env));
+            assert_eq!(
+                module.require_unlocked(&env),
+                Err(StandardsError::ExecutionLocked)
+            );
+            assert_eq!(module.enter(&env), Err(StandardsError::ExecutionLocked));
+            assert_eq!(
+                module.execute(&env, || 1u32),
+                Err(StandardsError::ExecutionLocked)
+            );
+
+            let exited = module.exit(&env).unwrap();
+            assert_eq!(
+                exited,
+                ExecutionGuardExitedEvent {
+                    guard_id: guard_id.clone()
+                }
+            );
+            assert!(!module.is_locked(&env));
+            assert_eq!(module.exit(&env), Err(StandardsError::ExecutionNotLocked));
+
+            let value = module.execute(&env, || 99u32).unwrap();
+            assert_eq!(value, 99);
+            assert!(!module.is_locked(&env));
+        });
     }
 }
