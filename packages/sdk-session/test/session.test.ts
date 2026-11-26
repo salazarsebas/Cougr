@@ -18,6 +18,7 @@ const CLOCK: LedgerClock = { timestamp: () => 1_735_689_700n, sequence: () => 42
 function keyWith(overrides: Partial<SessionKey> = {}): SessionKey {
   return {
     keyId: new Uint8Array(32),
+    delegate: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF',
     scope: { allowedActions: ['move', 'attack'], maxOperations: 2, expiresAt: 1_735_693_200n },
     createdAt: 1_735_689_600n,
     operationsUsed: 0,

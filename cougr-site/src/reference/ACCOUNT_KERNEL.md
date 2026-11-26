@@ -58,6 +58,7 @@ The replay implementation lives in:
 Session state now includes:
 
 - unique `key_id`
+- the `delegate` address approved by the owner
 - scoped allowed actions
 - operation budget
 - expiration timestamp
@@ -80,9 +81,16 @@ Current base signer implementations:
 - direct owner signer
   - uses `require_auth`
 - session signer
-  - explicit non-fallback session path evaluated by the kernel
+  - loads the stored session and requires the delegate's Soroban authorization
+    over `(account, key_id, nonce, action_hash)` before policy checks or state
+    consumption
 - secp256r1 passkey signer
   - verifies signatures against registered passkeys
+
+Session creation requires a delegate address. The owner approves this address
+once, and the delegate must authorize each exact session intent. `key_id` is
+public and is not an authorization credential. This changes the `SessionKey`
+XDR shape; previously stored session entries are not decodable by this version.
 
 ## Policies
 

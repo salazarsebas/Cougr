@@ -5,6 +5,9 @@
 ### Changed
 
 - Upgrade the workspace and path-dependent examples to Soroban SDK 29.0.1 and Rust 1.91.0.
+- **Breaking for Beta `accounts` users:** `SessionKey` now stores its owner-approved
+  delegate address, and every session intent requires the delegate's authorization.
+  Existing stored session keys have an incompatible XDR shape and must be recreated.
 - **`cougr_core::accounts::RecoverableAccount::new`** now returns
   `Result<Self, AccountError>` and rejects recovery thresholds outside
   `1..=max_guardians` before persisting account configuration.

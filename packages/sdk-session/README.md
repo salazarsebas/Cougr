@@ -31,7 +31,7 @@ npm test          # node --test test/session.test.ts test/vectors.test.ts
 
 ```text
 SessionScope { allowedActions: string[], maxOperations: u32, expiresAt: u64 }
-SessionKey   { keyId: BytesN<32>, scope, createdAt: u64, operationsUsed: u32, nextNonce: u64 }
+SessionKey   { keyId: BytesN<32>, delegate: Address, scope, createdAt: u64, operationsUsed: u32, nextNonce: u64 }
 ```
 
 Expiry is a ledger timestamp in **seconds**, and the boundary is the contract's: a session is expired

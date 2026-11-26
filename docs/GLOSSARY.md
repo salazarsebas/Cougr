@@ -178,7 +178,7 @@ A scoped cryptographic key authorized for a limited set of actions, operation bu
 Structured authorization payload binding target account, signer reference, action payload, nonce, expiry, deterministic `action_hash`, and proof material. The canonical input to the `AccountKernel`.
 
 ### Signer
-Base authorization implementation in the account subsystem. Variants: direct owner signer (`require_auth`), session signer (non-fallback session path), and secp256r1 passkey signer (WebAuthn/Passkey).
+Base authorization implementation in the account subsystem. Variants: direct owner signer (`require_auth`), session signer (stored delegate authorization over the exact intent), and secp256r1 passkey signer (WebAuthn/Passkey).
 
 ### SimpleWorld
 Table-backed ECS world backend. Uses a `Map<(EntityId, Symbol), Bytes>` with dual table/sparse indexes. Best for general use with modest entity counts. The recommended default for new projects.

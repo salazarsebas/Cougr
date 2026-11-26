@@ -11,16 +11,17 @@ use super::SessionStatus;
 pub struct SessionManager;
 
 impl SessionManager {
-    /// Create a scoped session key for `owner`.
+    /// Create a scoped session key for `owner`, bound to `delegate`.
     ///
     /// Contract entrypoints must call `owner.require_auth()` before invoking this.
     pub fn approve(
         env: &Env,
         owner: &Address,
+        delegate: Address,
         scope: SessionScope,
     ) -> Result<SessionKey, AccountError> {
         let mut account = ContractAccount::new(owner.clone());
-        account.create_session(env, scope)
+        account.create_session(env, delegate, scope)
     }
 
     /// Create a session from a [`SessionBuilder`] chain.

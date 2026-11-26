@@ -49,6 +49,7 @@ fn action(env: &Env, name: &str) -> GameAction {
 fn session(env: &Env, operations_used: u32, next_nonce: u64) -> SessionKey {
     SessionKey {
         key_id: key_id_bytes(env),
+        delegate: Address::generate(env),
         scope: SessionScope {
             allowed_actions: vec![&env, symbol_short!("move"), symbol_short!("attack")],
             max_operations: 2,

@@ -19,9 +19,11 @@ const SESSION_KEYS_PREFIX: &str = "sess_keys";
 ///
 /// let env = Env::default();
 /// let player_address = Address::generate(&env);
+/// let delegate = Address::generate(&env);
 /// let key_id = BytesN::from_array(&env, &[7u8; 32]);
 /// let session_key = SessionKey {
 ///     key_id: key_id.clone(),
+///     delegate,
 ///     scope: SessionScope {
 ///         allowed_actions: Vec::from_array(&env, [symbol_short!("move")]),
 ///         max_operations: 10,
@@ -257,7 +259,9 @@ impl SessionStorage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{contract, contractimpl, symbol_short, testutils::Address as _, vec, Env};
+    use soroban_sdk::{
+        contract, contractimpl, symbol_short, testutils::Address as _, vec, Address, Env,
+    };
 
     use crate::accounts::types::SessionScope;
 
@@ -271,6 +275,7 @@ mod tests {
     fn make_session_key(env: &Env, id_byte: u8, expires_at: u64) -> SessionKey {
         SessionKey {
             key_id: BytesN::from_array(env, &[id_byte; 32]),
+            delegate: Address::generate(env),
             scope: SessionScope {
                 allowed_actions: vec![env, symbol_short!("move")],
                 max_operations: 100,
