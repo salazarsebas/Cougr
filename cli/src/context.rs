@@ -75,20 +75,145 @@ pub fn example_dir(repo_root: &Path, name: &str) -> PathBuf {
     repo_root.join("examples").join(name)
 }
 
-/// Return the 10 currently-canonical example names per EXAMPLE_STANDARD.md §7.
-pub fn canonical_example_names() -> &'static [&'static str] {
-    &[
-        "spawn_and_move",
-        "tic_tac_toe",
-        "session_arena",
-        "hidden_hand",
-        "fog_explorer",
-        "dice_duel",
-        "blind_auction",
-        "snake",
-        "battleship",
-        "guild_arena",
-    ]
+#[derive(Default)]
+struct CatalogEntry {
+    key: String,
+    name: Option<String>,
+    maturity: Option<String>,
+}
+
+/// Return the canonical example names listed in `examples/catalog.toml`.
+pub fn canonical_example_names(repo_root: &Path) -> Result<Vec<String>> {
+    let catalog_path = repo_root.join("examples").join("catalog.toml");
+    let content = fs::read_to_string(&catalog_path).with_context(|| {
+        format!(
+            "failed to read example catalog at {}",
+            catalog_path.display()
+        )
+    })?;
+
+    let entries = parse_catalog(&content).with_context(|| {
+        format!(
+            "failed to parse example catalog at {}",
+            catalog_path.display()
+        )
+    })?;
+
+    if entries.is_empty() {
+        anyhow::bail!("no [example.*] entries found in {}", catalog_path.display());
+    }
+
+    let mut names: Vec<String> = entries
+        .into_iter()
+        .filter(|entry| entry.maturity.as_deref() == Some("canonical"))
+        .filter_map(|entry| entry.name)
+        .collect();
+    names.sort();
+    Ok(names)
+}
+
+fn parse_catalog(source: &str) -> Result<Vec<CatalogEntry>> {
+    let mut entries: Vec<CatalogEntry> = Vec::new();
+    let mut current: Option<CatalogEntry> = None;
+
+    for (index, raw_line) in source.lines().enumerate() {
+        let line_num = index + 1;
+        let line = raw_line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+
+        if line.starts_with('[') {
+            if !line.ends_with(']') {
+                anyhow::bail!("line {line_num}: unterminated table header: {line}");
+            }
+            let header = &line[1..line.len() - 1].trim();
+            let Some(key) = header.strip_prefix("example.") else {
+                anyhow::bail!("line {line_num}: unexpected table header [{header}]");
+            };
+            if key.is_empty() {
+                anyhow::bail!("line {line_num}: empty example key in [{header}]");
+            }
+            if let Some(entry) = current.take() {
+                validate_catalog_entry(&entry)?;
+                entries.push(entry);
+            }
+            current = Some(CatalogEntry {
+                key: key.to_string(),
+                ..CatalogEntry::default()
+            });
+            continue;
+        }
+
+        let Some((raw_key, raw_value)) = line.split_once('=') else {
+            anyhow::bail!("line {line_num}: expected key = value, got: {line}");
+        };
+        let key = raw_key.trim();
+        let value = raw_value.trim();
+        let entry = current
+            .as_mut()
+            .ok_or_else(|| anyhow::anyhow!("line {line_num}: key '{key}' outside [example.*]"))?;
+
+        match key {
+            "name" => entry.name = Some(parse_toml_string(value, line_num)?),
+            "maturity" => entry.maturity = Some(parse_toml_string(value, line_num)?),
+            _ => {}
+        }
+    }
+
+    if let Some(entry) = current.take() {
+        validate_catalog_entry(&entry)?;
+        entries.push(entry);
+    }
+
+    Ok(entries)
+}
+
+fn validate_catalog_entry(entry: &CatalogEntry) -> Result<()> {
+    if entry.name.as_deref().unwrap_or("").is_empty() {
+        anyhow::bail!("example.{} is missing required field 'name'", entry.key);
+    }
+    if entry.maturity.as_deref().unwrap_or("").is_empty() {
+        anyhow::bail!("example.{} is missing required field 'maturity'", entry.key);
+    }
+    Ok(())
+}
+
+fn parse_toml_string(raw: &str, line_num: usize) -> Result<String> {
+    let trimmed = raw.trim();
+    if !trimmed.starts_with('"') {
+        anyhow::bail!("line {line_num}: expected quoted string, got: {trimmed}");
+    }
+    let rest = &trimmed[1..];
+    let mut out = String::new();
+    let mut chars = rest.chars();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '"' => {
+                let trailing = chars.as_str().trim();
+                if !trailing.is_empty() && !trailing.starts_with('#') {
+                    anyhow::bail!(
+                        "line {line_num}: unexpected trailing characters after string: {trailing}"
+                    );
+                }
+                return Ok(out);
+            }
+            '\\' => {
+                let escaped = chars
+                    .next()
+                    .ok_or_else(|| anyhow::anyhow!("line {line_num}: unterminated escape"))?;
+                match escaped {
+                    '"' => out.push('"'),
+                    '\\' => out.push('\\'),
+                    'n' => out.push('\n'),
+                    't' => out.push('\t'),
+                    other => anyhow::bail!("line {line_num}: unsupported escape \\{other}"),
+                }
+            }
+            other => out.push(other),
+        }
+    }
+    anyhow::bail!("line {line_num}: unterminated string literal")
 }
 
 // ---------------------------------------------------------------------------
@@ -222,5 +347,86 @@ mod tests {
             .expect("empty examples directory should fail");
 
         assert!(error.to_string().contains("no examples found"), "{error:#}");
+    }
+
+    #[test]
+    fn canonical_example_names_filters_canonical_entries_using_name_field() {
+        let root = fake_root();
+        let examples_dir = root.path().join("examples");
+        fs::create_dir(&examples_dir).expect("create examples directory");
+        fs::write(
+            examples_dir.join("catalog.toml"),
+            r#"
+[example.alpha_key]
+name = "alpha_dir"
+category = "arcade"
+maturity = "canonical"
+cougr_features = ["ecs"]
+
+[example.beta]
+name = "beta"
+category = "board"
+maturity = "transitional"
+cougr_features = ["ecs"]
+
+[example.gamma]
+name = "gamma"
+category = "card"
+maturity = "canonical"
+cougr_features = ["privacy"]
+"#,
+        )
+        .expect("write catalog");
+
+        let names = canonical_example_names(root.path()).expect("parse catalog");
+        assert_eq!(names, vec!["alpha_dir", "gamma"]);
+    }
+
+    #[test]
+    fn canonical_example_names_reports_missing_catalog() {
+        let root = fake_root();
+        let error = canonical_example_names(root.path()).expect_err("missing catalog should fail");
+
+        assert!(
+            error.to_string().contains("failed to read example catalog"),
+            "{error:#}"
+        );
+    }
+
+    #[test]
+    fn canonical_example_names_reports_malformed_catalog() {
+        let root = fake_root();
+        let examples_dir = root.path().join("examples");
+        fs::create_dir(&examples_dir).expect("create examples directory");
+        fs::write(
+            examples_dir.join("catalog.toml"),
+            "[example.broken\nname = \"oops\"\n",
+        )
+        .expect("write malformed catalog");
+
+        let error =
+            canonical_example_names(root.path()).expect_err("malformed catalog should fail");
+
+        assert!(
+            error
+                .to_string()
+                .contains("failed to parse example catalog"),
+            "{error:#}"
+        );
+    }
+
+    #[test]
+    fn canonical_example_names_reports_empty_catalog() {
+        let root = fake_root();
+        let examples_dir = root.path().join("examples");
+        fs::create_dir(&examples_dir).expect("create examples directory");
+        fs::write(examples_dir.join("catalog.toml"), "# empty\n").expect("write empty catalog");
+
+        let error = canonical_example_names(root.path()).expect_err("empty catalog should fail");
+
+        assert!(
+            error.to_string().contains("no [example.*] entries found"),
+            "{error:#}"
+        );
     }
 }

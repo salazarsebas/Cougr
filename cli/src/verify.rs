@@ -40,10 +40,10 @@ pub fn run(
 ) -> Result<()> {
     // Filter to canonical examples if requested
     let target_examples: Vec<&crate::context::Example> = if canonical_only {
-        let canonicals = canonical_example_names();
+        let canonicals = canonical_example_names(&ctx.repo_root)?;
         ctx.examples
             .iter()
-            .filter(|ex| canonicals.contains(&ex.name.as_str()))
+            .filter(|ex| canonicals.iter().any(|name| name == &ex.name))
             .collect()
     } else {
         ctx.examples.iter().collect()

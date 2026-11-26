@@ -71,7 +71,7 @@ enum Command {
         #[arg(long)]
         full: bool,
 
-        /// Only check the 10 canonical examples (per EXAMPLE_STANDARD.md §7).
+        /// Only check canonical examples (from examples/catalog.toml).
         #[arg(long)]
         canonical_only: bool,
 
