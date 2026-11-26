@@ -80,9 +80,9 @@ fn test_remove_component() {
             .add_component(&env, eid, symbol_short!("pos"), data)
             .unwrap();
 
-        assert!(world.remove_component(eid, &symbol_short!("pos")));
+        assert!(world.remove_component(&env, eid, &symbol_short!("pos")));
         assert!(!world.has_component(eid, &symbol_short!("pos")));
-        assert!(!world.remove_component(eid, &symbol_short!("pos")));
+        assert!(!world.remove_component(&env, eid, &symbol_short!("pos")));
     });
 }
 
@@ -246,7 +246,7 @@ fn test_version_tracking() {
         let v1 = world.version();
         assert!(v1 > 0);
 
-        world.remove_component(eid, &symbol_short!("pos"));
+        world.remove_component(&env, eid, &symbol_short!("pos"));
         assert!(world.version() > v1);
     });
 }
@@ -567,7 +567,7 @@ fn test_remove_component_deletes_persistent_entry() {
     env.as_contract(&contract_id, || {
         let mut world = StorageWorld::open(&env, ns.clone());
         world.load_entity(&env, 1).unwrap();
-        assert!(world.remove_component(1, &symbol_short!("vel")));
+        assert!(world.remove_component(&env, 1, &symbol_short!("vel")));
         world.flush(&env);
 
         assert!(!env.storage().persistent().has(&keys::component_key(
@@ -588,7 +588,7 @@ fn test_remove_component_deletes_persistent_entry() {
     env.as_contract(&contract_id, || {
         let mut world = StorageWorld::open(&env, ns.clone());
         world.load_entity(&env, 1).unwrap();
-        assert!(world.remove_component(1, &symbol_short!("pos")));
+        assert!(world.remove_component(&env, 1, &symbol_short!("pos")));
         world
             .add_component(&env, 1, symbol_short!("pos"), Bytes::from_array(&env, &[9]))
             .unwrap();
@@ -638,7 +638,8 @@ fn test_ttl_policy_extends_entries_across_ledger_advances() {
         li.sequence_number += initial_ttl.saturating_sub(100);
     });
 
-    // Reading the entity extends TTL to DEFAULT_EXTEND_TO (10_000)
+    // Reading the entity extends TTL to DEFAULT_EXTEND_TO (10_000) for metadata,
+    // entity list, component, index position, and index bucket entries.
     env.as_contract(&contract_id, || {
         let mut world = StorageWorld::open(&env, ns.clone());
         world.load_entity(&env, 1).unwrap();
@@ -646,13 +647,33 @@ fn test_ttl_policy_extends_entries_across_ledger_advances() {
             world.get_component(1, &symbol_short!("pos")),
             Some(Bytes::from_array(&env, &[7]))
         );
-        let ttl = env.storage().persistent().get_ttl(&keys::component_key(
+        let meta_ttl = env
+            .storage()
+            .persistent()
+            .get_ttl(&keys::meta_key(&env, &ns));
+        let ent_ttl = env
+            .storage()
+            .persistent()
+            .get_ttl(&keys::entity_key(&env, &ns, 1));
+        let cmp_ttl = env.storage().persistent().get_ttl(&keys::component_key(
             &env,
             &ns,
             1,
             &symbol_short!("pos"),
         ));
-        assert!(ttl >= TtlPolicy::DEFAULT_EXTEND_TO);
+        let loc_ttl = env
+            .storage()
+            .persistent()
+            .get_ttl(&keys::entity_index_loc_key(&env, &ns, 1));
+        let bucket_ttl = env
+            .storage()
+            .persistent()
+            .get_ttl(&keys::entity_index_bucket_key(&env, &ns, 0));
+        assert!(meta_ttl >= TtlPolicy::DEFAULT_EXTEND_TO);
+        assert!(ent_ttl >= TtlPolicy::DEFAULT_EXTEND_TO);
+        assert!(cmp_ttl >= TtlPolicy::DEFAULT_EXTEND_TO);
+        assert!(loc_ttl >= TtlPolicy::DEFAULT_EXTEND_TO);
+        assert!(bucket_ttl >= TtlPolicy::DEFAULT_EXTEND_TO);
     });
 
     // Advance past the original initial_ttl — entry is still alive and loadable
@@ -888,5 +909,186 @@ fn test_apply_simple_world_minimal_diff_and_despawn() {
             world.get_component(4, &symbol_short!("pos")),
             Some(Bytes::from_array(&env, &[44]))
         );
+    });
+}
+
+#[test]
+fn test_remove_component_unloaded_entity_across_invocations() {
+    let env = Env::default();
+    let contract_id = env.register(TestContract, ());
+    let ns = Symbol::new(&env, "rem_unloaded");
+
+    // Invocation 1: create entity with two components and flush
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::open(&env, ns.clone());
+        let eid = world.spawn_entity(&env);
+        world
+            .add_component(
+                &env,
+                eid,
+                symbol_short!("pos"),
+                Bytes::from_array(&env, &[1, 2]),
+            )
+            .unwrap();
+        world
+            .add_component(
+                &env,
+                eid,
+                symbol_short!("hp"),
+                Bytes::from_array(&env, &[99]),
+            )
+            .unwrap();
+        world.flush(&env);
+    });
+
+    // Invocation 2: remove `hp` without calling `load_entity` first, then flush
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::open(&env, ns.clone());
+        assert!(world.remove_component(&env, 1, &symbol_short!("hp")));
+        assert!(!world.remove_component(&env, 1, &symbol_short!("hp")));
+        assert!(!world.remove_component(&env, 999, &symbol_short!("pos")));
+        world.flush(&env);
+
+        assert!(!env.storage().persistent().has(&keys::component_key(
+            &env,
+            &ns,
+            1,
+            &symbol_short!("hp")
+        )));
+    });
+
+    // Invocation 3: reload and verify `pos` is still reachable and `hp` is gone
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::open(&env, ns.clone());
+        world.load_entity(&env, 1).unwrap();
+        assert!(!world.has_component(1, &symbol_short!("hp")));
+        assert_eq!(
+            world.get_component(1, &symbol_short!("pos")),
+            Some(Bytes::from_array(&env, &[1, 2]))
+        );
+    });
+}
+
+#[test]
+fn test_from_simple_world_round_trip_preserves_entity_index() {
+    let env = Env::default();
+    let contract_id = env.register(TestContract, ());
+
+    // Invocation 1: persist 2 entities in the default namespace
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::load_metadata(&env);
+        let e1 = world.spawn_entity(&env);
+        let e2 = world.spawn_entity(&env);
+        world
+            .add_component(
+                &env,
+                e1,
+                symbol_short!("pos"),
+                Bytes::from_array(&env, &[1]),
+            )
+            .unwrap();
+        world
+            .add_component(
+                &env,
+                e2,
+                symbol_short!("pos"),
+                Bytes::from_array(&env, &[2]),
+            )
+            .unwrap();
+        world.flush(&env);
+        assert_eq!(world.entity_count(), 2);
+        assert_eq!(world.entity_ids_page(&env, 0).len(), 2);
+    });
+
+    // Invocation 2: round-trip through to_simple_world -> from_simple_world -> flush
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::load_metadata(&env);
+        world.load_entities(&env, &[1, 2]).unwrap();
+        let simple = world.to_simple_world(&env);
+
+        let mut round_tripped = StorageWorld::from_simple_world(&simple, &env);
+        round_tripped.flush(&env);
+
+        assert_eq!(round_tripped.entity_count(), 2);
+        let page0 = round_tripped.entity_ids_page(&env, 0);
+        assert_eq!(page0.len(), 2);
+        assert_eq!(page0.get(0), Some(1));
+        assert_eq!(page0.get(1), Some(2));
+    });
+
+    // Invocation 3: reload and verify despawn does not hit duplicate index entries
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::load_metadata(&env);
+        assert_eq!(world.entity_count(), 2);
+        world.despawn_entity(1);
+        world.flush(&env);
+
+        assert_eq!(world.entity_count(), 1);
+        let page0 = world.entity_ids_page(&env, 0);
+        assert_eq!(page0.len(), 1);
+        assert_eq!(page0.get(0), Some(2));
+    });
+}
+
+#[test]
+fn test_apply_simple_world_removing_last_component_despawns_entity() {
+    let env = Env::default();
+    let contract_id = env.register(TestContract, ());
+    let ns = Symbol::new(&env, "last_cmp_despawn");
+
+    // Invocation 1: persist 2 entities, e1 with a single component
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::open(&env, ns.clone());
+        let e1 = world.spawn_entity(&env);
+        let e2 = world.spawn_entity(&env);
+        world
+            .add_component(
+                &env,
+                e1,
+                symbol_short!("pos"),
+                Bytes::from_array(&env, &[1]),
+            )
+            .unwrap();
+        world
+            .add_component(
+                &env,
+                e2,
+                symbol_short!("pos"),
+                Bytes::from_array(&env, &[2]),
+            )
+            .unwrap();
+        world.flush(&env);
+        assert_eq!(world.entity_count(), 2);
+    });
+
+    // Invocation 2: load e1 and e2, remove e1's only component in SimpleWorld view,
+    // apply_simple_world, and flush
+    env.as_contract(&contract_id, || {
+        let mut world = StorageWorld::open(&env, ns.clone());
+        world.load_entities(&env, &[1, 2]).unwrap();
+        let mut view = world.to_simple_world(&env);
+        assert!(view.remove_component(1, &symbol_short!("pos")));
+
+        world.apply_simple_world(&env, &view);
+        world.flush(&env);
+
+        assert_eq!(world.entity_count(), 1);
+        assert!(!env
+            .storage()
+            .persistent()
+            .has(&keys::entity_key(&env, &ns, 1)));
+        assert!(!env.storage().persistent().has(&keys::component_key(
+            &env,
+            &ns,
+            1,
+            &symbol_short!("pos")
+        )));
+        assert!(!env
+            .storage()
+            .persistent()
+            .has(&keys::entity_index_loc_key(&env, &ns, 1)));
+        let page0 = world.entity_ids_page(&env, 0);
+        assert_eq!(page0.len(), 1);
+        assert_eq!(page0.get(0), Some(2));
     });
 }

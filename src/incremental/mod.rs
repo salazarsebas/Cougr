@@ -32,7 +32,11 @@
 //!    `CougrError::EntityNotFound` for unknown/despawned IDs), `remove_component`,
 //!    or `despawn_entity`.
 //! 3. Optionally bridge to systems with [`StorageWorld::to_simple_world`] and
-//!    write back diffs via [`StorageWorld::apply_simple_world`].
+//!    write back diffs via [`StorageWorld::apply_simple_world`]. Because
+//!    `SimpleWorld` drops an entity from `entity_components` when its last
+//!    component is removed, `apply_simple_world` despawns any loaded entity
+//!    absent from the view's `entity_components` (even though `to_simple_world`
+//!    preserves an empty-component entry for entities that started with none).
 //! 4. Call [`StorageWorld::flush`] to persist dirty writes and delete removed
 //!    components and despawned entities.
 //!

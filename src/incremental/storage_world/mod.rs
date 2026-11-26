@@ -137,6 +137,15 @@ impl StorageWorld {
             components,
         });
 
+        let loc_key = keys::entity_index_loc_key(env, &self.namespace, entity_id);
+        if let Some(pos) = self.read_persistent::<_, u32>(env, &loc_key) {
+            let bucket_idx = pos / keys::ENTITY_INDEX_BUCKET_SIZE;
+            let bucket_key = keys::entity_index_bucket_key(env, &self.namespace, bucket_idx);
+            if env.storage().persistent().has(&bucket_key) {
+                self.extend_entry_ttl(env, &bucket_key);
+            }
+        }
+
         Ok(())
     }
 
@@ -217,7 +226,22 @@ impl StorageWorld {
     }
 
     /// Remove a component from an entity.
-    pub fn remove_component(&mut self, entity_id: EntityId, component_type: &Symbol) -> bool {
+    ///
+    /// If the entity is not yet cached in memory, it is loaded from persistent
+    /// storage first so its component list and remaining components stay intact.
+    /// Returns `false` if the entity does not exist or does not have the component.
+    pub fn remove_component(
+        &mut self,
+        env: &Env,
+        entity_id: EntityId,
+        component_type: &Symbol,
+    ) -> bool {
+        if loaded_entity_index(&self.loaded_entities, entity_id).is_none()
+            && self.load_entity(env, entity_id).is_err()
+        {
+            return false;
+        }
+
         let Some(component_index) =
             loaded_component_index(&self.loaded_components, entity_id, component_type)
         else {
@@ -346,16 +370,46 @@ impl StorageWorld {
 
     /// Create a namespaced [`StorageWorld`] from a [`SimpleWorld`].
     ///
-    /// Marks everything as dirty so the next `flush()` writes all state.
+    /// Reconciles against any existing persisted index in `namespace` so
+    /// round-tripping an already-persisted world does not duplicate index entries,
+    /// and marks all entities and components in `world` dirty for the next `flush()`.
     pub fn from_simple_world_with_namespace(
         world: &SimpleWorld,
         env: &Env,
         namespace: Symbol,
     ) -> Self {
+        let meta_key = keys::meta_key(env, &namespace);
+        let persisted_entity_count = env
+            .storage()
+            .persistent()
+            .get::<_, WorldMetadata>(&meta_key)
+            .map(|m| m.entity_count)
+            .unwrap_or(0);
+
         let mut loaded_entities = Vec::new();
         let mut loaded_components = Vec::new();
         let mut dirty = DirtyTracker::new();
         let mut entity_count: u32 = 0;
+
+        if persisted_entity_count > 0 {
+            let bucket_count = persisted_entity_count.div_ceil(keys::ENTITY_INDEX_BUCKET_SIZE);
+            for bucket_idx in 0..bucket_count {
+                let bucket_key = keys::entity_index_bucket_key(env, &namespace, bucket_idx);
+                if let Some(bucket) = env
+                    .storage()
+                    .persistent()
+                    .get::<_, soroban_sdk::Vec<EntityId>>(&bucket_key)
+                {
+                    for i in 0..bucket.len() {
+                        if let Some(existing_id) = bucket.get(i) {
+                            if !world.entity_components.contains_key(existing_id) {
+                                dirty.mark_despawned(existing_id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         for entity_id in world.entity_components.keys().iter() {
             entity_count += 1;
@@ -387,7 +441,10 @@ impl StorageWorld {
                     components: refs,
                 });
                 dirty.mark_entity_dirty(entity_id);
-                dirty.mark_new_entity(entity_id);
+                let loc_key = keys::entity_index_loc_key(env, &namespace, entity_id);
+                if !env.storage().persistent().has(&loc_key) {
+                    dirty.mark_new_entity(entity_id);
+                }
             }
         }
 
@@ -401,7 +458,7 @@ impl StorageWorld {
                 version: world.version,
                 entity_count,
             },
-            persisted_entity_count: 0,
+            persisted_entity_count,
             loaded_entities,
             loaded_components,
             dirty,
@@ -411,6 +468,11 @@ impl StorageWorld {
     /// Diff a [`SimpleWorld`] view against the currently loaded state and mark
     /// only actual changes dirty (changed data/storage, added/removed components,
     /// newly spawned and despawned entities).
+    ///
+    /// Note: `SimpleWorld` drops an entity from `entity_components` when its
+    /// last component is removed, so `apply_simple_world` cannot distinguish
+    /// "removed last component" from "despawned" and despawns any loaded entity
+    /// absent from `simple.entity_components`.
     pub fn apply_simple_world(&mut self, env: &Env, simple: &SimpleWorld) {
         let old_next_entity_id = self.metadata.next_entity_id;
 
@@ -478,7 +540,7 @@ impl StorageWorld {
                 }
             }
             for rtype in &removed_types {
-                self.remove_component(entity_id, rtype);
+                self.remove_component(env, entity_id, rtype);
             }
 
             // Check for added or modified components.
@@ -504,10 +566,8 @@ impl StorageWorld {
                         self.dirty
                             .mark_component_dirty(entity_id, component_type.clone());
                         if storage_changed {
-                            let eidx =
-                                loaded_entity_index(&self.loaded_entities, entity_id).unwrap();
                             component_refs_upsert(
-                                &mut self.loaded_entities[eidx].components,
+                                &mut self.loaded_entities[entity_idx].components,
                                 &component_type,
                                 new_storage,
                             );
@@ -518,9 +578,8 @@ impl StorageWorld {
                     }
                 } else {
                     // Newly added component on existing loaded entity.
-                    let eidx = loaded_entity_index(&self.loaded_entities, entity_id).unwrap();
                     component_refs_upsert(
-                        &mut self.loaded_entities[eidx].components,
+                        &mut self.loaded_entities[entity_idx].components,
                         &component_type,
                         new_storage,
                     );
