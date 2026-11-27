@@ -1,6 +1,7 @@
 use soroban_sdk::{Address, BytesN, Env, Symbol, Vec};
 
 use super::error::AccountError;
+use super::ttl::extend_persistent_ttl;
 use super::types::SessionKey;
 
 /// Symbol used as the storage key prefix for session keys.
@@ -54,8 +55,7 @@ impl SessionStorage {
             }
         }
         new_keys.push_back(key.clone());
-        let storage_key = Self::storage_key(env, account);
-        env.storage().persistent().set(&storage_key, &new_keys);
+        Self::save_all(env, account, &new_keys);
     }
 
     /// Load a specific session key by ID.
@@ -74,10 +74,13 @@ impl SessionStorage {
     /// Load all session keys for an account.
     pub fn load_all(env: &Env, account: &Address) -> Vec<SessionKey> {
         let storage_key = Self::storage_key(env, account);
-        env.storage()
-            .persistent()
-            .get(&storage_key)
-            .unwrap_or_else(|| Vec::new(env))
+        match env.storage().persistent().get(&storage_key) {
+            Some(keys) => {
+                extend_persistent_ttl(env, &storage_key);
+                keys
+            }
+            None => Vec::new(env),
+        }
     }
 
     /// Remove a session key by ID. Returns true if found and removed.
@@ -97,11 +100,11 @@ impl SessionStorage {
         }
 
         if found {
-            let storage_key = Self::storage_key(env, account);
             if new_keys.is_empty() {
+                let storage_key = Self::storage_key(env, account);
                 env.storage().persistent().remove(&storage_key);
             } else {
-                env.storage().persistent().set(&storage_key, &new_keys);
+                Self::save_all(env, account, &new_keys);
             }
         }
         found
@@ -133,8 +136,7 @@ impl SessionStorage {
             return Err(AccountError::InvalidScope);
         }
 
-        let storage_key = Self::storage_key(env, account);
-        env.storage().persistent().set(&storage_key, &new_keys);
+        Self::save_all(env, account, &new_keys);
         Ok(())
     }
 
@@ -166,8 +168,7 @@ impl SessionStorage {
         }
 
         let updated = updated.ok_or(AccountError::SessionRevoked)?;
-        let storage_key = Self::storage_key(env, account);
-        env.storage().persistent().set(&storage_key, &new_keys);
+        Self::save_all(env, account, &new_keys);
         Ok(updated)
     }
 
@@ -198,8 +199,7 @@ impl SessionStorage {
         }
 
         let updated = updated.ok_or(AccountError::SessionRevoked)?;
-        let storage_key = Self::storage_key(env, account);
-        env.storage().persistent().set(&storage_key, &new_keys);
+        Self::save_all(env, account, &new_keys);
         Ok(updated)
     }
 
@@ -222,15 +222,21 @@ impl SessionStorage {
         }
 
         if removed > 0 {
-            let storage_key = Self::storage_key(env, account);
             if new_keys.is_empty() {
+                let storage_key = Self::storage_key(env, account);
                 env.storage().persistent().remove(&storage_key);
             } else {
-                env.storage().persistent().set(&storage_key, &new_keys);
+                Self::save_all(env, account, &new_keys);
             }
         }
 
         removed
+    }
+
+    fn save_all(env: &Env, account: &Address, keys: &Vec<SessionKey>) {
+        let storage_key = Self::storage_key(env, account);
+        env.storage().persistent().set(&storage_key, keys);
+        extend_persistent_ttl(env, &storage_key);
     }
 
     /// Build the storage key for an account's session keys.
@@ -432,6 +438,55 @@ mod tests {
 
             let loaded = SessionStorage::load(&env, &addr, &key.key_id).unwrap();
             assert_eq!(loaded.operations_used, 42);
+        });
+    }
+
+    #[test]
+    fn test_session_storage_write_and_read_extend_ttl() {
+        use crate::accounts::ttl::persistent_ttl_bounds;
+        use soroban_sdk::testutils::{storage::Persistent as _, Ledger as _};
+
+        let env = Env::default();
+        let contract_id = env.register(TestContract, ());
+        let addr = Address::generate(&env);
+        let key = make_session_key(&env, 7, 99_999);
+
+        let (threshold, extend_to) = env.as_contract(&contract_id, || persistent_ttl_bounds(&env));
+
+        env.as_contract(&contract_id, || {
+            SessionStorage::store(&env, &addr, &key);
+
+            let storage_key = SessionStorage::storage_key(&env, &addr);
+            let ttl_after_write = env.storage().persistent().get_ttl(&storage_key);
+            assert!(
+                ttl_after_write >= extend_to,
+                "expected TTL >= {extend_to} after write, got {ttl_after_write}"
+            );
+        });
+
+        // Advance past the default persistent TTL (4,096 ledgers in testutils)
+        // and below the extension threshold so the next read triggers a bump.
+        let advance = extend_to - threshold + 100;
+        env.ledger().with_mut(|li| {
+            li.sequence_number += advance;
+        });
+
+        env.as_contract(&contract_id, || {
+            let storage_key = SessionStorage::storage_key(&env, &addr);
+            let ttl_before_read = env.storage().persistent().get_ttl(&storage_key);
+            assert!(
+                ttl_before_read < threshold,
+                "expected TTL < {threshold} before read, got {ttl_before_read}"
+            );
+
+            let loaded = SessionStorage::load(&env, &addr, &key.key_id);
+            assert!(loaded.is_some());
+
+            let ttl_after_read = env.storage().persistent().get_ttl(&storage_key);
+            assert!(
+                ttl_after_read >= extend_to,
+                "expected TTL >= {extend_to} after read, got {ttl_after_read}"
+            );
         });
     }
 }

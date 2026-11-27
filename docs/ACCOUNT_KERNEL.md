@@ -73,6 +73,17 @@ Session enforcement requires all of:
 
 On success the session consumes one operation and advances `next_nonce`.
 
+## Storage Lifetime
+
+Account replay nonces (`ReplayProtection`) and per-account session key lists (`SessionStorage`) live in Soroban persistent storage. To prevent active nonces from being archived (which would reset `next_account_nonce` to `0` until restored) and to keep long-lived sessions readable, Cougr extends their TTL on every read and write through an internal helper in `src/accounts/ttl.rs`.
+
+The extension bounds are computed relative to the network's `env.storage().max_ttl()`:
+
+- **Threshold**: 25% of `max_ttl` (roughly 45 days on Stellar Mainnet at the 180-day `max_entry_ttl`).
+- **Extend-to**: 50% of `max_ttl` (roughly 90 days on Stellar Mainnet).
+
+When an existing entry's remaining TTL drops below the threshold, any read or write bumps it back to the extend-to target. Entries that have not been written yet or that have been removed are not extended. Restoring already-archived entries remains the caller's responsibility.
+
 ## Signers
 
 Current base signer implementations:
